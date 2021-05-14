@@ -31,40 +31,65 @@ namespace Hot_Pursuit
         {
             PursueButton.BackColor = Color.Salmon;
             SearchScout ss = new SearchScout();
-            bool ready = ss.GetTarget();
-            if (!ready) return;
+            ss.EphStart = DateTime.Now;
+            ss.EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value);
+            ss.EphEnd = ss.EphStart + TimeSpan.FromMinutes((100 * ss.EphStep.TotalMinutes));
+            bool ready = ss.LoadTargetData();
+            if (!ready)
+                return;
             TargetBox.Text = ss.TgtName;
-            RateBox.Text = ss.TgtRate.ToString("0.0");
-            ss.SetTargetTSX();
-            ss.TrackTargetTSX();
-            int updateSecs = (int)UpdateBox.Value * 60;
-            DateTime nextUpdate = DateTime.Now + TimeSpan.FromSeconds(updateSecs);
-            NextUpdateBox.Text = nextUpdate.ToShortTimeString();
+            ss.SlewToTarget();
             while (!AbortRequested)
             {
-                ss.GetTarget();
-                ss.TrackTargetTSX();
-                //for (int sec = 0; sec < updateSecs; sec++)
-                while (DateTime.Now < nextUpdate)
+                //the next target ephemeris has been loaded into the ss object, but assume not
+                if (ss.GetNextPositionUpdate())
                 {
-                    PursueButton.BackColor = Color.LightSalmon;
-                    Show();
-                    Application.DoEvents();
-                    System.Threading.Thread.Sleep(500);
-                    PursueButton.BackColor = Color.Salmon;
-                    Show();
-                    Application.DoEvents();
-                    System.Threading.Thread.Sleep(500);
-                    Show();
-                    Application.DoEvents();
-                    if (AbortRequested)
-                        break;
+                    DateTime nextUpdate = ss.NextUpdateAt;
+                    RateBox.Text = ss.TgtRate.ToString("0.0");
+                    int updateSecs = (int)UpdateBox.Value;
+                    NextUpdateBox.Text = nextUpdate.ToShortTimeString();
+                    if (nextUpdate != null)
+                    {
+                        ss.LoadTargetData();
+                        ss.SetTargetTracking();
+                        while (DateTime.Now < nextUpdate)
+                        {
+                            OneSecondPulse();
+                            if (AbortRequested)
+                                break;
+                        }
+                        nextUpdate = DateTime.Now + TimeSpan.FromSeconds(updateSecs);
+                        NextUpdateBox.Text = nextUpdate.ToShortTimeString();
+                    }
                 }
-                nextUpdate = DateTime.Now + TimeSpan.FromSeconds(updateSecs);
-                NextUpdateBox.Text = nextUpdate.ToShortTimeString();
+                else //no new update -- go get another
+                {
+                    ss = new SearchScout();
+                    ss.EphStart = DateTime.Now;
+                    ss.EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value);
+                    ss.EphEnd = ss.EphStart + TimeSpan.FromMinutes((100 * ss.EphStep.TotalMinutes));
+                    if (!ss.LoadTargetData())
+                        break;
+                    ss.SlewToTarget();
+                }
             }
             AbortRequested = false;
             PursueButton.BackColor = Color.LightGreen;
+        }
+
+        private void OneSecondPulse()
+        {
+            PursueButton.BackColor = Color.LightSalmon;
+            Show();
+            Application.DoEvents();
+            System.Threading.Thread.Sleep(500);
+            PursueButton.BackColor = Color.Salmon;
+            Show();
+            Application.DoEvents();
+            System.Threading.Thread.Sleep(500);
+            Show();
+            Application.DoEvents();
+
         }
 
         private void CloseButton_Click(object sender, EventArgs e)

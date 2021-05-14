@@ -55,13 +55,26 @@ namespace Hot_Pursuit
         public double TgtPA { get; set; }
         public double TgtRateRA { get; set; }
         public double TgtRateDec { get; set; }
+        public DateTime EphStart { get; set; }
+        public DateTime EphEnd { get; set; }
+        public TimeSpan EphStep { get; set; }  //query results steps as time span
+        public XDocument ScoutResultsX { get; set; }
+        public DateTime NextUpdateAt { get; set; }
+        public string? MPC_Observatory { get; set; }
 
-
-        public bool GetTarget()
+        public bool LoadTargetData()
         {
             //Import TNS CSV text query and parse out tracking parameters
+            //Get the closest observatory
+            sky6StarChart tsxsc = new sky6StarChart();
+            tsxsc.DocumentProperty(Sk6DocumentProperty.sk6DocProp_Latitude);
+            double lat = tsxsc.DocPropOut;
+            tsxsc.DocumentProperty(Sk6DocumentProperty.sk6DocProp_Longitude);
+            double lng = tsxsc.DocPropOut;
+            Observatory obs = new Observatory(lat, lng);
+            MPC_Observatory = obs.BestObservatory.Code ;
             ServerQueryToResultsXML();
-           return true;
+            return GetNextPositionUpdate();
         }
 
         /// <summary>
@@ -71,14 +84,14 @@ namespace Hot_Pursuit
         private bool ServerQueryToResultsXML()
         {
             string neoResultText;
+            string urlSearch;
             WebClient client = new WebClient();
             System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
             try
             {
                 // string urlSearch = url_NEO_search + MakeSearchQuery();
-                string urlSearch = URL_NEO_search + MakeSearchQuery(FindTargetTSX()) ;
+                urlSearch = URL_NEO_search + MakeSearchQuery(GetTargetName());
                 neoResultText = client.DownloadString(urlSearch);
-
             }
             catch (Exception ex)
             {
@@ -86,22 +99,36 @@ namespace Hot_Pursuit
                 return false;
             };
             //ScoutJSON scoutBase = JsonSerializer.Deserialize<ScoutJSON>(neoResultText);
-            XDocument scoutXML = JsonConvert.DeserializeXNode(neoResultText, "Root");
-
-            IEnumerable<XElement> sDataFieldsX = scoutXML.Element("Root").Elements("data-fields");
-            IEnumerable<XElement> sEphX = scoutXML.Element("Root").Elements("eph");
-            IEnumerable<XElement> sOrbitX = sEphX.First().Element("data").Elements("data");
-            List<XElement> sOrbitList = sOrbitX.ToList();
-            TgtRA = (Convert.ToDouble(sOrbitList[idx_ra].Value)) * 24.0 / 360.0;  //degrees to hours
-            TgtDec = Convert.ToDouble(sOrbitList[idx_dec].Value);
-            TgtRate = Convert.ToDouble(sOrbitList[idx_rate].Value);
-            TgtPA = (Convert.ToDouble(sOrbitList[idx_pa].Value)) * Math.PI / 180.0;
-            TgtRateRA = TgtRate * Math.Cos(TgtPA);
-            TgtRateDec = TgtRate * Math.Sin(TgtPA);
+            ScoutResultsX = JsonConvert.DeserializeXNode(neoResultText, "Root");
             return true;
         }
 
-        public string FindTargetTSX()
+        public bool GetNextPositionUpdate()
+        {
+            //Looks for next time for update
+
+            IEnumerable<XElement> sEphXList = ScoutResultsX.Element("Root").Elements("eph");
+            foreach (XElement ephX in sEphXList)
+            {
+                DateTime ephTime = Convert.ToDateTime(ephX.Element("time").Value);
+                if (ephTime >= DateTime.Now)
+                {
+                    IEnumerable<XElement> sPositionX = ephX.Element("data").Elements("data");
+                    List<XElement> sPositionList = sPositionX.ToList();
+                    TgtRA = (Convert.ToDouble(sPositionList[idx_ra].Value)) * 24.0 / 360.0;  //degrees to hours
+                    TgtDec = Convert.ToDouble(sPositionList[idx_dec].Value);
+                    TgtRate = Convert.ToDouble(sPositionList[idx_rate].Value);
+                    TgtPA = (Convert.ToDouble(sPositionList[idx_pa].Value)) * Math.PI / 180.0;
+                    TgtRateRA = TgtRate * Math.Cos(TgtPA);
+                    TgtRateDec = TgtRate * Math.Sin(TgtPA);
+                    NextUpdateAt = ephTime;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public string GetTargetName()
         {
             sky6ObjectInformation tsxoi = new sky6ObjectInformation();
             tsxoi.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_NAME1);
@@ -109,7 +136,7 @@ namespace Hot_Pursuit
             return TgtName;
         }
 
-        public void SetTargetTSX()
+        public void SlewToTarget()
         {
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
@@ -117,7 +144,7 @@ namespace Hot_Pursuit
             return;
         }
 
-        public void TrackTargetTSX()
+        public void SetTargetTracking()
         {
             const int ionTrackingOn = 1;
             const int ionTrackingOff = 0;
@@ -137,8 +164,11 @@ namespace Hot_Pursuit
 
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString["tdes"] = tgtName;
-            queryString["eph-start"] = "now";
             queryString["n-orbits"] = "1";
+            queryString["eph-start"] = EphStart.ToString("yyyy-MM-ddTHH:mm:ss");
+            queryString["eph-stop"] = EphEnd.ToString("yyyy-MM-ddTHH:mm:ss");
+            queryString["eph-step"] = EphStep.Minutes.ToString("0") + "m";
+            queryString["obs-code"] = MPC_Observatory;
             return queryString.ToString(); // Returns "key1=value1&key2=value2", all URL-encoded
         }
     }

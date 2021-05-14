@@ -81,12 +81,17 @@ namespace Hot_Pursuit
             0,
             0,
             0});
+            this.UpdateBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             this.UpdateBox.Name = "UpdateBox";
             this.UpdateBox.Size = new System.Drawing.Size(55, 20);
             this.UpdateBox.TabIndex = 3;
             this.UpdateBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.UpdateBox.Value = new decimal(new int[] {
-            5,
+            1,
             0,
             0,
             0});
