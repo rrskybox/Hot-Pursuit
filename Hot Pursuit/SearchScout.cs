@@ -49,20 +49,14 @@ namespace Hot_Pursuit
         const int idx_imp = 10;
 
         public string TgtName { get; set; }
-        public double TgtRA { get; set; }
-        public double TgtDec { get; set; }
-        public double TgtRate { get; set; }
-        public double TgtPA { get; set; }
-        public double TgtRateRA { get; set; }
-        public double TgtRateDec { get; set; }
         public DateTime EphStart { get; set; }
         public DateTime EphEnd { get; set; }
         public TimeSpan EphStep { get; set; }  //query results steps as time span
         public XDocument ScoutResultsX { get; set; }
-        public DateTime NextUpdateAt { get; set; }
         public string? MPC_Observatory { get; set; }
+        public List<SpeedVector> UpdateRateTable { get; set; }
 
-        public bool LoadTargetData()
+        public void LoadTargetData(bool isMinutes, int updateInterval)
         {
             //Import TNS CSV text query and parse out tracking parameters
             //Get the closest observatory
@@ -72,9 +66,10 @@ namespace Hot_Pursuit
             tsxsc.DocumentProperty(Sk6DocumentProperty.sk6DocProp_Longitude);
             double lng = tsxsc.DocPropOut;
             Observatory obs = new Observatory(lat, lng);
-            MPC_Observatory = obs.BestObservatory.Code ;
+            MPC_Observatory = obs.BestObservatory.Code;
             ServerQueryToResultsXML();
-            return GetNextPositionUpdate();
+            BuildRateUpdateTable(isMinutes, updateInterval);
+            return;
         }
 
         /// <summary>
@@ -103,29 +98,47 @@ namespace Hot_Pursuit
             return true;
         }
 
-        public bool GetNextPositionUpdate()
+        public void BuildRateUpdateTable(bool IsMinutes, int updateInterval)
         {
-            //Looks for next time for update
-
+            UpdateRateTable = new List<SpeedVector>();
+            List<SpeedVector> BasicRateTable = new List<SpeedVector>();
             IEnumerable<XElement> sEphXList = ScoutResultsX.Element("Root").Elements("eph");
             foreach (XElement ephX in sEphXList)
             {
-                DateTime ephTime = Convert.ToDateTime(ephX.Element("time").Value);
-                if (ephTime >= DateTime.Now)
+                IEnumerable<XElement> sPositionX = ephX.Element("data").Elements("data");
+                List<XElement> sPositionList = sPositionX.ToList();
+                BasicRateTable.Add(new SpeedVector
                 {
-                    IEnumerable<XElement> sPositionX = ephX.Element("data").Elements("data");
-                    List<XElement> sPositionList = sPositionX.ToList();
-                    TgtRA = (Convert.ToDouble(sPositionList[idx_ra].Value)) * 24.0 / 360.0;  //degrees to hours
-                    TgtDec = Convert.ToDouble(sPositionList[idx_dec].Value);
-                    TgtRate = Convert.ToDouble(sPositionList[idx_rate].Value);
-                    TgtPA = (Convert.ToDouble(sPositionList[idx_pa].Value)) * Math.PI / 180.0;
-                    TgtRateRA = TgtRate * Math.Cos(TgtPA);
-                    TgtRateDec = TgtRate * Math.Sin(TgtPA);
-                    NextUpdateAt = ephTime;
-                    return true;
+                    Time = Convert.ToDateTime(ephX.Element("time").Value),
+                    Rate = Convert.ToDouble(sPositionList[idx_rate].Value),
+                    PA = (Convert.ToDouble(sPositionList[idx_pa].Value)) * Math.PI / 180.0,
+                    RA = Convert.ToDouble(sPositionList[idx_ra].Value) * 24.0 / 360.0,
+                    Dec = Convert.ToDouble(sPositionList[idx_dec].Value)
+                });
+            }
+
+            if (IsMinutes)
+            {
+                UpdateRateTable = BasicRateTable;
+            }
+            else
+            {
+                for (int bIdx = 0; bIdx < BasicRateTable.Count-1; bIdx++)
+                {
+                    UpdateRateTable.Add(BasicRateTable[bIdx]);
+                    Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
+                    foreach (SpeedVector sv in intp.WayPoints)
+                        UpdateRateTable.Add(sv);
                 }
             }
-            return false;
+        }
+
+        public SpeedVector? GetNextRateUpdate(DateTime nextTime)
+        {
+            for (int i = 0; i < UpdateRateTable.Count; i++)
+                if (UpdateRateTable[i].Time > nextTime)
+                    return UpdateRateTable[i];
+            return null;
         }
 
         public string GetTargetName()
@@ -136,24 +149,27 @@ namespace Hot_Pursuit
             return TgtName;
         }
 
-        public void SlewToTarget()
+        public void SlewToTarget(SpeedVector sv)
         {
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            tsxmt.SlewToRaDec(TgtRA, TgtDec, TgtName);
+            tsxmt.SlewToRaDec(sv.RA, sv.Dec, TgtName);
             return;
         }
 
-        public void SetTargetTracking()
+        public void SetTargetTracking(SpeedVector sv)
         {
             const int ionTrackingOn = 1;
             const int ionTrackingOff = 0;
             const int ignoreRates = 1;
             const int useRates = 0;
 
+            double tgtRateRA = sv.Rate * Math.Cos(sv.PA);
+            double tgtRateDec = sv.Rate * Math.Sin(sv.PA);
+
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            try { tsxmt.SetTracking(ionTrackingOn, useRates, TgtRateRA, TgtRateDec); }
+            try { tsxmt.SetTracking(ionTrackingOn, useRates, tgtRateRA, tgtRateDec); }
             catch { }
             return;
         }

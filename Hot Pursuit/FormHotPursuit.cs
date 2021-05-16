@@ -31,46 +31,52 @@ namespace Hot_Pursuit
         {
             PursueButton.BackColor = Color.Salmon;
             SearchScout ss = new SearchScout();
-            ss.EphStart = DateTime.Now;
-            ss.EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value);
+            ss.EphStart = DateTime.UtcNow;
+            if (MinutesButton.Checked)
+                ss.EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value);
+            else
+                ss.EphStep = TimeSpan.FromMinutes(1);
             ss.EphEnd = ss.EphStart + TimeSpan.FromMinutes((100 * ss.EphStep.TotalMinutes));
-            bool ready = ss.LoadTargetData();
-            if (!ready)
-                return;
+            ss.LoadTargetData(MinutesButton.Checked, (int)UpdateBox.Value);
             TargetBox.Text = ss.TgtName;
-            ss.SlewToTarget();
+            //Fire off first tracking instruction
+            SpeedVector nextUpdateSV = ss.GetNextRateUpdate(ss.EphStart);
+            ss.SlewToTarget(nextUpdateSV);
+            ss.SetTargetTracking(nextUpdateSV);
+            RateBox.Text = nextUpdateSV.Rate.ToString("0.00");
+            PABox.Text = nextUpdateSV.PA.ToString("0.00");
+            DateTime nextUpdate = nextUpdateSV.Time;
+            if (MinutesButton.Checked)
+                nextUpdate += TimeSpan.FromMinutes((int)UpdateBox.Value);
+            else
+                nextUpdate += TimeSpan.FromSeconds((int)UpdateBox.Value);
+            NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+            //Set up for next tracking instruction
             while (!AbortRequested)
             {
                 //the next target ephemeris has been loaded into the ss object, but assume not
-                if (ss.GetNextPositionUpdate())
+                nextUpdateSV = ss.GetNextRateUpdate(DateTime.UtcNow);
+                if (nextUpdateSV != null)
                 {
-                    DateTime nextUpdate = ss.NextUpdateAt;
-                    RateBox.Text = ss.TgtRate.ToString("0.0");
-                    int updateSecs = (int)UpdateBox.Value;
-                    NextUpdateBox.Text = nextUpdate.ToShortTimeString();
-                    if (nextUpdate != null)
+                    nextUpdate = nextUpdateSV.Time;
+                    while (DateTime.UtcNow < nextUpdate)
                     {
-                        ss.LoadTargetData();
-                        ss.SetTargetTracking();
-                        while (DateTime.Now < nextUpdate)
-                        {
-                            OneSecondPulse();
-                            if (AbortRequested)
-                                break;
-                        }
-                        nextUpdate = DateTime.Now + TimeSpan.FromSeconds(updateSecs);
-                        NextUpdateBox.Text = nextUpdate.ToShortTimeString();
+                        OneSecondPulse();
+                        NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+                        if (AbortRequested)
+                            break;
                     }
+                    ss.SetTargetTracking(nextUpdateSV);
+                    RateBox.Text = nextUpdateSV.Rate.ToString("0.00");
+                    PABox.Text = nextUpdateSV.PA.ToString("0.00");
                 }
                 else //no new update -- go get another
                 {
                     ss = new SearchScout();
-                    ss.EphStart = DateTime.Now;
+                    ss.EphStart = DateTime.UtcNow;
                     ss.EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value);
                     ss.EphEnd = ss.EphStart + TimeSpan.FromMinutes((100 * ss.EphStep.TotalMinutes));
-                    if (!ss.LoadTargetData())
-                        break;
-                    ss.SlewToTarget();
+                    ss.LoadTargetData(MinutesButton.Checked, (int)UpdateBox.Value);
                 }
             }
             AbortRequested = false;
