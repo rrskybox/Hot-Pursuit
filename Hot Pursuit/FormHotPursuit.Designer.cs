@@ -44,13 +44,14 @@ namespace Hot_Pursuit
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.PABox = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.OnTopBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.UpdateBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // PursueButton
             // 
-            this.PursueButton.Location = new System.Drawing.Point(13, 102);
+            this.PursueButton.Location = new System.Drawing.Point(27, 113);
             this.PursueButton.Name = "PursueButton";
             this.PursueButton.Size = new System.Drawing.Size(75, 23);
             this.PursueButton.TabIndex = 0;
@@ -60,7 +61,7 @@ namespace Hot_Pursuit
             // 
             // CloseButton
             // 
-            this.CloseButton.Location = new System.Drawing.Point(276, 102);
+            this.CloseButton.Location = new System.Drawing.Point(283, 113);
             this.CloseButton.Name = "CloseButton";
             this.CloseButton.Size = new System.Drawing.Size(75, 23);
             this.CloseButton.TabIndex = 1;
@@ -70,7 +71,7 @@ namespace Hot_Pursuit
             // 
             // AbortButton
             // 
-            this.AbortButton.Location = new System.Drawing.Point(152, 102);
+            this.AbortButton.Location = new System.Drawing.Point(155, 113);
             this.AbortButton.Name = "AbortButton";
             this.AbortButton.Size = new System.Drawing.Size(75, 23);
             this.AbortButton.TabIndex = 2;
@@ -103,16 +104,17 @@ namespace Hot_Pursuit
             // 
             // TargetBox
             // 
-            this.TargetBox.Location = new System.Drawing.Point(96, 22);
+            this.TargetBox.Location = new System.Drawing.Point(97, 13);
             this.TargetBox.Name = "TargetBox";
-            this.TargetBox.Size = new System.Drawing.Size(76, 20);
+            this.TargetBox.Size = new System.Drawing.Size(77, 20);
             this.TargetBox.TabIndex = 5;
             this.TargetBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 25);
+            this.label1.ForeColor = System.Drawing.Color.White;
+            this.label1.Location = new System.Drawing.Point(14, 16);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(38, 13);
             this.label1.TabIndex = 6;
@@ -120,25 +122,27 @@ namespace Hot_Pursuit
             // 
             // NextUpdateBox
             // 
-            this.NextUpdateBox.Location = new System.Drawing.Point(273, 67);
+            this.NextUpdateBox.Location = new System.Drawing.Point(316, 77);
             this.NextUpdateBox.Name = "NextUpdateBox";
-            this.NextUpdateBox.Size = new System.Drawing.Size(78, 20);
+            this.NextUpdateBox.Size = new System.Drawing.Size(54, 20);
             this.NextUpdateBox.TabIndex = 7;
             this.NextUpdateBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(195, 70);
+            this.label2.ForeColor = System.Drawing.Color.White;
+            this.label2.Location = new System.Drawing.Point(210, 80);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(67, 13);
+            this.label2.Size = new System.Drawing.Size(100, 13);
             this.label2.TabIndex = 8;
-            this.label2.Text = "Next Update";
+            this.label2.Text = "Next Update (Secs)";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 51);
+            this.label3.ForeColor = System.Drawing.Color.White;
+            this.label3.Location = new System.Drawing.Point(14, 40);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(65, 13);
             this.label3.TabIndex = 9;
@@ -146,7 +150,7 @@ namespace Hot_Pursuit
             // 
             // RateBox
             // 
-            this.RateBox.Location = new System.Drawing.Point(95, 48);
+            this.RateBox.Location = new System.Drawing.Point(97, 37);
             this.RateBox.Name = "RateBox";
             this.RateBox.Size = new System.Drawing.Size(78, 20);
             this.RateBox.TabIndex = 10;
@@ -179,16 +183,17 @@ namespace Hot_Pursuit
             this.groupBox1.Controls.Add(this.MinutesButton);
             this.groupBox1.Controls.Add(this.SecondsButton);
             this.groupBox1.Controls.Add(this.UpdateBox);
-            this.groupBox1.Location = new System.Drawing.Point(179, 4);
+            this.groupBox1.ForeColor = System.Drawing.Color.White;
+            this.groupBox1.Location = new System.Drawing.Point(199, 9);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(171, 47);
+            this.groupBox1.Size = new System.Drawing.Size(171, 54);
             this.groupBox1.TabIndex = 13;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Update Period";
+            this.groupBox1.Text = "Update Interval";
             // 
             // PABox
             // 
-            this.PABox.Location = new System.Drawing.Point(96, 71);
+            this.PABox.Location = new System.Drawing.Point(97, 61);
             this.PABox.Name = "PABox";
             this.PABox.Size = new System.Drawing.Size(78, 20);
             this.PABox.TabIndex = 15;
@@ -197,17 +202,33 @@ namespace Hot_Pursuit
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(13, 74);
+            this.label4.ForeColor = System.Drawing.Color.White;
+            this.label4.Location = new System.Drawing.Point(14, 64);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(51, 13);
             this.label4.TabIndex = 14;
             this.label4.Text = "PA  (deg)";
             // 
+            // OnTopBox
+            // 
+            this.OnTopBox.AutoSize = true;
+            this.OnTopBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.OnTopBox.ForeColor = System.Drawing.Color.White;
+            this.OnTopBox.Location = new System.Drawing.Point(27, 89);
+            this.OnTopBox.Name = "OnTopBox";
+            this.OnTopBox.Size = new System.Drawing.Size(62, 17);
+            this.OnTopBox.TabIndex = 16;
+            this.OnTopBox.Text = "On Top";
+            this.OnTopBox.UseVisualStyleBackColor = true;
+            this.OnTopBox.CheckedChanged += new System.EventHandler(this.OnTopBox_CheckedChanged);
+            // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(362, 137);
+            this.BackColor = System.Drawing.Color.DarkCyan;
+            this.ClientSize = new System.Drawing.Size(382, 147);
+            this.Controls.Add(this.OnTopBox);
             this.Controls.Add(this.PABox);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.RateBox);
@@ -220,6 +241,7 @@ namespace Hot_Pursuit
             this.Controls.Add(this.CloseButton);
             this.Controls.Add(this.PursueButton);
             this.Controls.Add(this.groupBox1);
+            this.ForeColor = System.Drawing.Color.Teal;
             this.MaximizeBox = false;
             this.Name = "FormHotPursuit";
             this.Text = "FormHotPursuit";
@@ -248,6 +270,7 @@ namespace Hot_Pursuit
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TextBox PABox;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox OnTopBox;
     }
 }
 

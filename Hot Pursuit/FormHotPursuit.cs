@@ -31,18 +31,33 @@ namespace Hot_Pursuit
         {
             PursueButton.BackColor = Color.Salmon;
             SearchScout ss = new SearchScout();
+            ss.TgtName = ss.GetTargetName();
+            TargetBox.Text = ss.TgtName;
+            if (ss.TgtName == null)
+            {
+                MessageBox.Show("No target is found.  Check TheSkyX for target assigment.");
+                PursueButton.BackColor = Color.LightGreen;
+                return;
+            }
             ss.EphStart = DateTime.UtcNow;
             if (MinutesButton.Checked)
                 ss.EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value);
             else
                 ss.EphStep = TimeSpan.FromMinutes(1);
             ss.EphEnd = ss.EphStart + TimeSpan.FromMinutes((100 * ss.EphStep.TotalMinutes));
-            ss.LoadTargetData(MinutesButton.Checked, (int)UpdateBox.Value);
-            TargetBox.Text = ss.TgtName;
+            if (!ss.LoadTargetData(MinutesButton.Checked, (int)UpdateBox.Value))
+            {
+                MessageBox.Show("Problem with loading target data. The target may no longer be in the CNEOS Listing.");
+                PursueButton.BackColor = Color.LightGreen;
+                return;
+            }
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = ss.GetNextRateUpdate(ss.EphStart);
             ss.SlewToTarget(nextUpdateSV);
-            ss.SetTargetTracking(nextUpdateSV);
+            if (!ss.SetTargetTracking(nextUpdateSV))
+                TargetBox.BackColor = Color.LightSalmon;
+            else 
+                TargetBox.BackColor = Color.LightGreen;
             RateBox.Text = nextUpdateSV.Rate.ToString("0.00");
             PABox.Text = nextUpdateSV.PA.ToString("0.00");
             DateTime nextUpdate = nextUpdateSV.Time;
@@ -67,6 +82,10 @@ namespace Hot_Pursuit
                             break;
                     }
                     ss.SetTargetTracking(nextUpdateSV);
+                    if (!ss.SetTargetTracking(nextUpdateSV))
+                        TargetBox.BackColor = Color.LightSalmon;
+                    else
+                        TargetBox.BackColor = Color.LightGreen;
                     RateBox.Text = nextUpdateSV.Rate.ToString("0.00");
                     PABox.Text = nextUpdateSV.PA.ToString("0.00");
                 }
@@ -81,6 +100,7 @@ namespace Hot_Pursuit
             }
             AbortRequested = false;
             PursueButton.BackColor = Color.LightGreen;
+            TargetBox.BackColor = Color.White;
         }
 
         private void OneSecondPulse()
@@ -95,7 +115,6 @@ namespace Hot_Pursuit
             System.Threading.Thread.Sleep(500);
             Show();
             Application.DoEvents();
-
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
@@ -106,6 +125,11 @@ namespace Hot_Pursuit
         private void AbortButton_Click(object sender, EventArgs e)
         {
             AbortRequested = true;
+        }
+
+        private void OnTopBox_CheckedChanged(object sender, EventArgs e)
+        {
+            this.TopMost = OnTopBox.Checked;
         }
     }
 }

@@ -48,15 +48,17 @@ namespace Hot_Pursuit
         const int idx_geo = 9;
         const int idx_imp = 10;
 
-        public string TgtName { get; set; }
+        public string? TgtName { get; set; }
         public DateTime EphStart { get; set; }
         public DateTime EphEnd { get; set; }
         public TimeSpan EphStep { get; set; }  //query results steps as time span
         public XDocument ScoutResultsX { get; set; }
-        public string? MPC_Observatory { get; set; }
         public List<SpeedVector> UpdateRateTable { get; set; }
+        public Observatory MPC_Observatory { get; set; }
+        public double RA_CorrectionH { get; set; } //Hours
+        public double Dec_CorrectionD { get; set; } //Degrees
 
-        public void LoadTargetData(bool isMinutes, int updateInterval)
+        public bool LoadTargetData(bool isMinutes, int updateInterval)
         {
             //Import TNS CSV text query and parse out tracking parameters
             //Get the closest observatory
@@ -65,18 +67,23 @@ namespace Hot_Pursuit
             double lat = tsxsc.DocPropOut;
             tsxsc.DocumentProperty(Sk6DocumentProperty.sk6DocProp_Longitude);
             double lng = tsxsc.DocPropOut;
-            Observatory obs = new Observatory(lat, lng);
-            MPC_Observatory = obs.BestObservatory.Code;
-            ServerQueryToResultsXML();
-            BuildRateUpdateTable(isMinutes, updateInterval);
-            return;
+
+            //Get closest observatory to user TSX location
+            MPC_Observatory = new Observatory(lat, lng);
+
+            //Get Geocentric ephemeris
+            if (!GeoToSiteCalibration())
+                return false;
+            //Find geocentric ephemeris at current time (single ephemeris)
+            //Find observatory ephemeris at current time (100 count)
+            //Calculate geocentric to geodetic transformation for RA/Dec and dRA/dDec
+            if (ServerQueryToSpeedVectors(isMinutes, updateInterval))
+                return true;
+            else
+                return false;
         }
 
-        /// <summary>
-        /// Method to import TNS server database and convert to internal XML db
-        /// </summary>
-        /// <returns></returns>
-        private bool ServerQueryToResultsXML()
+        private bool ServerQueryToSpeedVectors(bool isMinutes, int updateInterval)
         {
             string neoResultText;
             string urlSearch;
@@ -90,18 +97,12 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Download Error: " + ex.Message);
+                MessageBox.Show("Download Error: " + ex.Message + "\n Possibly the NEO target is not available on Scout for ephemeris.");
                 return false;
             };
-            //ScoutJSON scoutBase = JsonSerializer.Deserialize<ScoutJSON>(neoResultText);
-            ScoutResultsX = JsonConvert.DeserializeXNode(neoResultText, "Root");
-            return true;
-        }
-
-        public void BuildRateUpdateTable(bool IsMinutes, int updateInterval)
-        {
-            UpdateRateTable = new List<SpeedVector>();
             List<SpeedVector> BasicRateTable = new List<SpeedVector>();
+            UpdateRateTable = new List<SpeedVector>();
+            ScoutResultsX = JsonConvert.DeserializeXNode(neoResultText, "Root");
             IEnumerable<XElement> sEphXList = ScoutResultsX.Element("Root").Elements("eph");
             foreach (XElement ephX in sEphXList)
             {
@@ -117,13 +118,13 @@ namespace Hot_Pursuit
                 });
             }
 
-            if (IsMinutes)
+            if (isMinutes)
             {
                 UpdateRateTable = BasicRateTable;
             }
             else
             {
-                for (int bIdx = 0; bIdx < BasicRateTable.Count-1; bIdx++)
+                for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
                 {
                     UpdateRateTable.Add(BasicRateTable[bIdx]);
                     Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
@@ -131,6 +132,71 @@ namespace Hot_Pursuit
                         UpdateRateTable.Add(sv);
                 }
             }
+            return true;
+        }
+
+        private bool GeoToSiteCalibration()
+        {
+            //MPC_Observatory must be set before calibration
+            string neoResultText;
+            string urlSearch;
+            WebClient client = new WebClient();
+            System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
+            //Get geocentric ephemeris for this target at eph start
+            try
+            {
+                urlSearch = URL_NEO_search + MakeCalibrateQuery(GetTargetName(), "500");
+                neoResultText = client.DownloadString(urlSearch);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Download Error: " + ex.Message);
+                return false;
+            };
+            XDocument geoResultsX = JsonConvert.DeserializeXNode(neoResultText, "Root");
+            XElement sEphXGeo = geoResultsX.Element("Root").Element("eph");
+            if (sEphXGeo == null)
+                return false;
+            IEnumerable<XElement> sPositionX = sEphXGeo.Element("data").Elements("data");
+            List<XElement> sPositionList = sPositionX.ToList();
+            SpeedVector geoResultsSV = new SpeedVector
+            {
+                Time = Convert.ToDateTime(sEphXGeo.Element("time").Value),
+                Rate = Convert.ToDouble(sPositionList[idx_rate].Value),
+                PA = (Convert.ToDouble(sPositionList[idx_pa].Value)) * Math.PI / 180.0,
+                RA = Convert.ToDouble(sPositionList[idx_ra].Value) * 24.0 / 360.0,
+                Dec = Convert.ToDouble(sPositionList[idx_dec].Value)
+            };
+            //Get topocentric ephemeris for the observatory near this site
+            try
+            {
+                urlSearch = URL_NEO_search + MakeCalibrateQuery(GetTargetName(), MPC_Observatory.BestObservatory.Code);
+                neoResultText = client.DownloadString(urlSearch);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Download Error: " + ex.Message);
+                return false;
+            };
+            XDocument topoResultsX = JsonConvert.DeserializeXNode(neoResultText, "Root");
+            XElement tEphXTopo = topoResultsX.Element("Root").Element("eph");
+            IEnumerable<XElement> tPositionX = tEphXTopo.Element("data").Elements("data");
+            List<XElement> tPositionList = tPositionX.ToList();
+            SpeedVector topoResultsSV = new SpeedVector
+            {
+                Time = Convert.ToDateTime(tEphXTopo.Element("time").Value),
+                Rate = Convert.ToDouble(tPositionList[idx_rate].Value),
+                PA = (Convert.ToDouble(tPositionList[idx_pa].Value)) * Math.PI / 180.0,
+                RA = Convert.ToDouble(tPositionList[idx_ra].Value) * 24.0 / 360.0,
+                Dec = Convert.ToDouble(tPositionList[idx_dec].Value)
+            };
+
+            double tgtDistance = MPC_Observatory.GeocentricDistanceToTarget(MPC_Observatory.BestObservatory.ObsLat, geoResultsSV.Dec,topoResultsSV.Dec);
+            Dec_CorrectionD = MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.SiteLat, geoResultsSV.Dec, tgtDistance) -
+                MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.ObsLat, geoResultsSV.Dec, tgtDistance);
+            RA_CorrectionH = (MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.SiteLong, geoResultsSV.RA, tgtDistance) -
+                MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.ObsLong, geoResultsSV.RA, tgtDistance)) * 24.0 / 360.0;
+            return true;
         }
 
         public SpeedVector? GetNextRateUpdate(DateTime nextTime)
@@ -153,11 +219,11 @@ namespace Hot_Pursuit
         {
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            tsxmt.SlewToRaDec(sv.RA, sv.Dec, TgtName);
+            tsxmt.SlewToRaDec(sv.RA - RA_CorrectionH, sv.Dec - Dec_CorrectionD, TgtName);
             return;
         }
 
-        public void SetTargetTracking(SpeedVector sv)
+        public bool SetTargetTracking(SpeedVector sv)
         {
             const int ionTrackingOn = 1;
             const int ionTrackingOff = 0;
@@ -170,8 +236,8 @@ namespace Hot_Pursuit
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
             try { tsxmt.SetTracking(ionTrackingOn, useRates, tgtRateRA, tgtRateDec); }
-            catch { }
-            return;
+            catch { return false; }
+            return true;
         }
         private string MakeSearchQuery(string tgtName)
         {
@@ -184,9 +250,27 @@ namespace Hot_Pursuit
             queryString["eph-start"] = EphStart.ToString("yyyy-MM-ddTHH:mm:ss");
             queryString["eph-stop"] = EphEnd.ToString("yyyy-MM-ddTHH:mm:ss");
             queryString["eph-step"] = EphStep.Minutes.ToString("0") + "m";
-            queryString["obs-code"] = MPC_Observatory;
+            queryString["obs-code"] = MPC_Observatory.BestObservatory.Code;
+            //queryString["obs-lat"] = "47.0";
+            //queryString["obs-long"] = "122.0";             
             return queryString.ToString(); // Returns "key1=value1&key2=value2", all URL-encoded
         }
+
+        private string MakeCalibrateQuery(string tgtName, string mpc_observatory_code)
+        {
+            //Returns a url string for querying the TNS website
+            //tdes=C5M39P2&eph-start&n-orbits=1
+
+            NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
+            queryString["tdes"] = tgtName;
+            queryString["n-orbits"] = "1";
+            queryString["eph-start"] = EphStart.ToString("yyyy-MM-ddTHH:mm:ss");
+            //queryString["eph-stop"] = EphEnd.ToString("yyyy-MM-ddTHH:mm:ss");
+            //queryString["eph-step"] = EphStep.Minutes.ToString("0") + "m";
+            queryString["obs-code"] = mpc_observatory_code;
+            return queryString.ToString(); // Returns "key1=value1&key2=value2", all URL-encoded
+        }
+
     }
 }
 
