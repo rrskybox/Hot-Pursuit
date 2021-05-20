@@ -57,6 +57,8 @@ namespace Hot_Pursuit
         public Observatory MPC_Observatory { get; set; }
         public double RA_CorrectionH { get; set; } //Hours
         public double Dec_CorrectionD { get; set; } //Degrees
+        public double Diff_RA_CorrectionH { get; set; } //Hours
+        public double Diff_Dec_CorrectionD { get; set; } //Degrees
 
         public bool LoadTargetData(bool isMinutes, int updateInterval)
         {
@@ -195,7 +197,9 @@ namespace Hot_Pursuit
             Dec_CorrectionD = MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.SiteLat, geoResultsSV.Dec, tgtDistance) -
                 MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.ObsLat, geoResultsSV.Dec, tgtDistance);
             RA_CorrectionH = (MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.SiteLong, geoResultsSV.RA, tgtDistance) -
-                MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.ObsLong, geoResultsSV.RA, tgtDistance)) * 24.0 / 360.0;
+                MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.ObsLong, geoResultsSV.RA, tgtDistance)) * 24.0 / 3600.0;
+            Diff_Dec_CorrectionD = 1.0 / (1.0 + Math.Pow(Dec_CorrectionD, 2));
+            Diff_RA_CorrectionH = 1.0 / (1.0 + Math.Pow(RA_CorrectionH, 2));
             return true;
         }
 
@@ -232,10 +236,12 @@ namespace Hot_Pursuit
 
             double tgtRateRA = sv.Rate * Math.Cos(sv.PA);
             double tgtRateDec = sv.Rate * Math.Sin(sv.PA);
+            double adjtgtRateRA = tgtRateRA * Diff_RA_CorrectionH;
+            double adjtgtRateDec = tgtRateDec * Diff_Dec_CorrectionD;
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            try { tsxmt.SetTracking(ionTrackingOn, useRates, tgtRateRA, tgtRateDec); }
+            try { tsxmt.SetTracking(ionTrackingOn, useRates, adjtgtRateRA, adjtgtRateDec); }
             catch { return false; }
             return true;
         }

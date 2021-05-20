@@ -7,6 +7,8 @@ namespace Hot_Pursuit
 {
     public partial class FormHotPursuit : Form
     {
+        public bool InPursuit = false;
+
         public FormHotPursuit()
         {
             InitializeComponent();
@@ -23,12 +25,16 @@ namespace Hot_Pursuit
             PursueButton.BackColor = Color.LightGreen;
             AbortButton.BackColor = Color.LightGreen;
             CloseButton.BackColor = Color.LightGreen;
+            return;
         }
 
         public bool AbortRequested { get; set; } = false;
 
         private void PursueButton_Click(object sender, EventArgs e)
         {
+            if (InPursuit)
+                return;
+            InPursuit = true;
             PursueButton.BackColor = Color.Salmon;
             SearchScout ss = new SearchScout();
             ss.TgtName = ss.GetTargetName();
@@ -37,6 +43,7 @@ namespace Hot_Pursuit
             {
                 MessageBox.Show("No target is found.  Check TheSkyX for target assigment.");
                 PursueButton.BackColor = Color.LightGreen;
+                InPursuit = false;
                 return;
             }
             ss.EphStart = DateTime.UtcNow;
@@ -49,6 +56,7 @@ namespace Hot_Pursuit
             {
                 MessageBox.Show("Problem with loading target data. The target may no longer be in the CNEOS Listing.");
                 PursueButton.BackColor = Color.LightGreen;
+                InPursuit = false;
                 return;
             }
             //Fire off first tracking instruction
@@ -56,7 +64,7 @@ namespace Hot_Pursuit
             ss.SlewToTarget(nextUpdateSV);
             if (!ss.SetTargetTracking(nextUpdateSV))
                 TargetBox.BackColor = Color.LightSalmon;
-            else 
+            else
                 TargetBox.BackColor = Color.LightGreen;
             RateBox.Text = nextUpdateSV.Rate.ToString("0.00");
             PABox.Text = nextUpdateSV.PA.ToString("0.00");
@@ -99,8 +107,10 @@ namespace Hot_Pursuit
                 }
             }
             AbortRequested = false;
+            InPursuit = false;
             PursueButton.BackColor = Color.LightGreen;
             TargetBox.BackColor = Color.White;
+            return;
         }
 
         private void OneSecondPulse()
@@ -115,6 +125,7 @@ namespace Hot_Pursuit
             System.Threading.Thread.Sleep(500);
             Show();
             Application.DoEvents();
+            return;
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
@@ -124,12 +135,15 @@ namespace Hot_Pursuit
 
         private void AbortButton_Click(object sender, EventArgs e)
         {
-            AbortRequested = true;
+            if (InPursuit)
+                AbortRequested = true;
+            return;
         }
 
         private void OnTopBox_CheckedChanged(object sender, EventArgs e)
         {
             this.TopMost = OnTopBox.Checked;
+            return;
         }
     }
 }

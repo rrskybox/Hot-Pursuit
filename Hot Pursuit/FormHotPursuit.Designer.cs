@@ -244,7 +244,7 @@ namespace Hot_Pursuit
             this.ForeColor = System.Drawing.Color.Teal;
             this.MaximizeBox = false;
             this.Name = "FormHotPursuit";
-            this.Text = "FormHotPursuit";
+            this.Text = "Hot Pursuit";
             ((System.ComponentModel.ISupportInitialize)(this.UpdateBox)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
