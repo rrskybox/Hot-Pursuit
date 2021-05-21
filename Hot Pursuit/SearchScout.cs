@@ -193,7 +193,7 @@ namespace Hot_Pursuit
                 Dec = Convert.ToDouble(tPositionList[idx_dec].Value)
             };
 
-            double tgtDistance = MPC_Observatory.GeocentricDistanceToTarget(MPC_Observatory.BestObservatory.ObsLat, geoResultsSV.Dec,topoResultsSV.Dec);
+            double tgtDistance = MPC_Observatory.GeocentricDistanceToTarget(MPC_Observatory.BestObservatory.ObsLat, geoResultsSV.Dec, topoResultsSV.Dec);
             Dec_CorrectionD = MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.SiteLat, geoResultsSV.Dec, tgtDistance) -
                 MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.ObsLat, geoResultsSV.Dec, tgtDistance);
             RA_CorrectionH = (MPC_Observatory.GeodeticAngleToTarget(MPC_Observatory.BestObservatory.SiteLong, geoResultsSV.RA, tgtDistance) -
@@ -219,12 +219,20 @@ namespace Hot_Pursuit
             return TgtName;
         }
 
-        public void SlewToTarget(SpeedVector sv)
+        public bool SlewToTarget(SpeedVector sv)
         {
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            tsxmt.SlewToRaDec(sv.RA - RA_CorrectionH, sv.Dec - Dec_CorrectionD, TgtName);
-            return;
+            try
+            {
+                tsxmt.SlewToRaDec(sv.RA - RA_CorrectionH, sv.Dec - Dec_CorrectionD, TgtName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Slew Failed: " + ex.Message);
+                return false;
+            }
+            return true;
         }
 
         public bool SetTargetTracking(SpeedVector sv)
@@ -241,8 +249,14 @@ namespace Hot_Pursuit
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            try { tsxmt.SetTracking(ionTrackingOn, useRates, adjtgtRateRA, adjtgtRateDec); }
-            catch { return false; }
+            try
+            {
+                tsxmt.SetTracking(ionTrackingOn, useRates, adjtgtRateRA, adjtgtRateDec);
+            }
+            catch
+            {
+                return false;
+            }
             return true;
         }
         private string MakeSearchQuery(string tgtName)

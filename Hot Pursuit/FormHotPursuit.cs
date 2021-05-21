@@ -41,7 +41,7 @@ namespace Hot_Pursuit
             TargetBox.Text = ss.TgtName;
             if (ss.TgtName == null)
             {
-                MessageBox.Show("No target is found.  Check TheSkyX for target assigment.");
+                MessageBox.Show("No target is found.  Check TheSkyX for target assignment.");
                 PursueButton.BackColor = Color.LightGreen;
                 InPursuit = false;
                 return;
@@ -61,7 +61,8 @@ namespace Hot_Pursuit
             }
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = ss.GetNextRateUpdate(ss.EphStart);
-            ss.SlewToTarget(nextUpdateSV);
+            if (!ss.SlewToTarget(nextUpdateSV))
+                return;
             if (!ss.SetTargetTracking(nextUpdateSV))
                 TargetBox.BackColor = Color.LightSalmon;
             else
