@@ -251,7 +251,8 @@ namespace Hot_Pursuit
             tsxmt.Connect();
             try
             {
-                tsxmt.SetTracking(ionTrackingOn, useRates, adjtgtRateRA, adjtgtRateDec);
+                //TSX expects tracking rates in arcsec/sec
+                tsxmt.SetTracking(ionTrackingOn, useRates, adjtgtRateRA/60.0, adjtgtRateDec/60.0);
             }
             catch
             {
