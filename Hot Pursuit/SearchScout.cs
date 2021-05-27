@@ -113,7 +113,7 @@ namespace Hot_Pursuit
                 BasicRateTable.Add(new SpeedVector
                 {
                     Time = Convert.ToDateTime(ephX.Element("time").Value),
-                    Rate = Convert.ToDouble(sPositionList[idx_rate].Value),
+                    Rate = Convert.ToDouble(sPositionList[idx_rate].Value)/10, //Scout reports dRA & dDec as "/min X 10.
                     PA = (Convert.ToDouble(sPositionList[idx_pa].Value)) * Math.PI / 180.0,
                     RA = Convert.ToDouble(sPositionList[idx_ra].Value) * 24.0 / 360.0,
                     Dec = Convert.ToDouble(sPositionList[idx_dec].Value)
