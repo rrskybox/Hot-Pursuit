@@ -6,4 +6,4 @@ Hot Pursuit fetches the name of the current TSX target, queries the CNEOS Scout 
 
 A detailed description can be found in the "Hot Pursuit Description.docx" within the "Hot Pursuit" folder.
 
-A One-Click installation of the app is in "Hot-Pursuit/publish/HotPursuit64.zip".  Download, extract and run setup.exe.  See the detailed description for more information.
+A One-Click installation of the app is in "Hot Pursuit/publish/Hot Pursuit64.zip".  Download, extract and run setup.exe.  See the detailed description for more information.
