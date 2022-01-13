@@ -5,3 +5,5 @@ Targets are input to TheSkyX using the TSXToolKit Transient Search (see rrskybox
 Hot Pursuit fetches the name of the current TSX target, queries the CNEOS Scout internet site for its current ephemeral data, slews the mount to the coordinates and changes the tracking to match the target’s pace.  Hot Pursuit recaptures the ephemeral data and resets tracking speeds every few minutes as set by the user.
 
 A detailed description can be found in the "Hot Pursuit Description.docx" within the "Hot Pursuit" folder.
+
+A One-Click installation of the app is in "Hot-Pursuit/publish/HotPursuit64.zip".  Download, extract and run setup.exe.  See the detailed description for more information.
