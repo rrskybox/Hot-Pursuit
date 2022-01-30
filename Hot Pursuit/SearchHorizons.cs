@@ -429,7 +429,7 @@ namespace Hot_Pursuit
             //tsxsc.Find(TgtName);
             //return true;
             //*********************
-            bool returnStatus = false;
+            bool returnStatus = true;
             try
             {
                 clsStatus = tsx_cl.exec();

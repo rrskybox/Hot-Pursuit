@@ -10,6 +10,7 @@ namespace Hot_Pursuit
     public partial class FormHotPursuit : Form
     {
         public bool InPursuit = false;
+        public bool IsImaging = false;
         public SearchScout ScoutData;
         public SearchHorizons HorizonsData;
 
@@ -27,7 +28,7 @@ namespace Hot_Pursuit
             this.Text = "Hot Pursuit V" + version;
             FullReductionCheckBox.Checked = Properties.Settings.Default.FullReduction;
 
-            PursueButton.BackColor = Color.LightGreen;
+            ScoutButton.BackColor = Color.LightGreen;
             HorizonsButton.BackColor = Color.LightGreen;
             AbortButton.BackColor = Color.LightGreen;
             CloseButton.BackColor = Color.LightGreen;
@@ -41,12 +42,13 @@ namespace Hot_Pursuit
 
         public bool AbortRequested { get; set; } = false;
 
-        private void PursueButton_Click(object sender, EventArgs e)
+        private void ScoutButton_Click(object sender, EventArgs e)
         {
             if (InPursuit)
                 return;
             InPursuit = true;
-            PursueButton.BackColor = Color.Salmon;
+            ScoutButton.BackColor = Color.Salmon;
+            ClearFields();
             ScoutData = new SearchScout();
             //Retrieve current target name from TSX and set in ss
             if (LookUpCheckBox.Checked)
@@ -135,8 +137,9 @@ namespace Hot_Pursuit
                     nextUpdate = nextUpdateSV.Time_UTC;
                     while (DateTime.UtcNow < nextUpdate)
                     {
-                        OneSecondPulse(PursueButton);
+                        OneSecondPulse(ScoutButton);
                         NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+                        CheckImaging();
                         if (AbortRequested)
                             break;
                     }
@@ -175,6 +178,7 @@ namespace Hot_Pursuit
             InPursuit = true;
 
             HorizonsButton.BackColor = Color.Salmon;
+            ClearFields();
             HorizonsData = new SearchHorizons();
             if (LookUpCheckBox.Checked)
                 HorizonsData.TgtName = TargetBox.Text;
@@ -259,6 +263,7 @@ namespace Hot_Pursuit
                     {
                         OneSecondPulse(HorizonsButton);
                         NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+                        CheckImaging();
                         if (AbortRequested)
                             break;
                     }
@@ -296,10 +301,10 @@ namespace Hot_Pursuit
         {
             AbortRequested = false;
             InPursuit = false;
-            PursueButton.BackColor = Color.LightGreen;
+            ScoutButton.BackColor = Color.LightGreen;
             HorizonsButton.BackColor = Color.LightGreen;
             TargetBox.BackColor = Color.White;
-            ImageButton.BackColor = Color.Yellow;
+            CheckImaging();
             return;
         }
 
@@ -316,6 +321,29 @@ namespace Hot_Pursuit
             Show();
             System.Windows.Forms.Application.DoEvents();
             return;
+        }
+
+        private void CheckImaging()
+        {
+            //Checks to see if imaging is going on, if not, turn off indicators that it is
+            ccdsoftCamera tsxc = new ccdsoftCamera();
+            if (tsxc.State == ccdsoftCameraState.cdStateNone)
+            {
+                if (InPursuit)
+                    ImageButton.BackColor = Color.LightGreen;
+                else ImageButton.BackColor = Color.Yellow;
+                IsImaging = false;
+                ImageAbort.Visible = false;
+            }
+        }
+
+        private void ClearFields()
+        {
+            //Removes text from all fields
+            RARateBox.Text = "";
+            DecRateBox.Text = "";
+            CorrectionBox.Text = "";
+            NextUpdateBox.Text = "";
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
@@ -360,6 +388,7 @@ namespace Hot_Pursuit
                 calLib.SetReductionGroup(tsxc.FilterIndexZeroBased, tsxc.ExposureTime, (int)tsxc.TemperatureSetPoint, binning);
             }
             ImageAbort.BackColor = Color.LightGreen;
+            IsImaging = true;
             tsxc.Connect();
             try
             {
@@ -367,6 +396,8 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
+                ImageButton.BackColor = Color.Yellow;
+                IsImaging = false;
                 UpdateStatusLine("Imaging Error: " + ex.Message);
             }
             return;
@@ -379,6 +410,7 @@ namespace Hot_Pursuit
             tsxc.Abort();
             ImageButton.BackColor = Color.LightGreen;
             ImageAbort.Visible = false;
+            IsImaging = false;
             return;
         }
 
@@ -399,7 +431,6 @@ namespace Hot_Pursuit
             return (tsxu.dOut0, tsxu.dOut1);
         }
 
-
         private void FullReductionCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.FullReduction = FullReductionCheckBox.Checked;
@@ -412,6 +443,11 @@ namespace Hot_Pursuit
             return;
         }
 
+        private void TargetBox_Click(object sender, EventArgs e)
+        {
+            LookUpCheckBox.Checked = true;
+            return;
+        }
     }
 }
 

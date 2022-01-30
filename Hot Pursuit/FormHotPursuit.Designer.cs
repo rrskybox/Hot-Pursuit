@@ -29,7 +29,7 @@ namespace Hot_Pursuit
         /// </summary>
         private void InitializeComponent()
         {
-            this.PursueButton = new System.Windows.Forms.Button();
+            this.ScoutButton = new System.Windows.Forms.Button();
             this.CloseButton = new System.Windows.Forms.Button();
             this.AbortButton = new System.Windows.Forms.Button();
             this.UpdateBox = new System.Windows.Forms.NumericUpDown();
@@ -64,15 +64,15 @@ namespace Hot_Pursuit
             ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).BeginInit();
             this.SuspendLayout();
             // 
-            // PursueButton
+            // ScoutButton
             // 
-            this.PursueButton.Location = new System.Drawing.Point(6, 113);
-            this.PursueButton.Name = "PursueButton";
-            this.PursueButton.Size = new System.Drawing.Size(75, 23);
-            this.PursueButton.TabIndex = 0;
-            this.PursueButton.Text = "Scout";
-            this.PursueButton.UseVisualStyleBackColor = true;
-            this.PursueButton.Click += new System.EventHandler(this.PursueButton_Click);
+            this.ScoutButton.Location = new System.Drawing.Point(6, 113);
+            this.ScoutButton.Name = "ScoutButton";
+            this.ScoutButton.Size = new System.Drawing.Size(75, 23);
+            this.ScoutButton.TabIndex = 0;
+            this.ScoutButton.Text = "Scout";
+            this.ScoutButton.UseVisualStyleBackColor = true;
+            this.ScoutButton.Click += new System.EventHandler(this.ScoutButton_Click);
             // 
             // CloseButton
             // 
@@ -124,6 +124,7 @@ namespace Hot_Pursuit
             this.TargetBox.Size = new System.Drawing.Size(77, 20);
             this.TargetBox.TabIndex = 5;
             this.TargetBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.TargetBox.Click += new System.EventHandler(this.TargetBox_Click);
             // 
             // label1
             // 
@@ -416,7 +417,7 @@ namespace Hot_Pursuit
             this.Controls.Add(this.TargetBox);
             this.Controls.Add(this.AbortButton);
             this.Controls.Add(this.CloseButton);
-            this.Controls.Add(this.PursueButton);
+            this.Controls.Add(this.ScoutButton);
             this.Controls.Add(this.groupBox1);
             this.ForeColor = System.Drawing.Color.Teal;
             this.MaximizeBox = false;
@@ -435,7 +436,7 @@ namespace Hot_Pursuit
 
         #endregion
 
-        private System.Windows.Forms.Button PursueButton;
+        private System.Windows.Forms.Button ScoutButton;
         private System.Windows.Forms.Button CloseButton;
         private System.Windows.Forms.Button AbortButton;
         private System.Windows.Forms.NumericUpDown UpdateBox;
