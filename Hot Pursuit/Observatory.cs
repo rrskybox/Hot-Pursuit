@@ -6,16 +6,26 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Reflection;
 using System.Resources;
+using TheSky64Lib;
+using AstroMath;
+
+//Observatory codes can be found at https://www.projectpluto.com/obsc.htm
+//Copy text data to Observatories.txt
 
 namespace Hot_Pursuit
 {
-    class Observatory
+    public class Observatory
     {
         public Location BestObservatory { get; set; }
 
-        public Observatory(double topolat, double topolng)
+        public Observatory()
         {
             char[] space = new char[] { ' ' };
+
+            BestObservatory = new Location();
+
+            //Load site location
+            GetSiteLocation();
 
             Assembly dgassembly = Assembly.GetExecutingAssembly();
             Stream dgstream = dgassembly.GetManifestResourceStream("Hot_Pursuit.Observatories.txt");
@@ -25,107 +35,78 @@ namespace Hot_Pursuit
             string[] allLinesList = allLines.Split('\n');
             for (int i = 1; i < allLinesList.Length; i++)
             {
-                string recordLine = allLinesList[i];
-                string[] records = recordLine.Split(space, StringSplitOptions.RemoveEmptyEntries);
-                obsList.Add(new Location { Code = records[1], ObsLong = Convert.ToDouble(records[2]), ObsLat = Convert.ToDouble(records[3]) });
+                Location parsedline = ParseObservatory(allLinesList[i]);
+                if (parsedline != null)
+                    obsList.Add(parsedline);
             }
-            //change topolat from +/- to 360
-            topolng = 360 - topolng;
+            //convert MPC longitude from +/- to 360 (format of MPC site)
+            double topolng360 = 360 - BestObservatory.MySiteLong ;
             double leastRMS = 360;
             //Find the closest observatory to input lst and lng by simple RMS
             foreach (Location ob in obsList)
             {
-                double oLat = ob.ObsLat;
-                double oLong = ob.ObsLong;
-                double dLat = Math.Abs(ob.ObsLat - topolat);
-                double dLng = Math.Abs(ob.ObsLong - topolng);
+                double oLat = ob.MPC_ObsLat;
+                double oLong = ob.MPC_ObsLong;
+                double dLat = Math.Abs(ob.MPC_ObsLat -  BestObservatory.MySiteLat);
+                double dLng = Math.Abs(ob.MPC_ObsLong - topolng360);
                 double siteRMS = Math.Sqrt((Math.Pow(dLat, 2) + Math.Pow(dLng, 2)) / 2);
                 if (siteRMS < leastRMS)
                 {
                     leastRMS = siteRMS;
-                    ob.SiteLat = topolat;
-                    ob.SiteLong = topolng;
+                    ob.MySiteLat = BestObservatory.MySiteLat;
+                    ob.MySiteLong = topolng360;
+                    ob.VarianceRA = ob.MPC_ObsLat - BestObservatory.MySiteLat;
+                    ob.VarianceDec = ob.MPC_ObsLong - topolng360;
                     BestObservatory = ob;
                 }
             }
         }
 
-        //public double DeltaAngToTarget(double aAngDeg, double bAngDeg, double geoDist)
-        //{
-        //    //Compute the angular differential between the dec angle at two different 
-        //    //  latitudes to a point at the same distance
-        //    double aLatAngDeg = GeodeticAngleToTarget(aAngDeg, geoDist);
-        //    double bLatAngDeg = GeodeticAngleToTarget(bAngDeg, geoDist);
-        //    return aLatAngDeg - bLatAngDeg;
-        //}
 
-        public double GeocentricDistanceToTarget(double latMdeg, double decGdeg, double decMdeg)
+        private Location ParseObservatory(string ent)
         {
-            //Draw two lines, one from the center of a circle and one from the rim of the circle
-            // which meet outside the circle at a point that is some distance from the center of the circle.
-            // the point on the circle is defined with respect to the angular arc from this point on the circle to the
-            // intersection of the center line and the circle.
-            //Given the angle of the arc and the angle at the line intersection, this procedure returns the distance (miles) to the point
-            // for a circle the siae of the earth.
-
-            //Earth radius (avg)
-            const double RE = 3958.8; //radiusEarthInMiles
-            //Convert degrees to radians
-            double latMrad = latMdeg * Math.PI / 180.0;
-            double decGrad = decGdeg * Math.PI / 180.0;
-            double decMrad = decMdeg * Math.PI / 180.0;
-            //Calculate angles -- difference in declination and difference in latitude
-            double deltaDecMGrad = decMrad - decGrad;
-            double deltaLatMGrad = latMrad - decGrad;
-            //Calculate legs of interior triangle
-            double distBCmiles = RE * Math.Cos(deltaLatMGrad);
-            double distMBmiles = RE * Math.Sin(deltaLatMGrad);
-            //Calculate tangent of difference in dec (angle at N)
-            double tanN = Math.Tan(deltaDecMGrad);
-            double distNBmiles = distMBmiles / tanN;
-            double distNCmiles = distNBmiles + distBCmiles;
-            //
-
-            return distNCmiles;
+            Location parsed = new Location();
+            if (ent.Length < 4)
+                return null;
+            else
+            {
+                parsed.MPC_Code = ent.Substring(0, 3);
+                parsed.MPC_ObsLong = Convert.ToDouble(ent.Substring(5, 10));
+                parsed.MPC_ObsLat = Convert.ToDouble(ent.Substring(16, 10));
+                string alt = ent.Substring(29, 8);
+                string rhocos = ent.Substring(38, 7);
+                string rhosinphi = ent.Substring(48, 11);
+                string region = ent.Substring(62, 14);
+                parsed.Description = ent.Substring(76);
+                return parsed;
+            }
         }
 
-        public double GeodeticAngleToTarget(double latSdeg, double decGdeg, double geoDist)
+        private void GetSiteLocation()
         {
-            //Draw two lines, one from the center of a circle and one from the rim of the circle
-            // which meet outside the circle at a point that is some distance from the center of the circle.
-            // the point on the circle is defined with respect to the angular arc from this point on the circle to the
-            // intersection of the center line and the circle.
-            //Given the angle of the arc and the distance to the point, this procedure returns the arc angle
-            // for a circle the siae of the earth.
-
-            //Earth radius (average)
-            const double Re = 3958.8; //Miles
-            //Convert degrees to radians
-            double latSrad = latSdeg * Math.PI / 180.0;
-            double decGrad = decGdeg * Math.PI / 180.0;
-            //Calculate angles -- difference in declination and difference in latitude
-            //double deltaDecMGrad = decSrad - decGrad;
-            double angDCSrad = latSrad - decGrad;
-            //Calculate legs
-            double distDC = Re * Math.Cos(angDCSrad);
-            double distSD = Re * Math.Sin(angDCSrad);
-            double distND = geoDist - distDC;
-            //Calculate angle
-            double angSNBrad = Math.Atan(distSD/distND);
-            double angSNBdeg = angSNBrad * (180 / Math.PI);
-            return angSNBdeg;
+            //Import scout text query and parse out tracking parameters
+            sky6StarChart tsxsc = new sky6StarChart();
+            tsxsc.DocumentProperty(Sk6DocumentProperty.sk6DocProp_Latitude);
+            BestObservatory.MySiteLat = tsxsc.DocPropOut;
+            tsxsc.DocumentProperty(Sk6DocumentProperty.sk6DocProp_Longitude);
+            BestObservatory.MySiteLong = tsxsc.DocPropOut;
+            tsxsc.DocumentProperty(Sk6DocumentProperty.sk6DocProp_ElevationInMeters);
+            BestObservatory.MySiteElev = tsxsc.DocPropOut / 1000;
+            return;
         }
     }
 
     public class Location
     {
-        public string Code { get; set; }
-        public double SiteLat { get; set; }
-        public double SiteLong { get; set; }
-        public double ObsLat { get; set; }
-        public double ObsLong { get; set; }
+        public string MPC_Code{ get; set; }
+        public double MySiteLat { get; set; }
+        public double MySiteLong { get; set; }
+        public double MySiteElev { get; set; }
+        public double MPC_ObsLat { get; set; }
+        public double MPC_ObsLong { get; set; }
         public double VarianceRA { get; set; }
         public double VarianceDec { get; set; }
+        public string Description { get; set; }
 
     }
 
