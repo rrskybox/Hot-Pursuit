@@ -285,7 +285,7 @@ namespace Hot_Pursuit
             for (int i = soeIdx + 1; i < eoeIdx; i++)
             {
                 XElement ephmRecord = new XElement("Data");
-                string cleanLine = hzLineItems[i].Remove(19, 2);  //Clear out some garbage that Horizons leaves in the line for some reason
+                string cleanLine = hzLineItems[i].Remove(22, 2);  //Clear out some garbage that Horizons leaves in the line for some reason -- minutes? seconds?
                 string[] columns = cleanLine.Split(spc, StringSplitOptions.RemoveEmptyEntries);
                 for (int r = 0; r < headers.Count(); r++)
                     ephmRecord.Add(new XElement(headerNames[r], columns[r]));
@@ -301,7 +301,7 @@ namespace Hot_Pursuit
             {
                 string sDate = ephX.Element(hzUTDate).Value;
                 string sTime = ephX.Element(hzUTHrMin).Value;
-                string sUTDateTime = sDate + " " + sTime + ":00";
+                string sUTDateTime = sDate + " " + sTime;
                 sUTDateTime = sUTDateTime.Replace('.', ' ');
                 DateTime sUT = Convert.ToDateTime(sUTDateTime);
                 double sRA_D = Convert.ToDouble(ephX.Element(hzRA).Value);
@@ -423,11 +423,11 @@ namespace Hot_Pursuit
             catch (Exception ex)
             {
                 MessageBox.Show("Slew Failure: " + ex.Message);
-                return false;
+                //return false;
             }
             //********** CLS AVOIDANCE CODE FOR SIMULATOR DEBUGGING PURPOSES
             //tsxsc.Find(TgtName);
-            //return true;
+            return true;
             //*********************
             bool returnStatus = true;
             try
@@ -546,7 +546,7 @@ namespace Hot_Pursuit
         const string hAirMass = "AIRMASS";
         const string hLHACutoff = "LHA_CUTOFF";
         const string hAngularRateCutoff = "ANG_RATE_CUTOFF";
-        const string hExtraPrecisionCSVFormat = "EXTRA_PREC";
+        const string hExtraPrecisionFormat = "EXTRA_PREC";
         const string hCSVFormat = "CSV_FORMAT";
         const string hVectorLabels = "VEC_LABELS";
         const string hVectorDeltaT = "VEC_DELTA_T";
@@ -579,8 +579,10 @@ namespace Hot_Pursuit
             queryString[hStopTime] = EphEnd.ToString("yyyy-MM-dd"); // "2021-01-13";
             queryString[hStepSize] = "1m"; // shortest time that horizons can do
             queryString[hAngleFormat] = hAngleFormatDegrees;
+            queryString[hTimeDigits] = "Seconds";
             //queryString[hQuantities ] = "'1,9,20,23,24,29'";
             queryString[hOutUnits] = hUnitTypeKMS;
+            queryString[hExtraPrecisionFormat] = hYes;
 
             return queryString.ToString(); // Returns "key1=value1&key2=value2", all URL-encoded
         }
