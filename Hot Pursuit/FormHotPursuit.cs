@@ -2,6 +2,8 @@
 using System.Deployment.Application;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using System.Linq;
 using AstroMath;
 using TheSky64Lib;
 
@@ -181,10 +183,10 @@ namespace Hot_Pursuit
             ClearFields();
             HorizonsData = new SearchHorizons();
             if (LookUpCheckBox.Checked)
-                HorizonsData.TgtName = TargetBox.Text;
+                HorizonsData.TgtName = ScrubSmallBodyName(TargetBox.Text);
             else
-                HorizonsData.TgtName = HorizonsData.GetTargetName();
-            TargetBox.Text = HorizonsData.TgtName;
+                HorizonsData.TgtName = ScrubSmallBodyName(HorizonsData.GetTargetName());
+             TargetBox.Text = HorizonsData.TgtName.Replace(";", "");
             //Handle exceptions
             if (HorizonsData.TgtName == null)
             {
@@ -203,7 +205,7 @@ namespace Hot_Pursuit
             HorizonsData.EphEnd = HorizonsData.EphStart + TimeSpan.FromDays(1);  //Shortest time that Horizons can do is one day
             if (!HorizonsData.LoadTargetData())
             {
-                UpdateStatusLine("Problem with loading target data. The target may no longer be in the CNEOS Listing.");
+                UpdateStatusLine("Problem with loading target data. The target may no longer be in the Horizons Listing.");
                 CleanupOnFault();
                 return;
             }
@@ -344,6 +346,36 @@ namespace Hot_Pursuit
             DecRateBox.Text = "";
             CorrectionBox.Text = "";
             NextUpdateBox.Text = "";
+        }
+
+        private string ScrubSmallBodyName(string longName)
+        {
+            //Decoder for small body name input.  Horizon's does not do well parsing numbers and names
+            //This program reduces a standard comet, asteroid or other name to something
+            //  that Horizons can search for.
+            //Comets will start with P/ or C/.  Horizons cant search that so it must be scrubbed.
+            //  Anything trailing (e.g. (PANSTARRS) must be removed as well.
+             if (longName.StartsWith("P/") || longName.StartsWith("C/")) 
+            {
+                //Definitely a comet, probably from TSX SDB
+                string[] shortStrings = (longName.Remove(0, 2)).Split(' ');
+                return shortStrings[0] + " " + shortStrings[1] + ";";  //Small Body ";"
+            }
+            else
+            {
+                //Asteroid or something not an asteroid
+                //this could be in the format of a single name (e.g. JWST),
+                //  a comet designation (e.g. 2021 A7),
+                //  or a asteroid designation (e.g. 7 Isis)
+                //So, if it is a single name, we pass it through with no small body search designator (";")
+                string[] splits = longName.Split(' ');
+                if (splits.Count() < 2)
+                    return longName;  //single name format, e.g. "JWST", and so leavve off the small body search designator
+                if (splits[1].All(Char.IsLetter)) //Comet -- 2021 A7 or Asteroid 7 Isis
+                    return splits[1] + ";"; //Asteroid format ( e.g. 7 Isis) so return just the name and small body search designator (";")
+                else
+                    return splits[0] + " " + splits[1] + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
+            }
         }
 
         private void CloseButton_Click(object sender, EventArgs e)

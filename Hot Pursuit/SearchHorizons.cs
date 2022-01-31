@@ -251,7 +251,7 @@ namespace Hot_Pursuit
             else
                 return false;
         }
-
+         
         public bool ServerQueryToSpeedVectors()
         {
             string hzResultText;
@@ -449,7 +449,6 @@ namespace Hot_Pursuit
             return returnStatus;
         }
 
-
         public bool SetTargetTracking(SpeedVector sv)
         {
             const int ionTrackingOn = 1;
@@ -491,25 +490,6 @@ namespace Hot_Pursuit
                 return false;
             }
             return true;
-        }
-
-        private string ScrubSmallBodyName(string longName)
-        {
-            //Comets
-            if (longName.StartsWith("P/") || longName.StartsWith("C/"))
-            {
-                string[] shortStrings = (longName.Remove(0, 2)).Split(' ');
-                return shortStrings[0] + " " + shortStrings[1] + ";";  //Small Body
-            }
-            else
-            {
-                //Asteroids -- just use the first field (format number space yyyy letter(s) number space (xxx)
-                string shortName = longName.Split(' ')[0];
-                if (char.IsLetter(shortName.First()))
-                    return shortName;
-                else
-                    return shortName + ";";
-            }
         }
 
         #region HorizonsFields
@@ -586,10 +566,11 @@ namespace Hot_Pursuit
             string siteLat = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
             string siteElev = MPC_Observatory.BestObservatory.MySiteElev.ToString("0.000");
             string center = siteLong + ":" + siteLat + ":" + siteElev;
-            string name = ScrubSmallBodyName(TgtName);
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[hFormat] = hFormatTypeText;
-            queryString[hCommand] = name; // ";" means that it is a small body search for name
+            //queryString[hCommand] = "\'" + "NAME=" + TgtName + "\'"; // ";" means that it is a small body search for name
+            queryString[hCommand] = "\'" + TgtName + "\'"; // ";" means that it is a small body search for name
+
             queryString[hMakeEphemeris] = hYes;
             queryString[hEphemerisType] = hObserverType;
             queryString[hCenter] = "399";  //Earth
