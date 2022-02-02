@@ -348,14 +348,6 @@ namespace Hot_Pursuit
             return true;
         }
 
-        public string GetTargetName()
-        {
-            sky6ObjectInformation tsxoi = new sky6ObjectInformation();
-            tsxoi.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_NAME1);
-            string tgtName = tsxoi.ObjInfoPropOut;
-            return tgtName;
-        }
-
         public SpeedVector? GetNextRateUpdate(DateTime nextTime)
         {
             for (int i = 0; i < UpdateRateTable.Count; i++)
@@ -366,10 +358,9 @@ namespace Hot_Pursuit
 
         public bool SlewToTarget(SpeedVector sv)
         {
-
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees - RA_CorrectionD);
-            double tgtDecD = sv.Dec_Degrees - Dec_CorrectionD;
+            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
+            double tgtDecD = sv.Dec_Degrees;
             tsxmt.Connect();
             try
             {
@@ -383,70 +374,6 @@ namespace Hot_Pursuit
             return true;
         }
 
-        public bool CLSToTarget(SpeedVector sv)
-        {
-            //first, couple dome to telescope, if there is one
-            sky6Dome tsxd = new sky6Dome();
-            try
-            {
-                tsxd.Connect();
-                tsxd.IsCoupled = 1;
-            }
-            catch (Exception ex)
-            {
-                //do nothing
-            }
-
-            int clsStatus = 123;
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            ClosedLoopSlew tsx_cl = new ClosedLoopSlew();
-            sky6StarChart tsxsc = new sky6StarChart();
-            //Clear any image reduction, otherwise full reduction might cause a problem
-            ccdsoftCamera tsxcam = new ccdsoftCamera()
-            {
-                ImageReduction = ccdsoftImageReduction.cdNone,
-                Asynchronous = 1 //make sure nothing else happens while setting this up
-            };
-            //Abort any ongoing imaging
-            tsxcam.Abort();
-
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees - RA_CorrectionD);
-            double tgtDecD = sv.Dec_Degrees - Dec_CorrectionD;
-            tsxsc.Find(tgtRAH.ToString() + ", " + tgtDecD.ToString());
-            tsxmt.Connect();
-            //tsxmt.Asynchronous = 0;
-            try
-            {
-                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, GetTargetName());
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Slew Failure: " + ex.Message);
-                //return false;
-            }
-            //********** CLS AVOIDANCE CODE FOR SIMULATOR DEBUGGING PURPOSES
-            //tsxsc.Find(TgtName);
-            //return true;
-            //*********************
-            bool returnStatus = true;
-            try
-            {
-                clsStatus = tsx_cl.exec();
-            }
-            catch (Exception ex)
-            {
-                returnStatus = false;
-            }
-            try
-            {
-                tsxsc.Find(TgtName);
-            }
-            catch (Exception ex)
-            {
-                returnStatus = true;
-            }
-            return returnStatus;
-        }
 
         public bool SetTargetTracking(SpeedVector sv)
         {
@@ -489,6 +416,45 @@ namespace Hot_Pursuit
                 return false;
             }
             return true;
+        }
+
+        public static string ScrubSmallBodyName(string longName)
+        {
+            //Decoder for small body name input.  Horizon's does not do well parsing numbers and names
+            //This program reduces a standard comet, asteroid or other name to something
+            //  that Horizons can search for.
+            //Comets will start with P/ or C/.  Horizons cant search that so it must be scrubbed.
+            //  Anything trailing (e.g. (PANSTARRS) must be removed as well.
+            //if (longName.StartsWith("P/") || longName.StartsWith("C/"))
+            string scrub;
+            if (longName.Contains("/"))
+            {
+                //We got a comet, probably from TSX SDB
+                //Several formats are possible:  P/asdfa, nnnP/asdfe, C/yyyy aD
+                if (char.IsDigit(longName[0]))
+                    scrub = longName;
+                else
+                {
+                    string[] shortStrings = (longName.Remove(0, 2)).Split(' ');
+                    scrub = shortStrings[0] + " " + shortStrings[1] + ";";  //Small Body ";"
+                }
+            }
+            else
+            {
+                //Asteroid or something not an asteroid
+                //this could be in the format of a single name (e.g. JWST),
+                //  a comet designation (e.g. 2021 A7),
+                //  or a asteroid designation (e.g. 7 Isis)
+                //So, if it is a single name, we pass it through with no small body search designator (";")
+                string[] splits = longName.Split(' ');
+                if (splits.Count() < 2)
+                    scrub = longName;  //single name format, e.g. "JWST", and so leave off the small body search designator
+                else if (splits[1].All(Char.IsLetter)) //Comet -- 2021 A7 or Asteroid 7 Isis
+                    scrub = splits[1] + ";"; //Asteroid format ( e.g. 7 Isis) so return just the name and small body search designator (";")
+                else
+                    scrub = splits[0] + " " + splits[1] + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
+            }
+            return scrub;
         }
 
         #region HorizonsFields
@@ -568,7 +534,7 @@ namespace Hot_Pursuit
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[hFormat] = hFormatTypeText;
             //queryString[hCommand] = "\'" + "NAME=" + TgtName + "\'"; // ";" means that it is a small body search for name
-            queryString[hCommand] = "\'" + TgtName + "\'"; // ";" means that it is a small body search for name
+            queryString[hCommand] = "\'NAME=" + TgtName + "\'"; // ";" means that it is a small body search for name
 
             queryString[hMakeEphemeris] = hYes;
             queryString[hEphemerisType] = hObserverType;
@@ -582,8 +548,10 @@ namespace Hot_Pursuit
             //queryString[hQuantities ] = "'1,9,20,23,24,29'";
             queryString[hOutUnits] = hUnitTypeKMS;
             queryString[hExtraPrecisionFormat] = hYes;
-
-            return queryString.ToString(); // Returns "key1=value1&key2=value2", all URL-encoded
+            string q = queryString.ToString();
+            //fix bug where queryString inserts %2f instead of %2F for the "/" char
+            q = q.Replace("%2f", "%2F");
+            return q; // Returns "key1=value1&key2=value2", all URL-encoded
         }
     }
 }

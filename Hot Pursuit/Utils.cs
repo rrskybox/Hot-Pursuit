@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AstroMath;
+using TheSky64Lib;
+using System.Windows.Forms;
 
 namespace Hot_Pursuit
 {
@@ -27,6 +29,79 @@ namespace Hot_Pursuit
             double decRate = rate * Math.Cos(paR);
             return AstroMath.Transform.RadiansToDegrees(decRate);
         }
+        public static string GetTargetName()
+        {
+            sky6ObjectInformation tsxoi = new sky6ObjectInformation();
+            tsxoi.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_NAME1);
+            string tgtName = tsxoi.ObjInfoPropOut;
+            return tgtName;
+        }
+        public static bool CLSToTarget(string tgtName, SpeedVector sv)
+        {
+            //first, couple dome to telescope, if there is one
+            sky6Dome tsxd = new sky6Dome();
+            try
+            {
+                tsxd.Connect();
+                tsxd.IsCoupled = 1;
+            }
+            catch (Exception ex)
+            {
+                //do nothing
+            }
+
+            int clsStatus = 123;
+            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
+            ClosedLoopSlew tsx_cl = new ClosedLoopSlew();
+            sky6StarChart tsxsc = new sky6StarChart();
+            //Clear any image reduction, otherwise full reduction might cause a problem
+            ccdsoftCamera tsxcam = new ccdsoftCamera()
+            {
+                ImageReduction = ccdsoftImageReduction.cdNone,
+                Asynchronous = 1 //make sure nothing else happens while setting this up
+            };
+            //Abort any ongoing imaging
+            tsxcam.Abort();
+
+            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
+            double tgtDecD = sv.Dec_Degrees;
+            tsxsc.Find(tgtRAH.ToString() + ", " + tgtDecD.ToString());
+            tsxmt.Connect();
+            //tsxmt.Asynchronous = 0;
+            try
+            {
+                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, tgtName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Slew Failure: " + ex.Message);
+                return false;
+            }
+            //********** CLS AVOIDANCE CODE FOR SIMULATOR DEBUGGING PURPOSES
+            //tsxsc.Find(TgtName);
+            //return true;
+            //*********************
+            bool returnStatus = true;
+            try
+            {
+                clsStatus = tsx_cl.exec();
+            }
+            catch (Exception ex)
+            {
+                returnStatus = false;
+            }
+            try
+            {
+                tsxsc.Find(tgtName);
+            }
+            catch (Exception ex)
+            {
+                returnStatus = true;
+            }
+            return returnStatus;
+        }
+
+
 
         public static string HourString(double ha, bool shorten)
         {

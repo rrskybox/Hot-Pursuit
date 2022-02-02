@@ -244,8 +244,8 @@ namespace Hot_Pursuit
         {
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees - RA_CorrectionD);
-            double tgtDecD = sv.Dec_Degrees - Dec_CorrectionD;
+            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
+            double tgtDecD = sv.Dec_Degrees;
             tsxmt.Connect();
             try
             {
@@ -257,71 +257,6 @@ namespace Hot_Pursuit
                 return false;
             }
             return true;
-        }
-
-        public bool CLSToTarget(SpeedVector sv)
-        {
-            //first, couple dome to telescope, if there is one
-            sky6Dome tsxd = new sky6Dome();
-            try
-            {
-                tsxd.Connect();
-                tsxd.IsCoupled = 1;
-            }
-            catch (Exception ex)
-            {
-                //do nothing
-            }
-
-            int clsStatus = 123;
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            ClosedLoopSlew tsx_cl = new ClosedLoopSlew();
-            sky6StarChart tsxsc = new sky6StarChart();
-            //Clear any image reduction, otherwise full reduction might cause a problem
-            ccdsoftCamera tsxcam = new ccdsoftCamera()
-            {
-                ImageReduction = ccdsoftImageReduction.cdNone,
-                Asynchronous = 1 //make sure nothing else happens while setting this up
-            };
-            //Abort any ongoing imaging
-            tsxcam.Abort();
-
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees - RA_CorrectionD);
-            double tgtDecD = sv.Dec_Degrees - Dec_CorrectionD;
-            tsxsc.Find(tgtRAH.ToString() + ", " + tgtDecD.ToString());
-            tsxmt.Connect();
-            //tsxmt.Asynchronous = 0;
-            try
-            {
-                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, GetTargetName());
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Slew Failure: " + ex.Message);
-                //return false;
-            }
-            //********** CLS AVOIDANCE CODE FOR SIMULATOR DEBUGGING PURPOSES
-            //tsxsc.Find(TgtName);
-            //return true;
-            //*********************
-            bool returnStatus = true;
-            try
-            {
-                clsStatus = tsx_cl.exec();
-            }
-            catch (Exception ex)
-            {
-                returnStatus = false;
-            }
-            try
-            {
-                tsxsc.Find(TgtName);
-            }
-            catch (Exception ex)
-            {
-                returnStatus = true;
-            }
-            return returnStatus;
         }
 
         public bool SetTargetTracking(SpeedVector sv)
@@ -365,6 +300,25 @@ namespace Hot_Pursuit
                 return false;
             }
             return true;
+        }
+
+        public static string ScrubSmallBodyName(string longName)
+        {
+            //Decoder for small body name input.  MPES does not do well parsing numbers and names sometimes
+            //This program reduces a standard comet, asteroid or other name to something
+            //  that MPES can search for.
+            //Comets will start with P/ or C/.  Horizons cant search that so it must be scrubbed.
+            string scrub;
+            //  Anything trailing parenthesis (e.g. (PANSTARRS) must be removed.
+            if (longName.Contains("("))
+            {
+                scrub = longName.Remove(longName.IndexOf('(')).TrimEnd(new char[] { ' ' });
+            }
+            else
+            {
+                scrub = longName;
+            }
+            return scrub;
         }
 
         #region APIFields
@@ -436,8 +390,10 @@ namespace Hot_Pursuit
             queryString[mjs] = "f"; // = "js"; //set to f
             //queryString[mSuppressSun] = "n"; // = "igd"; // SuppressSun: igd = “y” or “n” (default) Suppress output if sun above horizon
             //queryString[mSuppressHorizon] = "n"; // = "igd";  // igd = “y” or “n” (default) Suppress output if target is below horizon
-
-            return queryString.ToString(); // Returns "key1=value1&key2=value2", all URL-encoded
+            string q = queryString.ToString();
+            // May be problem with "/" = %2F rather than %2f
+            q = q.Replace("%2f", "%2F");
+            return q; // Returns "key1=value1&key2=value2", all URL-encoded
         }
     }
 }

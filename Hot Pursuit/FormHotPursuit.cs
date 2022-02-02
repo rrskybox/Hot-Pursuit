@@ -94,7 +94,7 @@ namespace Hot_Pursuit
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = ScoutData.GetNextRateUpdate(ScoutData.EphStart);
             //CLS to where target should be currently, deal with CLS failure
-            if (!ScoutData.CLSToTarget(nextUpdateSV))
+            if (!Utils.CLSToTarget(ScoutData.TgtName, nextUpdateSV))
             {
                 UpdateStatusLine("Tracking failed: Problem with CLS.");
                 CleanupOnFault();
@@ -184,9 +184,9 @@ namespace Hot_Pursuit
             ClearFields();
             HorizonsData = new SearchHorizons();
             if (LookUpCheckBox.Checked)
-                HorizonsData.TgtName = ScrubSmallBodyName(TargetBox.Text);
+                HorizonsData.TgtName = SearchHorizons.ScrubSmallBodyName(TargetBox.Text);
             else
-                HorizonsData.TgtName = ScrubSmallBodyName(HorizonsData.GetTargetName());
+                HorizonsData.TgtName = SearchHorizons.ScrubSmallBodyName(Utils.GetTargetName());
             TargetBox.Text = HorizonsData.TgtName.Replace(";", "");
             //Handle exceptions
             if (HorizonsData.TgtName == null)
@@ -218,7 +218,7 @@ namespace Hot_Pursuit
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = HorizonsData.GetNextRateUpdate(DateTime.UtcNow);
             //CLS to where target should be currently, deal with CLS failure
-            if (!HorizonsData.CLSToTarget(nextUpdateSV))
+            if (!Utils.CLSToTarget(HorizonsData.TgtName, nextUpdateSV))
             {
                 UpdateStatusLine("Tracking failed: Problem with CLS.");
                 CleanupOnFault();
@@ -234,7 +234,8 @@ namespace Hot_Pursuit
                 TargetBox.BackColor = Color.LightGreen;
             RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
             DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
-            CorrectionBox.Text = Utils.HourString(HorizonsData.RA_CorrectionD, true) + "/" + Utils.DegreeString(HorizonsData.Dec_CorrectionD, true);
+            //CorrectionBox.Text = Utils.HourString(HorizonsData.RA_CorrectionD, true) + "/" + Utils.DegreeString(HorizonsData.Dec_CorrectionD, true);
+            CorrectionBox.Text = "N/A";  //Not used -- Horizons ephemeras are topocentric to user's site
             DateTime nextUpdate = nextUpdateSV.Time_UTC;
             if (MinutesButton.Checked)
                 nextUpdate += TimeSpan.FromMinutes((int)UpdateBox.Value);
@@ -310,9 +311,9 @@ namespace Hot_Pursuit
             ClearFields();
             MPESData = new SearchMPES();
             if (LookUpCheckBox.Checked)
-                MPESData.TgtName = TargetBox.Text;
+                MPESData.TgtName = SearchMPES.ScrubSmallBodyName(TargetBox.Text);
             else
-                MPESData.TgtName = MPESData.GetTargetName();
+                MPESData.TgtName = SearchMPES.ScrubSmallBodyName(MPESData.GetTargetName());
             TargetBox.Text = MPESData.TgtName;
             //Handle exceptions
             if (MPESData.TgtName == null)
@@ -344,7 +345,7 @@ namespace Hot_Pursuit
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = MPESData.GetNextRateUpdate(DateTime.UtcNow);
             //CLS to where target should be currently, deal with CLS failure
-            if (!MPESData.CLSToTarget(nextUpdateSV))
+            if (!Utils.CLSToTarget(MPESData.TgtName, nextUpdateSV))
             {
                 UpdateStatusLine("Tracking failed: Problem with CLS.");
                 CleanupOnFault();
@@ -360,7 +361,8 @@ namespace Hot_Pursuit
                 TargetBox.BackColor = Color.LightGreen;
             RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
             DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
-            CorrectionBox.Text = Utils.HourString(MPESData.RA_CorrectionD, true) + "/" + Utils.DegreeString(MPESData.Dec_CorrectionD, true);
+            //CorrectionBox.Text = Utils.HourString(MPESData.RA_CorrectionD, true) + "/" + Utils.DegreeString(MPESData.Dec_CorrectionD, true);
+            CorrectionBox.Text = "N/A";  //Not used -- MPES ephemeras are topocentric to user's site
             DateTime nextUpdate = nextUpdateSV.Time_UTC;
             if (MinutesButton.Checked)
                 nextUpdate += TimeSpan.FromMinutes((int)UpdateBox.Value);
@@ -474,36 +476,6 @@ namespace Hot_Pursuit
             DecRateBox.Text = "";
             CorrectionBox.Text = "";
             NextUpdateBox.Text = "";
-        }
-
-        private string ScrubSmallBodyName(string longName)
-        {
-            //Decoder for small body name input.  Horizon's does not do well parsing numbers and names
-            //This program reduces a standard comet, asteroid or other name to something
-            //  that Horizons can search for.
-            //Comets will start with P/ or C/.  Horizons cant search that so it must be scrubbed.
-            //  Anything trailing (e.g. (PANSTARRS) must be removed as well.
-            if (longName.StartsWith("P/") || longName.StartsWith("C/"))
-            {
-                //Definitely a comet, probably from TSX SDB
-                string[] shortStrings = (longName.Remove(0, 2)).Split(' ');
-                return shortStrings[0] + " " + shortStrings[1] + ";";  //Small Body ";"
-            }
-            else
-            {
-                //Asteroid or something not an asteroid
-                //this could be in the format of a single name (e.g. JWST),
-                //  a comet designation (e.g. 2021 A7),
-                //  or a asteroid designation (e.g. 7 Isis)
-                //So, if it is a single name, we pass it through with no small body search designator (";")
-                string[] splits = longName.Split(' ');
-                if (splits.Count() < 2)
-                    return longName;  //single name format, e.g. "JWST", and so leavve off the small body search designator
-                if (splits[1].All(Char.IsLetter)) //Comet -- 2021 A7 or Asteroid 7 Isis
-                    return splits[1] + ";"; //Asteroid format ( e.g. 7 Isis) so return just the name and small body search designator (";")
-                else
-                    return splits[0] + " " + splits[1] + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
-            }
         }
 
         private void CloseButton_Click(object sender, EventArgs e)

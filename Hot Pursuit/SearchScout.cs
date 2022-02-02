@@ -321,7 +321,6 @@ namespace Hot_Pursuit
             return true;
         }
 
-
         public bool SetTargetTracking(SpeedVector sv)
         {
             const int ionTrackingOn = 1;
