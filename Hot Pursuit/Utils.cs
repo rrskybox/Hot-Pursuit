@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AstroMath;
 
 namespace Hot_Pursuit
 {
@@ -11,6 +12,21 @@ namespace Hot_Pursuit
         public const double Astronomical_Unit = 149597870.700;  //km
         public const double Earth_Radius = 6371.0; //km
 
+        public static double PARateToRA(double paD, double rate)
+        {
+            //Calculates dRA/dt for PA in Degrees and rate in arcsec/min (but really doesn't matter
+            double paR = AstroMath.Transform.DegreesToRadians(paD);
+            double raRate = rate * Math.Sin(paR);
+            return raRate;
+        }
+
+        public static double PARateToDec(double paD, double rate)
+        {
+            //Calculates dDec/dt for PA in Degrees and rate in arcsec/min (but really doesn't matter
+            double paR = AstroMath.Transform.DegreesToRadians(paD);
+            double decRate = rate * Math.Cos(paR);
+            return AstroMath.Transform.RadiansToDegrees(decRate);
+        }
 
         public static string HourString(double ha, bool shorten)
         {

@@ -235,7 +235,7 @@ namespace Hot_Pursuit
         public double Site_Corrected_Dec { get; set; }
 
 
-        public bool LoadTargetData()
+        public bool LoadTargetData(bool isMinutes, int updateInterval)
         {
             //Get site location and closest MPC observatory
             MPC_Observatory = new Observatory();
@@ -246,13 +246,13 @@ namespace Hot_Pursuit
             //Find geocentric ephemeris at current time (single ephemeris)
             //Find observatory ephemeris at current time (100 count)
             //Calculate geocentric to geodetic transformation for RA/Dec and dRA/dDec
-            if (ServerQueryToSpeedVectors())
+            if (ServerQueryToSpeedVectors(isMinutes, updateInterval))
                 return true;
             else
                 return false;
         }
-         
-        public bool ServerQueryToSpeedVectors()
+
+        public bool ServerQueryToSpeedVectors(bool isMinutes, int updateInterval)
         {
             string hzResultText;
             string urlSearch;
@@ -275,6 +275,7 @@ namespace Hot_Pursuit
                 return false;
             }
             //Convert Text to XML  -- JSON format is rudimentary and no better than text
+            List<SpeedVector> BasicRateTable = new List<SpeedVector>();
             UpdateRateTable = new List<SpeedVector>();
             char[] spc = { ' ' };
             string[] hzLineItems = hzResultText.Split('\n');
@@ -293,10 +294,7 @@ namespace Hot_Pursuit
             }
 
             //Convert XML to speed vector array
-            SpeedVector priorSpeedVector = null;
             SpeedVector currentSpeedVector;
-            double changeRaArcSec = 0;
-            double changeDecArcSec = 0;
             foreach (XElement ephX in ephmList.Elements("Data"))
             {
                 string sDate = ephX.Element(hzUTDate).Value;
@@ -308,17 +306,15 @@ namespace Hot_Pursuit
                 double sDec_D = Convert.ToDouble(ephX.Element(hzDec).Value);
                 double sElevation_KM = MPC_Observatory.BestObservatory.MySiteElev;
                 //Compute PA
-                double sdDecdt = Convert.ToDouble(ephX.Element(hzdDec).Value) / 60;  //arcsec/min
-                double sdRAdt = Convert.ToDouble(ephX.Element(hzdRACosD).Value) / 60;  //arcsec/min
+                double sdDecdt = Convert.ToDouble(ephX.Element(hzdDec).Value) / 60;  //convert to arcsec/min
+                double sdRAdt = Convert.ToDouble(ephX.Element(hzdRACosD).Value) / 60;  //convert to arcsec/min
                 double sPA_D = Math.Atan2(sdDecdt, sdRAdt);
                 //sRate and sRange are not used for Horizons
-                //double sRate = 0;
-                //double sRange = hzd;
                 currentSpeedVector = new SpeedVector
                 {
                     Time_UTC = sUT,
                     //Rate_ArcsecPerMinute = sRate,
-                    Rate_ArcsecPerMinute = sdRAdt,
+                    Rate_RA_CosDec_ArcsecPerMinute = sdRAdt,
                     Rate_Dec_ArcsecPerMinute = sdDecdt,
                     RA_Degrees = sRA_D,  //Scout delivers RA in degrees
                     Dec_Degrees = sDec_D,
@@ -326,20 +322,23 @@ namespace Hot_Pursuit
                     //Range_AU = sRange  //AU
                     Elevation_KM = sElevation_KM
                 };
-                if (priorSpeedVector != null)
+                BasicRateTable.Add(currentSpeedVector);
+
+                if (isMinutes)
                 {
-                    //This is not the first vector, 
-                    //  Calculate the change in RA and Dec, save it in the prior vector and save the prior vector
-                    //  then set the current vector as the prior vector
-                    double interval_Minutes = (currentSpeedVector.Time_UTC - priorSpeedVector.Time_UTC).TotalMinutes;
-                    changeRaArcSec = AstroMath.Transform.DegreesToArcSec(currentSpeedVector.RA_Degrees - priorSpeedVector.RA_Degrees);
-                    priorSpeedVector.Rate_RA_CosDec_ArcsecPerMinute = changeRaArcSec / interval_Minutes;
-                    changeDecArcSec = AstroMath.Transform.DegreesToArcSec(currentSpeedVector.Dec_Degrees - priorSpeedVector.Dec_Degrees);
-                    priorSpeedVector.Rate_Dec_ArcsecPerMinute = changeDecArcSec / interval_Minutes;
-                    UpdateRateTable.Add(priorSpeedVector);
-                    priorSpeedVector = currentSpeedVector;
+                    UpdateRateTable = BasicRateTable;
                 }
-                else priorSpeedVector = currentSpeedVector;  //This is the first vector.  Set it as prior and get the next one.
+                else
+                {
+                    //must add interpolated ephemeras
+                    for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
+                    {
+                        UpdateRateTable.Add(BasicRateTable[bIdx]);
+                        Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
+                        foreach (SpeedVector sv in intp.WayPoints)
+                            UpdateRateTable.Add(sv);
+                    }
+                }
             }
             return true;
         }
@@ -427,7 +426,7 @@ namespace Hot_Pursuit
             }
             //********** CLS AVOIDANCE CODE FOR SIMULATOR DEBUGGING PURPOSES
             //tsxsc.Find(TgtName);
-            return true;
+            //return true;
             //*********************
             bool returnStatus = true;
             try

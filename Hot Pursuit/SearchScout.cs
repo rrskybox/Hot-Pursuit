@@ -76,7 +76,7 @@ namespace Hot_Pursuit
 
         public bool LoadTargetData(bool isMinutes, int updateInterval)
         {
-             //Get site locatino and closest observatory
+            //Get site locatino and closest observatory
             MPC_Observatory = new Observatory();
 
             //Get Geocentric ephemeris
@@ -111,10 +111,7 @@ namespace Hot_Pursuit
             UpdateRateTable = new List<SpeedVector>();
             ScoutResultsX = JsonConvert.DeserializeXNode(neoResultText, "Root");
             IEnumerable<XElement> sEphXList = ScoutResultsX.Element("Root").Elements("eph");
-            SpeedVector priorSpeedVector = null;
             SpeedVector currentSpeedVector;
-            double changeRaArcSec = 0;
-            double changeDecArcSec = 0;
             foreach (XElement ephX in sEphXList)
             {
                 IEnumerable<XElement> sPositionX = ephX.Element("data").Elements("data");
@@ -122,47 +119,31 @@ namespace Hot_Pursuit
                 currentSpeedVector = new SpeedVector
                 {
                     Time_UTC = Convert.ToDateTime(ephX.Element("time").Value),
-                    Rate_ArcsecPerMinute = Convert.ToDouble(sPositionList[idx_rate].Value),
+                    Rate_ArcsecPerMinute = Convert.ToDouble(sPositionList[idx_rate].Value),  //Arcsec/min
                     PA_Degrees = (Convert.ToDouble(sPositionList[idx_pa].Value)),
                     RA_Degrees = Convert.ToDouble(sPositionList[idx_ra].Value),  //Scout delivers RA in degrees
                     Dec_Degrees = Convert.ToDouble(sPositionList[idx_dec].Value),
                     Elevation_KM = Convert.ToDouble(sPositionList[idx_el].Value),
                     Range_AU = Convert.ToDouble(sPositionList[idx_reO].Value)  //AU
                 };
-                if (priorSpeedVector != null)
-                {
-                    //This is not the first vector, 
-                    //  Calculate the change in RA and Dec, save it in the prior vector and save the prior vector
-                    //  then set the current vector as the prior vector
-                    double interval_Minutes = (currentSpeedVector.Time_UTC - priorSpeedVector.Time_UTC).TotalMinutes;
-                    changeRaArcSec = Transform.DegreesToArcSec(currentSpeedVector.RA_Degrees - priorSpeedVector.RA_Degrees);
-                    priorSpeedVector.Rate_RA_CosDec_ArcsecPerMinute = changeRaArcSec / interval_Minutes;
-                    changeDecArcSec = Transform.DegreesToArcSec(currentSpeedVector.Dec_Degrees - priorSpeedVector.Dec_Degrees);
-                    priorSpeedVector.Rate_Dec_ArcsecPerMinute = changeDecArcSec / interval_Minutes;
-                    BasicRateTable.Add(priorSpeedVector);
-                    priorSpeedVector = currentSpeedVector;
-                }
-                else priorSpeedVector = currentSpeedVector;  //This is the first vector.  Set it as prior and get the next one.
-            }
-            //The last prior vector will not have been saved, nor the RA and Dec rates filled in
-            //  and there is no next vector to calculate RA and Dec differences, so use the last ones because
-            //  the Scout dRA/dDec data is all fucked up
-            priorSpeedVector.Rate_RA_CosDec_ArcsecPerMinute = changeRaArcSec;
-            priorSpeedVector.Rate_Dec_ArcsecPerMinute = changeDecArcSec;
-            BasicRateTable.Add(priorSpeedVector);
+                currentSpeedVector.Rate_RA_CosDec_ArcsecPerMinute = Utils.PARateToRA(currentSpeedVector.PA_Degrees, currentSpeedVector.Rate_ArcsecPerMinute);
+                currentSpeedVector.Rate_Dec_ArcsecPerMinute = Utils.PARateToDec(currentSpeedVector.PA_Degrees, currentSpeedVector.Rate_ArcsecPerMinute);
+                BasicRateTable.Add(currentSpeedVector);
 
-            if (isMinutes)
-            {
-                UpdateRateTable = BasicRateTable;
-            }
-            else
-            {
-                for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
+                if (isMinutes)
                 {
-                    UpdateRateTable.Add(BasicRateTable[bIdx]);
-                    Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
-                    foreach (SpeedVector sv in intp.WayPoints)
-                        UpdateRateTable.Add(sv);
+                    UpdateRateTable = BasicRateTable;
+                }
+                else
+                {
+                    //must add interpolated ephemeras
+                    for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
+                    {
+                        UpdateRateTable.Add(BasicRateTable[bIdx]);
+                        Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
+                        foreach (SpeedVector sv in intp.WayPoints)
+                            UpdateRateTable.Add(sv);
+                    }
                 }
             }
             return true;

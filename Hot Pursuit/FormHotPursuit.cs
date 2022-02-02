@@ -15,6 +15,7 @@ namespace Hot_Pursuit
         public bool IsImaging = false;
         public SearchScout ScoutData;
         public SearchHorizons HorizonsData;
+        public SearchMPES MPESData;
 
         public FormHotPursuit()
         {
@@ -32,6 +33,7 @@ namespace Hot_Pursuit
 
             ScoutButton.BackColor = Color.LightGreen;
             HorizonsButton.BackColor = Color.LightGreen;
+            MPESButton.BackColor = Color.LightGreen;
             AbortButton.BackColor = Color.LightGreen;
             CloseButton.BackColor = Color.LightGreen;
 
@@ -69,7 +71,6 @@ namespace Hot_Pursuit
             //fill in Filters list
             FiltersListBox.Items.AddRange(Filters.FilterNameSet());
             FiltersListBox.SelectedIndex = Properties.Settings.Default.FilterIndexZeroBased;
-
             this.Show();
             //Set start time for ephemeris to current UTC, then set update step period from form
             ScoutData.EphStart = DateTime.UtcNow;
@@ -186,7 +187,7 @@ namespace Hot_Pursuit
                 HorizonsData.TgtName = ScrubSmallBodyName(TargetBox.Text);
             else
                 HorizonsData.TgtName = ScrubSmallBodyName(HorizonsData.GetTargetName());
-             TargetBox.Text = HorizonsData.TgtName.Replace(";", "");
+            TargetBox.Text = HorizonsData.TgtName.Replace(";", "");
             //Handle exceptions
             if (HorizonsData.TgtName == null)
             {
@@ -203,7 +204,7 @@ namespace Hot_Pursuit
             HorizonsData.EphStart = DateTime.UtcNow;
             HorizonsData.EphStep = TimeSpan.FromMinutes(1); //Shortest that Horizons can do is 1 minute intervals
             HorizonsData.EphEnd = HorizonsData.EphStart + TimeSpan.FromDays(1);  //Shortest time that Horizons can do is one day
-            if (!HorizonsData.LoadTargetData())
+            if (!HorizonsData.LoadTargetData(MinutesButton.Checked, (int)UpdateBox.Value))
             {
                 UpdateStatusLine("Problem with loading target data. The target may no longer be in the Horizons Listing.");
                 CleanupOnFault();
@@ -292,7 +293,133 @@ namespace Hot_Pursuit
                         EphEnd = DateTime.UtcNow + TimeSpan.FromDays(1),
                         EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value)
                     };
-                    HorizonsData.LoadTargetData();
+                    HorizonsData.LoadTargetData(MinutesButton.Checked, (int)UpdateBox.Value);
+                }
+            }
+            CleanupOnFault();
+            return;
+        }
+
+        private void MPESButton_Click(object sender, EventArgs e)
+        {
+            if (InPursuit)
+                return;
+            InPursuit = true;
+
+            MPESButton.BackColor = Color.Salmon;
+            ClearFields();
+            MPESData = new SearchMPES();
+            if (LookUpCheckBox.Checked)
+                MPESData.TgtName = TargetBox.Text;
+            else
+                MPESData.TgtName = MPESData.GetTargetName();
+            TargetBox.Text = MPESData.TgtName;
+            //Handle exceptions
+            if (MPESData.TgtName == null)
+            {
+                UpdateStatusLine("No target is found.  Check TheSkyX for target assignment.");
+                CleanupOnFault();
+                return;
+            }
+            UpdateStatusLine("Now targetting: " + MPESData.TgtName);
+            //fill in Filters list
+            FiltersListBox.Items.AddRange(Filters.FilterNameSet());
+            FiltersListBox.SelectedIndex = 0;
+            this.Show();
+            //Set start time for ephemeris to current UTC, then set update step period from form
+            MPESData.EphStart = DateTime.UtcNow;
+            MPESData.EphStep = TimeSpan.FromMinutes(1); //Shortest that MPES can do is 1 minute intervals
+            MPESData.EphEnd = MPESData.EphStart + TimeSpan.FromDays(1);  //Shortest time that MPES can do is one day
+            if (!MPESData.LoadTargetData(MinutesButton.Checked, (int)UpdateBox.Value))
+            {
+                UpdateStatusLine("Problem with loading target data. The target may no longer be in the MPES Listing.");
+                CleanupOnFault();
+                return;
+            }
+            UpdateStatusLine("Closest observatory: " + MPESData.MPC_Observatory.BestObservatory.MPC_Code +
+                            " (" + MPESData.MPC_Observatory.BestObservatory.Description + ")" +
+                            " Variance: " + Utils.HourString(MPESData.MPC_Observatory.BestObservatory.VarianceRA, true) +
+                            "(Lat) / " + Utils.DegreeString(MPESData.MPC_Observatory.BestObservatory.VarianceDec, true) +
+                            " (Lon)");
+            //Fire off first tracking instruction
+            SpeedVector nextUpdateSV = MPESData.GetNextRateUpdate(DateTime.UtcNow);
+            //CLS to where target should be currently, deal with CLS failure
+            if (!MPESData.CLSToTarget(nextUpdateSV))
+            {
+                UpdateStatusLine("Tracking failed: Problem with CLS.");
+                CleanupOnFault();
+                return;
+            }
+            //Prompt for imaging
+            ImageButton.BackColor = Color.LightGreen;
+
+            //Set custom tracking 
+            if (!MPESData.SetTargetTracking(nextUpdateSV))
+                TargetBox.BackColor = Color.LightSalmon;
+            else
+                TargetBox.BackColor = Color.LightGreen;
+            RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
+            DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+            CorrectionBox.Text = Utils.HourString(MPESData.RA_CorrectionD, true) + "/" + Utils.DegreeString(MPESData.Dec_CorrectionD, true);
+            DateTime nextUpdate = nextUpdateSV.Time_UTC;
+            if (MinutesButton.Checked)
+                nextUpdate += TimeSpan.FromMinutes((int)UpdateBox.Value);
+            else
+                nextUpdate += TimeSpan.FromSeconds((int)UpdateBox.Value);
+            NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+            //**************************  site location status code
+            UpdateStatusLine("This site astometry: " +
+                                MPESData.Site_Corrected_Range.ToString("0.00") + " AU:  " +
+                                Utils.HourString(Transform.DegreesToHours(MPESData.Site_Corrected_RA), false) + " / " +
+                                Utils.DegreeString(MPESData.Site_Corrected_Dec, false) + " (RA/Dec)");
+            //**************************
+            //Update status
+            UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)\r\n" +
+                            "    MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false) +
+                            " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees), false) + "(RA/Dec) " +
+                            "    Site corrected: " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees - MPESData.RA_CorrectionD), false) +
+                            " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)");
+
+            //Set up for next tracking instruction
+            while (!AbortRequested)
+            {
+                //the next target ephemeris has been loaded into the ss object, but assume not
+                nextUpdateSV = MPESData.GetNextRateUpdate(DateTime.UtcNow);
+                if (nextUpdateSV != null)
+                {
+                    nextUpdate = nextUpdateSV.Time_UTC;
+                    while (DateTime.UtcNow < nextUpdate)
+                    {
+                        OneSecondPulse(MPESButton);
+                        NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+                        CheckImaging();
+                        if (AbortRequested)
+                            break;
+                    }
+                    MPESData.SetTargetTracking(nextUpdateSV);
+                    if (!MPESData.SetTargetTracking(nextUpdateSV))
+                        TargetBox.BackColor = Color.LightSalmon;
+                    else
+                        TargetBox.BackColor = Color.LightGreen;
+                    RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
+                    DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+                    //Update status
+                    UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)\r\n" +
+                                    "    MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false) +
+                                    " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees), false) + "(RA/Dec) " +
+                                    "    Site corrected: " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees - MPESData.RA_CorrectionD), false) +
+                                    " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)");
+                    //
+                }
+                else //no new update -- go get another
+                {
+                    MPESData = new SearchMPES()
+                    {
+                        EphStart = DateTime.UtcNow,
+                        EphEnd = DateTime.UtcNow + TimeSpan.FromDays(1),
+                        EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value)
+                    };
+                    MPESData.LoadTargetData(MinutesButton.Checked, (int)UpdateBox.Value);
                 }
             }
             CleanupOnFault();
@@ -304,6 +431,7 @@ namespace Hot_Pursuit
             AbortRequested = false;
             InPursuit = false;
             ScoutButton.BackColor = Color.LightGreen;
+            MPESButton.BackColor = Color.LightGreen;
             HorizonsButton.BackColor = Color.LightGreen;
             TargetBox.BackColor = Color.White;
             CheckImaging();
@@ -355,7 +483,7 @@ namespace Hot_Pursuit
             //  that Horizons can search for.
             //Comets will start with P/ or C/.  Horizons cant search that so it must be scrubbed.
             //  Anything trailing (e.g. (PANSTARRS) must be removed as well.
-             if (longName.StartsWith("P/") || longName.StartsWith("C/")) 
+            if (longName.StartsWith("P/") || longName.StartsWith("C/"))
             {
                 //Definitely a comet, probably from TSX SDB
                 string[] shortStrings = (longName.Remove(0, 2)).Split(' ');
@@ -480,6 +608,8 @@ namespace Hot_Pursuit
             LookUpCheckBox.Checked = true;
             return;
         }
+
+
     }
 }
 

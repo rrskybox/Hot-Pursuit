@@ -54,10 +54,11 @@ namespace Hot_Pursuit
             this.HPStatusBox = new System.Windows.Forms.TextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.CorrectionBox = new System.Windows.Forms.TextBox();
-            this.HorizonsButton = new System.Windows.Forms.Button();
             this.DecRateBox = new System.Windows.Forms.TextBox();
             this.RARateBox = new System.Windows.Forms.TextBox();
             this.LookUpCheckBox = new System.Windows.Forms.CheckBox();
+            this.HorizonsButton = new System.Windows.Forms.Button();
+            this.MPESButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.UpdateBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SequencerGroupBox.SuspendLayout();
@@ -68,7 +69,7 @@ namespace Hot_Pursuit
             // 
             this.ScoutButton.Location = new System.Drawing.Point(6, 113);
             this.ScoutButton.Name = "ScoutButton";
-            this.ScoutButton.Size = new System.Drawing.Size(75, 23);
+            this.ScoutButton.Size = new System.Drawing.Size(60, 23);
             this.ScoutButton.TabIndex = 0;
             this.ScoutButton.Text = "Scout";
             this.ScoutButton.UseVisualStyleBackColor = true;
@@ -86,7 +87,7 @@ namespace Hot_Pursuit
             // 
             // AbortButton
             // 
-            this.AbortButton.Location = new System.Drawing.Point(168, 113);
+            this.AbortButton.Location = new System.Drawing.Point(214, 113);
             this.AbortButton.Name = "AbortButton";
             this.AbortButton.Size = new System.Drawing.Size(75, 23);
             this.AbortButton.TabIndex = 2;
@@ -356,16 +357,6 @@ namespace Hot_Pursuit
             this.CorrectionBox.TabIndex = 20;
             this.CorrectionBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // HorizonsButton
-            // 
-            this.HorizonsButton.Location = new System.Drawing.Point(87, 113);
-            this.HorizonsButton.Name = "HorizonsButton";
-            this.HorizonsButton.Size = new System.Drawing.Size(75, 23);
-            this.HorizonsButton.TabIndex = 22;
-            this.HorizonsButton.Text = "Horizons";
-            this.HorizonsButton.UseVisualStyleBackColor = true;
-            this.HorizonsButton.Click += new System.EventHandler(this.HorizonsButton_Click);
-            // 
             // DecRateBox
             // 
             this.DecRateBox.Location = new System.Drawing.Point(112, 63);
@@ -394,16 +385,37 @@ namespace Hot_Pursuit
             this.LookUpCheckBox.Text = "Look Up";
             this.LookUpCheckBox.UseVisualStyleBackColor = true;
             // 
+            // HorizonsButton
+            // 
+            this.HorizonsButton.Location = new System.Drawing.Point(72, 113);
+            this.HorizonsButton.Name = "HorizonsButton";
+            this.HorizonsButton.Size = new System.Drawing.Size(60, 23);
+            this.HorizonsButton.TabIndex = 26;
+            this.HorizonsButton.Text = "Horizons";
+            this.HorizonsButton.UseVisualStyleBackColor = true;
+            this.HorizonsButton.Click += new System.EventHandler(this.HorizonsButton_Click);
+            // 
+            // MPESButton
+            // 
+            this.MPESButton.Location = new System.Drawing.Point(138, 113);
+            this.MPESButton.Name = "MPESButton";
+            this.MPESButton.Size = new System.Drawing.Size(60, 23);
+            this.MPESButton.TabIndex = 27;
+            this.MPESButton.Text = "MPC";
+            this.MPESButton.UseVisualStyleBackColor = true;
+            this.MPESButton.Click += new System.EventHandler(this.MPESButton_Click);
+            // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkCyan;
             this.ClientSize = new System.Drawing.Size(569, 185);
+            this.Controls.Add(this.MPESButton);
+            this.Controls.Add(this.HorizonsButton);
             this.Controls.Add(this.LookUpCheckBox);
             this.Controls.Add(this.RARateBox);
             this.Controls.Add(this.DecRateBox);
-            this.Controls.Add(this.HorizonsButton);
             this.Controls.Add(this.CorrectionBox);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.HPStatusBox);
@@ -461,10 +473,11 @@ namespace Hot_Pursuit
         private System.Windows.Forms.TextBox HPStatusBox;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox CorrectionBox;
-        private System.Windows.Forms.Button HorizonsButton;
         private System.Windows.Forms.TextBox DecRateBox;
         private System.Windows.Forms.TextBox RARateBox;
         private System.Windows.Forms.CheckBox LookUpCheckBox;
+        private System.Windows.Forms.Button HorizonsButton;
+        private System.Windows.Forms.Button MPESButton;
     }
 }
 

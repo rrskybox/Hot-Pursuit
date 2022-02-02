@@ -27,7 +27,7 @@
     <ProductName>Hot Pursuit</ProductName>
     <PublisherName>TSXToolKit</PublisherName>
     <SuiteName>TSXToolKit</SuiteName>
-    <ApplicationRevision>17</ApplicationRevision>
+    <ApplicationRevision>18</ApplicationRevision>
     <ApplicationVersion>0.4.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -99,7 +99,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reduction.cs" />
     <Compile Include="SearchHorizons.cs" />
+    <Compile Include="SearchMPES.cs" />
     <Compile Include="SearchScout.cs" />
+    <Compile Include="SearchScoutOld.cs" />
     <Compile Include="Utils.cs" />
     <EmbeddedResource Include="FormHotPursuit.resx">
       <DependentUpon>FormHotPursuit.cs</DependentUpon>
