@@ -58,7 +58,7 @@ namespace Hot_Pursuit
             if (LookUpCheckBox.Checked)
                 ScoutData.TgtName = TargetBox.Text;
             else
-                ScoutData.TgtName = ScoutData.GetTargetName();
+                ScoutData.TgtName = Utils.GetTargetName();
             TargetBox.Text = ScoutData.TgtName;
             //Handle exceptions
             if (ScoutData.TgtName == null)
@@ -104,13 +104,14 @@ namespace Hot_Pursuit
             //Prompt for imaging
             ImageButton.BackColor = Color.LightGreen;
             //Set custom tracking 
-            if (!ScoutData.SetTargetTracking(nextUpdateSV))
+            if (!Utils.SetTargetTracking(nextUpdateSV, ScoutData.Topo_RA_Correction_Factor, ScoutData.Topo_Dec_Correction_Factor))
                 TargetBox.BackColor = Color.LightSalmon;
             else
                 TargetBox.BackColor = Color.LightGreen;
             RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
             DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
             CorrectionBox.Text = Utils.HourString(ScoutData.RA_CorrectionD, true) + "/" + Utils.DegreeString(ScoutData.Dec_CorrectionD, true);
+            RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
             DateTime nextUpdate = nextUpdateSV.Time_UTC;
             if (MinutesButton.Checked)
                 nextUpdate += TimeSpan.FromMinutes((int)UpdateBox.Value);
@@ -146,13 +147,13 @@ namespace Hot_Pursuit
                         if (AbortRequested)
                             break;
                     }
-                    ScoutData.SetTargetTracking(nextUpdateSV);
-                    if (!ScoutData.SetTargetTracking(nextUpdateSV))
+                    if (!Utils.SetTargetTracking(nextUpdateSV, ScoutData.Topo_RA_Correction_Factor, ScoutData.Topo_Dec_Correction_Factor))
                         TargetBox.BackColor = Color.LightSalmon;
                     else
                         TargetBox.BackColor = Color.LightGreen;
                     RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
                     DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+                    RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
                     //Update status
                     UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)\r\n" +
                                     "    MPC Obs " + ScoutData.MPC_Observatory.BestObservatory.MPC_Code + ": " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false) +
@@ -184,10 +185,10 @@ namespace Hot_Pursuit
             ClearFields();
             HorizonsData = new SearchHorizons();
             if (LookUpCheckBox.Checked)
-                HorizonsData.TgtName = SearchHorizons.ScrubSmallBodyName(TargetBox.Text);
+                HorizonsData.TgtName = TargetBox.Text;
             else
-                HorizonsData.TgtName = SearchHorizons.ScrubSmallBodyName(Utils.GetTargetName());
-            TargetBox.Text = HorizonsData.TgtName.Replace(";", "");
+                HorizonsData.TgtName = Utils.GetTargetName();
+            TargetBox.Text = HorizonsData.TgtName;
             //Handle exceptions
             if (HorizonsData.TgtName == null)
             {
@@ -198,7 +199,7 @@ namespace Hot_Pursuit
             UpdateStatusLine("Now targetting: " + HorizonsData.TgtName);
             //fill in Filters list
             FiltersListBox.Items.AddRange(Filters.FilterNameSet());
-            FiltersListBox.SelectedIndex = 0;
+            FiltersListBox.SelectedIndex = Properties.Settings.Default.FilterIndexZeroBased;
             this.Show();
             //Set start time for ephemeris to current UTC, then set update step period from form
             HorizonsData.EphStart = DateTime.UtcNow;
@@ -228,12 +229,13 @@ namespace Hot_Pursuit
             ImageButton.BackColor = Color.LightGreen;
 
             //Set custom tracking 
-            if (!HorizonsData.SetTargetTracking(nextUpdateSV))
+            if (!Utils.SetTargetTracking(nextUpdateSV, 1, 1))
                 TargetBox.BackColor = Color.LightSalmon;
             else
                 TargetBox.BackColor = Color.LightGreen;
             RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
             DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+            RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
             //CorrectionBox.Text = Utils.HourString(HorizonsData.RA_CorrectionD, true) + "/" + Utils.DegreeString(HorizonsData.Dec_CorrectionD, true);
             CorrectionBox.Text = "N/A";  //Not used -- Horizons ephemeras are topocentric to user's site
             DateTime nextUpdate = nextUpdateSV.Time_UTC;
@@ -271,8 +273,7 @@ namespace Hot_Pursuit
                         if (AbortRequested)
                             break;
                     }
-                    HorizonsData.SetTargetTracking(nextUpdateSV);
-                    if (!HorizonsData.SetTargetTracking(nextUpdateSV))
+                    if (!Utils.SetTargetTracking(nextUpdateSV, 1, 1))
                         TargetBox.BackColor = Color.LightSalmon;
                     else
                         TargetBox.BackColor = Color.LightGreen;
@@ -311,9 +312,9 @@ namespace Hot_Pursuit
             ClearFields();
             MPESData = new SearchMPES();
             if (LookUpCheckBox.Checked)
-                MPESData.TgtName = SearchMPES.ScrubSmallBodyName(TargetBox.Text);
+                MPESData.TgtName = TargetBox.Text;
             else
-                MPESData.TgtName = SearchMPES.ScrubSmallBodyName(MPESData.GetTargetName());
+                MPESData.TgtName = MPESData.GetTargetName();
             TargetBox.Text = MPESData.TgtName;
             //Handle exceptions
             if (MPESData.TgtName == null)
@@ -325,7 +326,7 @@ namespace Hot_Pursuit
             UpdateStatusLine("Now targetting: " + MPESData.TgtName);
             //fill in Filters list
             FiltersListBox.Items.AddRange(Filters.FilterNameSet());
-            FiltersListBox.SelectedIndex = 0;
+            FiltersListBox.SelectedIndex = Properties.Settings.Default.FilterIndexZeroBased;
             this.Show();
             //Set start time for ephemeris to current UTC, then set update step period from form
             MPESData.EphStart = DateTime.UtcNow;
@@ -355,12 +356,13 @@ namespace Hot_Pursuit
             ImageButton.BackColor = Color.LightGreen;
 
             //Set custom tracking 
-            if (!MPESData.SetTargetTracking(nextUpdateSV))
+            if (!Utils.SetTargetTracking(nextUpdateSV, 1, 1))
                 TargetBox.BackColor = Color.LightSalmon;
             else
                 TargetBox.BackColor = Color.LightGreen;
             RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
             DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+            RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
             //CorrectionBox.Text = Utils.HourString(MPESData.RA_CorrectionD, true) + "/" + Utils.DegreeString(MPESData.Dec_CorrectionD, true);
             CorrectionBox.Text = "N/A";  //Not used -- MPES ephemeras are topocentric to user's site
             DateTime nextUpdate = nextUpdateSV.Time_UTC;
@@ -398,13 +400,13 @@ namespace Hot_Pursuit
                         if (AbortRequested)
                             break;
                     }
-                    MPESData.SetTargetTracking(nextUpdateSV);
-                    if (!MPESData.SetTargetTracking(nextUpdateSV))
+                    if (!Utils.SetTargetTracking(nextUpdateSV, 1, 1))
                         TargetBox.BackColor = Color.LightSalmon;
                     else
                         TargetBox.BackColor = Color.LightGreen;
                     RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
                     DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+                    RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
                     //Update status
                     UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)\r\n" +
                                     "    MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false) +
@@ -425,6 +427,54 @@ namespace Hot_Pursuit
                 }
             }
             CleanupOnFault();
+            return;
+        }
+
+        private void ImageButton_Click(object sender, EventArgs e)
+        {
+            //Sets up and runs a single shot using the exposure and filter set by the form
+            ImageButton.BackColor = Color.LightSalmon;
+            ImageAbort.Visible = true;
+            ImageAbort.BackColor = Color.LightGreen;
+            ImageAbort.Enabled = true;
+
+            TakeImage();
+            return;
+        }
+
+        private void TakeImage()
+        {
+            ccdsoftCamera tsxc = new ccdsoftCamera()
+            {
+                Subframe = 0,
+                Delay = 0,
+                AutoSaveOn = 1,
+                FilterIndexZeroBased = (int)Filters.LookUpFilterIndex(FiltersListBox.Text),
+                ExposureTime = (double)ExposureBox.Value,
+                Asynchronous = 1 //asychronous is on
+            };
+            if (FullReductionCheckBox.Checked)
+            {
+                tsxc.ImageReduction = ccdsoftImageReduction.cdBiasDarkFlat;
+                string binning = "1X1";
+                Reduction calLib = new Reduction();
+                calLib.SetReductionGroup(tsxc.FilterIndexZeroBased, tsxc.ExposureTime, (int)tsxc.TemperatureSetPoint, binning);
+            }
+            ImageAbort.BackColor = Color.LightGreen;
+            tsxc.Connect();
+            try
+            {
+                tsxc.TakeImage();
+            }
+            catch (Exception ex)
+            {
+                ImageButton.BackColor = Color.Yellow;
+                IsImaging = false;
+                UpdateStatusLine("Imaging Error: " + ex.Message);
+                RepsBox.Value = 1;
+            }
+            IsImaging = true;
+            tsxc = null;
             return;
         }
 
@@ -459,15 +509,29 @@ namespace Hot_Pursuit
         {
             //Checks to see if imaging is going on, if not, turn off indicators that it is
             ccdsoftCamera tsxc = new ccdsoftCamera();
-            if (tsxc.State == ccdsoftCameraState.cdStateNone)
+            if (tsxc.State == ccdsoftCameraState.cdStateNone && IsImaging)
             {
                 if (InPursuit)
-                    ImageButton.BackColor = Color.LightGreen;
-                else ImageButton.BackColor = Color.Yellow;
-                IsImaging = false;
-                ImageAbort.Visible = false;
+                {
+                    if (RepsBox.Value > 1)
+                    {
+                        RepsBox.Value--;
+                        ImageButton.BackColor = Color.Salmon;
+                        TakeImage();
+                    }
+                    else
+                        ImageButton.BackColor = Color.LightGreen;
+                }
+                else
+                {
+                    ImageButton.BackColor = Color.Yellow;
+                    IsImaging = false;
+                    ImageAbort.Visible = false;
+                }
             }
         }
+
+
 
         private void ClearFields()
         {
@@ -476,6 +540,7 @@ namespace Hot_Pursuit
             DecRateBox.Text = "";
             CorrectionBox.Text = "";
             NextUpdateBox.Text = "";
+            RangeBox.Text = "";
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
@@ -496,44 +561,6 @@ namespace Hot_Pursuit
             return;
         }
 
-        private void ImageButton_Click(object sender, EventArgs e)
-        {
-            //Sets up and runs a single shot using the exposure and filter set by the form
-            ImageButton.BackColor = Color.LightSalmon;
-            ImageAbort.Visible = true;
-            ImageAbort.BackColor = Color.LightGreen;
-            ImageAbort.Enabled = true;
-
-            ccdsoftCamera tsxc = new ccdsoftCamera()
-            {
-                Subframe = 0,
-                Delay = 0,
-                FilterIndexZeroBased = (int)Filters.LookUpFilterIndex(FiltersListBox.Text),
-                ExposureTime = (double)ExposureBox.Value,
-                Asynchronous = 1 //asychronous is on
-            };
-            if (FullReductionCheckBox.Checked)
-            {
-                tsxc.ImageReduction = ccdsoftImageReduction.cdBiasDarkFlat;
-                string binning = "1X1";
-                Reduction calLib = new Reduction();
-                calLib.SetReductionGroup(tsxc.FilterIndexZeroBased, tsxc.ExposureTime, (int)tsxc.TemperatureSetPoint, binning);
-            }
-            ImageAbort.BackColor = Color.LightGreen;
-            IsImaging = true;
-            tsxc.Connect();
-            try
-            {
-                tsxc.TakeImage();
-            }
-            catch (Exception ex)
-            {
-                ImageButton.BackColor = Color.Yellow;
-                IsImaging = false;
-                UpdateStatusLine("Imaging Error: " + ex.Message);
-            }
-            return;
-        }
 
         private void ImageAbort_Click(object sender, EventArgs e)
         {
@@ -542,7 +569,7 @@ namespace Hot_Pursuit
             tsxc.Abort();
             ImageButton.BackColor = Color.LightGreen;
             ImageAbort.Visible = false;
-            IsImaging = false;
+            RepsBox.Value = 1;
             return;
         }
 

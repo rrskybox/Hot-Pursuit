@@ -174,29 +174,32 @@ namespace Hot_Pursuit
                 double sdDecdt = Convert.ToDouble(ephX.Element(mdDec).Value);  //arcsec/min
                 double sdRAdt = Convert.ToDouble(ephX.Element(mdRACosD).Value);  //arcsec/min
                 double sPA_D = Math.Atan2(sdDecdt, sdRAdt);
-                double sRate = Convert.ToDouble(ephX.Element(mr).Value);
+                double sRange = Convert.ToDouble(ephX.Element(mr).Value);
                 currentSpeedVector = new SpeedVector
                 {
                     Time_UTC = sUT,
-                    Rate_ArcsecPerMinute = sRate,
                     Rate_RA_CosDec_ArcsecPerMinute = sdRAdt,
                     Rate_Dec_ArcsecPerMinute = sdDecdt,
                     RA_Degrees = sRA_D,  //Scout delivers RA in degrees
                     Dec_Degrees = sDec_D,
                     PA_Degrees = sPA_D,
-                    //Range_AU = sRange  //AU
+                    Range_AU = sRange,  //AU
                     Elevation_KM = sElevation_KM
                 };
                 BasicRateTable.Add(currentSpeedVector);
-
-                if (isMinutes)
+            }
+            if (isMinutes)
+            {
+                UpdateRateTable = BasicRateTable;
+            }
+            else
+            {
+                //must add interpolated ephemeras
+                //Horizons delivers a full day worth of data at 1 minute intervals
+                // throwaway all but the first hour (60 readings) so we don't run out of memory interpolating
+                for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
                 {
-                    UpdateRateTable = BasicRateTable;
-                }
-                else
-                {
-                    //must add interpolated ephemeras
-                    for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
+                    if (BasicRateTable[bIdx].Time_UTC > DateTime.UtcNow && BasicRateTable[bIdx].Time_UTC < DateTime.UtcNow + TimeSpan.FromHours(1))
                     {
                         UpdateRateTable.Add(BasicRateTable[bIdx]);
                         Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
@@ -205,6 +208,7 @@ namespace Hot_Pursuit
                     }
                 }
             }
+
             return true;
         }
 
@@ -238,68 +242,6 @@ namespace Hot_Pursuit
                 if (UpdateRateTable[i].Time_UTC > nextTime)
                     return UpdateRateTable[i];
             return null;
-        }
-
-        public bool SlewToTarget(SpeedVector sv)
-        {
-
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
-            double tgtDecD = sv.Dec_Degrees;
-            tsxmt.Connect();
-            try
-            {
-                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, TgtName);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Slew Failed: " + ex.Message);
-                return false;
-            }
-            return true;
-        }
-
-        public bool SetTargetTracking(SpeedVector sv)
-        {
-            const int ionTrackingOn = 1;
-            const int ionTrackingOff = 0;
-            const int ignoreRates = 1;
-            const int useRates = 0;
-
-            double tgtRateRA = sv.Rate_RA_CosDec_ArcsecPerMinute;
-            double tgtRateDec = sv.Rate_Dec_ArcsecPerMinute;
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            tsxmt.Connect();
-            try
-            {
-                //TSX expects tracking rates in arcsec/sec: convert it from arcsec/min
-                tsxmt.SetTracking(ionTrackingOn, useRates, tgtRateRA / 60.0, tgtRateDec / 60.0);
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public bool SetStandardTracking()
-        {
-            const int ionTrackingOn = 1;
-            const int ionTrackingOff = 0;
-            const int ignoreRates = 1;
-            const int useRates = 0;
-
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            tsxmt.Connect();
-            try
-            {
-                tsxmt.SetTracking(ionTrackingOn, ignoreRates, 0, 0);
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
         }
 
         public static string ScrubSmallBodyName(string longName)
@@ -358,6 +300,7 @@ namespace Hot_Pursuit
         {
             //Returns a url string for querying the TNS website
 
+            string scrubbedTgtName = ScrubSmallBodyName(TgtName);
             //figure out site location
             string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
             string siteLat = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
@@ -365,7 +308,7 @@ namespace Hot_Pursuit
             string center = siteLong + ":" + siteLat + ":" + siteElev;
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[mEphemerisType] = "e";
-            queryString[mTarget] = TgtName; // ";" means that it is a small body search for name
+            queryString[mTarget] = scrubbedTgtName;
             queryString[mStartDate] = EphStart.ToString("yyyy-MM-dd"); // "2021-01-12";
             queryString[mNumberOfRecords] = "1440";  // one day's worth at 1 min
             queryString[mInterval] = "1";

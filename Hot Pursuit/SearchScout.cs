@@ -62,8 +62,8 @@ namespace Hot_Pursuit
         public Observatory MPC_Observatory { get; set; }
         public double RA_CorrectionD { get; set; } //Hours
         public double Dec_CorrectionD { get; set; } //Degrees
-        public double Diff_RA_CorrectionD { get; set; } //Hours
-        public double Diff_Dec_CorrectionD { get; set; } //Degrees
+        public double Topo_RA_Correction_Factor { get; set; } //Hours
+        public double Topo_Dec_Correction_Factor { get; set; } //Degrees
         public double RangeAU { get; set; } //AU
         public double Range_CorrectionAU { get; set; } //AU
 
@@ -71,8 +71,6 @@ namespace Hot_Pursuit
         public double Site_Corrected_Range { get; set; }
         public double Site_Corrected_RA { get; set; }
         public double Site_Corrected_Dec { get; set; }
-
-
 
         public bool LoadTargetData(bool isMinutes, int updateInterval)
         {
@@ -99,7 +97,7 @@ namespace Hot_Pursuit
             System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
             try
             {
-                urlSearch = URL_NEO_search + MakeSearchQuery(GetTargetName(), MPC_Observatory.BestObservatory.MPC_Code);
+                urlSearch = URL_NEO_search + MakeSearchQuery(TgtName, MPC_Observatory.BestObservatory.MPC_Code);
                 neoResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
@@ -129,21 +127,20 @@ namespace Hot_Pursuit
                 currentSpeedVector.Rate_RA_CosDec_ArcsecPerMinute = Utils.PARateToRA(currentSpeedVector.PA_Degrees, currentSpeedVector.Rate_ArcsecPerMinute);
                 currentSpeedVector.Rate_Dec_ArcsecPerMinute = Utils.PARateToDec(currentSpeedVector.PA_Degrees, currentSpeedVector.Rate_ArcsecPerMinute);
                 BasicRateTable.Add(currentSpeedVector);
-
-                if (isMinutes)
+            }
+            if (isMinutes)
+            {
+                UpdateRateTable = BasicRateTable;
+            }
+            else
+            {
+                //must add interpolated ephemeras
+                for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
                 {
-                    UpdateRateTable = BasicRateTable;
-                }
-                else
-                {
-                    //must add interpolated ephemeras
-                    for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
-                    {
-                        UpdateRateTable.Add(BasicRateTable[bIdx]);
-                        Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
-                        foreach (SpeedVector sv in intp.WayPoints)
-                            UpdateRateTable.Add(sv);
-                    }
+                    UpdateRateTable.Add(BasicRateTable[bIdx]);
+                    Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
+                    foreach (SpeedVector sv in intp.WayPoints)
+                        UpdateRateTable.Add(sv);
                 }
             }
             return true;
@@ -159,7 +156,7 @@ namespace Hot_Pursuit
             //Get geocentric ephemeris for this target at eph start
             try
             {
-                urlSearch = URL_NEO_search + MakeSearchQuery(GetTargetName());
+                urlSearch = URL_NEO_search + MakeSearchQuery(TgtName);
                 mpcResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
@@ -185,7 +182,7 @@ namespace Hot_Pursuit
             //Get topocentric ephemeris for the observatory nearest this site
             try
             {
-                urlSearch = URL_NEO_search + MakeSearchQuery(GetTargetName(), MPC_Observatory.BestObservatory.MPC_Code);
+                urlSearch = URL_NEO_search + MakeSearchQuery(TgtName, MPC_Observatory.BestObservatory.MPC_Code);
                 mpcResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
@@ -237,8 +234,8 @@ namespace Hot_Pursuit
 
             Dec_CorrectionD = mpcResultsSV.Dec_Degrees - Site_Corrected_Dec;  //degrees Dec
             RA_CorrectionD = mpcResultsSV.RA_Degrees - Site_Corrected_RA;  //degrees RA
-            Diff_Dec_CorrectionD = 1.0 / (1.0 + Math.Pow(Dec_CorrectionD, 2));  //degrees per arcdegree
-            Diff_RA_CorrectionD = 1.0 / (1.0 + Math.Pow(RA_CorrectionD, 2));  //degrees per arcdegree
+            Topo_Dec_Correction_Factor = 1.0 / (1.0 + Math.Pow(Dec_CorrectionD, 2));  //degrees per arcdegree
+            Topo_RA_Correction_Factor = 1.0 / (1.0 + Math.Pow(RA_CorrectionD, 2));  //degrees per arcdegree
             RangeAU = mpcResultsSV.Range_AU; //AU
             Range_CorrectionAU = RangeAU - Site_Corrected_Range;  //AU
             return true;
@@ -250,125 +247,6 @@ namespace Hot_Pursuit
                 if (UpdateRateTable[i].Time_UTC > nextTime)
                     return UpdateRateTable[i];
             return null;
-        }
-
-        public string GetTargetName()
-        {
-            sky6ObjectInformation tsxoi = new sky6ObjectInformation();
-            tsxoi.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_NAME1);
-            string tgtName = tsxoi.ObjInfoPropOut;
-            return tgtName;
-        }
-
-        public bool SlewToTarget(SpeedVector sv)
-        {
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees - RA_CorrectionD);
-            double tgtDecD = sv.Dec_Degrees - Dec_CorrectionD;
-            tsxmt.Connect();
-            try
-            {
-                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, TgtName);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Slew Failed: " + ex.Message);
-                return false;
-            }
-            return true;
-        }
-
-        public bool CLSToTarget(SpeedVector sv)
-        {
-            int clsStatus = 123;
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            ClosedLoopSlew tsx_cl = new ClosedLoopSlew();
-            sky6StarChart tsxsc = new sky6StarChart();
-            //Clear any image reduction, otherwise full reduction might cause a problem
-            ccdsoftCamera tsxcam = new ccdsoftCamera()
-            {
-                ImageReduction = ccdsoftImageReduction.cdNone,
-                Asynchronous = 1 //make sure nothing else happens while setting this up
-            };
-            //Abort any ongoing imaging
-            tsxcam.Abort();
-
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees - RA_CorrectionD);
-            double tgtDecD = sv.Dec_Degrees - Dec_CorrectionD;
-            tsxsc.Find(tgtRAH.ToString() + ", " + tgtDecD.ToString());
-            tsxmt.Connect();
-            try
-            {
-                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, TgtName);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Slew to target failed: " + ex.Message);
-                return false;
-            }
-            //********** CLS AVOIDANCE CODE FOR SIMULATOR DEBUGGING PURPOSES
-            //tsxsc.Find(TgtName);
-            //return true;
-            //*********************
-            try
-            { clsStatus = tsx_cl.exec(); }
-            catch (Exception ex)
-            {
-                tsxsc.Find(TgtName);
-                return false;
-            }
-            tsxsc.Find(TgtName);
-            return true;
-        }
-
-        public bool SetTargetTracking(SpeedVector sv)
-        {
-            const int ionTrackingOn = 1;
-            const int ionTrackingOff = 0;
-            const int ignoreRates = 1;
-            const int useRates = 0;
-
-            double tgtRateRA = sv.Rate_RA_CosDec_ArcsecPerMinute;
-            double tgtRateDec = sv.Rate_Dec_ArcsecPerMinute;
-            double adjtgtRateRA = tgtRateRA * Diff_RA_CorrectionD;
-            double adjtgtRateDec = tgtRateDec * Diff_Dec_CorrectionD;
-
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            tsxmt.Connect();
-            double dRA1 = tsxmt.dRaTrackingRate;
-            double dDec1 = tsxmt.dDecTrackingRate;
-            try
-            {
-                //TSX expects tracking rates in arcsec/sec: convert it from arcsec/min
-                tsxmt.SetTracking(ionTrackingOn, useRates, adjtgtRateRA / 60.0, adjtgtRateDec / 60.0);
-            }
-            catch
-            {
-                return false;
-            }
-            double dRA2 = tsxmt.dRaTrackingRate;
-            double dDec2 = tsxmt.dDecTrackingRate;
-            return true;
-        }
-
-        public bool SetStandardTracking()
-        {
-            const int ionTrackingOn = 1;
-            const int ionTrackingOff = 0;
-            const int ignoreRates = 1;
-            const int useRates = 1;  //Don't use rates
-
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            tsxmt.Connect();
-            try
-            {
-                tsxmt.SetTracking(ionTrackingOn, useRates, 0, 0);
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
         }
 
         private string MakeSearchQuery(string tgtName, string mpc_observatory_code = "500")

@@ -77,10 +77,6 @@ namespace Hot_Pursuit
                 MessageBox.Show("Slew Failure: " + ex.Message);
                 return false;
             }
-            //********** CLS AVOIDANCE CODE FOR SIMULATOR DEBUGGING PURPOSES
-            //tsxsc.Find(TgtName);
-            //return true;
-            //*********************
             bool returnStatus = true;
             try
             {
@@ -101,7 +97,74 @@ namespace Hot_Pursuit
             return returnStatus;
         }
 
+        public static bool SlewToTarget(string tgtName, SpeedVector sv)
+        {
 
+            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
+            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
+            double tgtDecD = sv.Dec_Degrees;
+            tsxmt.Connect();
+            try
+            {
+                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, tgtName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Slew Failed: " + ex.Message);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool SetTargetTracking(SpeedVector sv, double topo_Adjustment_RA, double topo_Adjustment_Dec)
+        {
+            const int ionTrackingOn = 1;
+            const int ionTrackingOff = 0;
+            const int ignoreRates = 1;
+            const int useRates = 0;
+
+            double tgtRateRA = sv.Rate_RA_CosDec_ArcsecPerMinute;
+            double tgtRateDec = sv.Rate_Dec_ArcsecPerMinute;
+            double adjtgtRateRA = tgtRateRA * topo_Adjustment_RA;
+            double adjtgtRateDec = tgtRateDec * topo_Adjustment_Dec;
+
+            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
+            tsxmt.Connect();
+            //double dRA1 = tsxmt.dRaTrackingRate;
+            //double dDec1 = tsxmt.dDecTrackingRate;
+            try
+            {
+                //TSX expects tracking rates in arcsec/sec: convert it from arcsec/min
+                tsxmt.SetTracking(ionTrackingOn, useRates, adjtgtRateRA / 60.0, adjtgtRateDec / 60.0);
+            }
+            catch
+            {
+                return false;
+            }
+            //double dRA2 = tsxmt.dRaTrackingRate;
+            //double dDec2 = tsxmt.dDecTrackingRate;
+            return true;
+        }
+
+        public static bool SetStandardTracking()
+        {
+            const int ionTrackingOn = 1;
+            const int ionTrackingOff = 0;
+            const int ignoreRates = 1;
+            const int useRates = 1;  //Don't use rates
+
+            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
+            tsxmt.Connect();
+            try
+            {
+                tsxmt.SetTracking(ionTrackingOn, useRates, 0, 0);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
 
         public static string HourString(double ha, bool shorten)
         {

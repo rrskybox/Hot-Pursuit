@@ -240,12 +240,7 @@ namespace Hot_Pursuit
             //Get site location and closest MPC observatory
             MPC_Observatory = new Observatory();
 
-            //Get Geocentric ephemeris
-            if (!GeoToSiteCalibration())
-                return false;
-            //Find geocentric ephemeris at current time (single ephemeris)
-            //Find observatory ephemeris at current time (100 count)
-            //Calculate geocentric to geodetic transformation for RA/Dec and dRA/dDec
+            //Don't need geocentric ephemeris for Horizons -- using topocentric
             if (ServerQueryToSpeedVectors(isMinutes, updateInterval))
                 return true;
             else
@@ -309,7 +304,7 @@ namespace Hot_Pursuit
                 double sdDecdt = Convert.ToDouble(ephX.Element(hzdDec).Value) / 60;  //convert to arcsec/min
                 double sdRAdt = Convert.ToDouble(ephX.Element(hzdRACosD).Value) / 60;  //convert to arcsec/min
                 double sPA_D = Math.Atan2(sdDecdt, sdRAdt);
-                //sRate and sRange are not used for Horizons
+                double sRange = Convert.ToDouble(ephX.Element(hzr).Value);
                 currentSpeedVector = new SpeedVector
                 {
                     Time_UTC = sUT,
@@ -319,19 +314,23 @@ namespace Hot_Pursuit
                     RA_Degrees = sRA_D,  //Scout delivers RA in degrees
                     Dec_Degrees = sDec_D,
                     PA_Degrees = sPA_D,
-                    //Range_AU = sRange  //AU
+                    Range_AU = sRange,  //AU
                     Elevation_KM = sElevation_KM
                 };
                 BasicRateTable.Add(currentSpeedVector);
-
-                if (isMinutes)
+            }
+            if (isMinutes)
+            {
+                UpdateRateTable = BasicRateTable;
+            }
+            else
+            {
+                //must add interpolated ephemeras
+                //Horizons delivers a full day worth of data at 1 minute intervals
+                // throwaway all but the first hour (60 readings) so we don't run out of memory interpolating
+                for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
                 {
-                    UpdateRateTable = BasicRateTable;
-                }
-                else
-                {
-                    //must add interpolated ephemeras
-                    for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
+                    if (BasicRateTable[bIdx].Time_UTC > DateTime.UtcNow && BasicRateTable[bIdx].Time_UTC < DateTime.UtcNow + TimeSpan.FromHours(1))
                     {
                         UpdateRateTable.Add(BasicRateTable[bIdx]);
                         Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
@@ -340,11 +339,7 @@ namespace Hot_Pursuit
                     }
                 }
             }
-            return true;
-        }
 
-        private bool GeoToSiteCalibration()
-        {
             return true;
         }
 
@@ -354,68 +349,6 @@ namespace Hot_Pursuit
                 if (UpdateRateTable[i].Time_UTC > nextTime)
                     return UpdateRateTable[i];
             return null;
-        }
-
-        public bool SlewToTarget(SpeedVector sv)
-        {
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
-            double tgtDecD = sv.Dec_Degrees;
-            tsxmt.Connect();
-            try
-            {
-                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, TgtName);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Slew Failed: " + ex.Message);
-                return false;
-            }
-            return true;
-        }
-
-
-        public bool SetTargetTracking(SpeedVector sv)
-        {
-            const int ionTrackingOn = 1;
-            const int ionTrackingOff = 0;
-            const int ignoreRates = 1;
-            const int useRates = 0;
-
-            double tgtRateRA = sv.Rate_RA_CosDec_ArcsecPerMinute;
-            double tgtRateDec = sv.Rate_Dec_ArcsecPerMinute;
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            tsxmt.Connect();
-            try
-            {
-                //TSX expects tracking rates in arcsec/sec: convert it from arcsec/min
-                tsxmt.SetTracking(ionTrackingOn, useRates, tgtRateRA / 60.0, tgtRateDec / 60.0);
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public bool SetStandardTracking()
-        {
-            const int ionTrackingOn = 1;
-            const int ionTrackingOff = 0;
-            const int ignoreRates = 1;
-            const int useRates = 0;
-
-            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            tsxmt.Connect();
-            try
-            {
-                tsxmt.SetTracking(ionTrackingOn, ignoreRates, 0, 0);
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
         }
 
         public static string ScrubSmallBodyName(string longName)
@@ -527,21 +460,22 @@ namespace Hot_Pursuit
             //Returns a url string for querying the TNS website
 
             //figure out site location
+            string scrubbedTargetName = ScrubSmallBodyName(TgtName);
             string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
             string siteLat = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
             string siteElev = MPC_Observatory.BestObservatory.MySiteElev.ToString("0.000");
             string center = siteLong + ":" + siteLat + ":" + siteElev;
+            string startTime = EphStart.ToString("yyyy-MMM-dd");
+            string endTime = EphEnd.ToString("yyyy-MMM-dd");
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[hFormat] = hFormatTypeText;
-            //queryString[hCommand] = "\'" + "NAME=" + TgtName + "\'"; // ";" means that it is a small body search for name
-            queryString[hCommand] = "\'NAME=" + TgtName + "\'"; // ";" means that it is a small body search for name
-
+            queryString[hCommand] = "\'NAME=" + scrubbedTargetName + "\'"; // ";" means that it is a small body search for name
             queryString[hMakeEphemeris] = hYes;
             queryString[hEphemerisType] = hObserverType;
             queryString[hCenter] = "399";  //Earth
             queryString[hSiteCoordinate] = center;  //e-long(degrees):lat(degrees):elevation(km)
-            queryString[hStartTime] = EphStart.ToString("yyyy-MM-dd"); // "2021-01-12";
-            queryString[hStopTime] = EphEnd.ToString("yyyy-MM-dd"); // "2021-01-13";
+            queryString[hStartTime] = startTime; // "2021-01-12";
+            queryString[hStopTime] = endTime; // "2021-01-13";
             queryString[hStepSize] = "1m"; // shortest time that horizons can do
             queryString[hAngleFormat] = hAngleFormatDegrees;
             queryString[hTimeDigits] = "Seconds";
