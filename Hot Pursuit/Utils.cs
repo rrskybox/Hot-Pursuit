@@ -36,7 +36,7 @@ namespace Hot_Pursuit
             string tgtName = tsxoi.ObjInfoPropOut;
             return tgtName;
         }
-        public static bool CLSToTarget(string tgtName, SpeedVector sv)
+        public static bool CLSToTarget(string tgtName, SpeedVector sv, bool IsPrecision = false)
         {
             //first, couple dome to telescope, if there is one
             sky6Dome tsxd = new sky6Dome();
@@ -63,7 +63,8 @@ namespace Hot_Pursuit
             //Abort any ongoing imaging
             tsxcam.Abort();
 
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
+                bool returnStatus = true;
+           double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
             double tgtDecD = sv.Dec_Degrees;
             tsxsc.Find(tgtRAH.ToString() + ", " + tgtDecD.ToString());
             tsxmt.Connect();
@@ -75,16 +76,19 @@ namespace Hot_Pursuit
             catch (Exception ex)
             {
                 MessageBox.Show("Slew Failure: " + ex.Message);
-                return false;
+                returnStatus=false;
             }
-            bool returnStatus = true;
-            try
+            if (IsPrecision && returnStatus)
             {
-                clsStatus = tsx_cl.exec();
-            }
-            catch (Exception ex)
-            {
-                returnStatus = false;
+                //***  precision slew
+                try
+                {
+                    clsStatus = tsx_cl.exec();
+                }
+                catch (Exception ex)
+                {
+                    returnStatus = false;
+                }
             }
             try
             {

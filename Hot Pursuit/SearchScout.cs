@@ -66,8 +66,6 @@ namespace Hot_Pursuit
         public double Topo_Dec_Correction_Factor { get; set; } //Degrees
         public double RangeAU { get; set; } //AU
         public double Range_CorrectionAU { get; set; } //AU
-
-
         public double Site_Corrected_Range { get; set; }
         public double Site_Corrected_RA { get; set; }
         public double Site_Corrected_Dec { get; set; }

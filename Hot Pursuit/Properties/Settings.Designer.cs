@@ -46,5 +46,29 @@ namespace Hot_Pursuit.Properties {
                 this["FullReduction"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IsOnTop {
+            get {
+                return ((bool)(this["IsOnTop"]));
+            }
+            set {
+                this["IsOnTop"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool UseCLS {
+            get {
+                return ((bool)(this["UseCLS"]));
+            }
+            set {
+                this["UseCLS"] = value;
+            }
+        }
     }
 }

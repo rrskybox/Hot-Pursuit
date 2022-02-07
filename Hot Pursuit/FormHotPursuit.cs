@@ -30,6 +30,8 @@ namespace Hot_Pursuit
             }
             this.Text = "Hot Pursuit V" + version;
             FullReductionCheckBox.Checked = Properties.Settings.Default.FullReduction;
+            OnTopBox.Checked = Properties.Settings.Default.IsOnTop;
+            CLSBox.Checked = Properties.Settings.Default.UseCLS;
 
             ScoutButton.BackColor = Color.LightGreen;
             HorizonsButton.BackColor = Color.LightGreen;
@@ -545,6 +547,7 @@ namespace Hot_Pursuit
 
         private void CloseButton_Click(object sender, EventArgs e)
         {
+            Properties.Settings.Default.Save();
             Close();
         }
 
@@ -558,6 +561,8 @@ namespace Hot_Pursuit
         private void OnTopBox_CheckedChanged(object sender, EventArgs e)
         {
             this.TopMost = OnTopBox.Checked;
+            Properties.Settings.Default.IsOnTop = OnTopBox.Checked;
+            Properties.Settings.Default.Save();
             return;
         }
 
@@ -593,12 +598,14 @@ namespace Hot_Pursuit
         private void FullReductionCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.FullReduction = FullReductionCheckBox.Checked;
+            Properties.Settings.Default.Save();
             return;
         }
 
         private void FiltersListBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.FilterIndexZeroBased = FiltersListBox.SelectedIndex;
+            Properties.Settings.Default.Save();
             return;
         }
 
@@ -608,7 +615,13 @@ namespace Hot_Pursuit
             return;
         }
 
+        private void CLSBox_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.UseCLS = CLSBox.Checked;
+            Properties.Settings.Default.Save();
+            return;
 
+        }
     }
 }
 

@@ -44,6 +44,8 @@ namespace Hot_Pursuit
             this.label4 = new System.Windows.Forms.Label();
             this.OnTopBox = new System.Windows.Forms.CheckBox();
             this.SequencerGroupBox = new System.Windows.Forms.GroupBox();
+            this.RepsBox = new System.Windows.Forms.NumericUpDown();
+            this.label9 = new System.Windows.Forms.Label();
             this.FiltersListBox = new System.Windows.Forms.ComboBox();
             this.ImageAbort = new System.Windows.Forms.Button();
             this.FullReductionCheckBox = new System.Windows.Forms.CheckBox();
@@ -61,18 +63,17 @@ namespace Hot_Pursuit
             this.MPESButton = new System.Windows.Forms.Button();
             this.RangeBox = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.RepsBox = new System.Windows.Forms.NumericUpDown();
+            this.CLSBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.UpdateBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SequencerGroupBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).BeginInit();
             this.SuspendLayout();
             // 
             // ScoutButton
             // 
-            this.ScoutButton.Location = new System.Drawing.Point(6, 113);
+            this.ScoutButton.Location = new System.Drawing.Point(6, 120);
             this.ScoutButton.Name = "ScoutButton";
             this.ScoutButton.Size = new System.Drawing.Size(60, 23);
             this.ScoutButton.TabIndex = 0;
@@ -82,7 +83,7 @@ namespace Hot_Pursuit
             // 
             // CloseButton
             // 
-            this.CloseButton.Location = new System.Drawing.Point(295, 113);
+            this.CloseButton.Location = new System.Drawing.Point(295, 120);
             this.CloseButton.Name = "CloseButton";
             this.CloseButton.Size = new System.Drawing.Size(75, 23);
             this.CloseButton.TabIndex = 1;
@@ -92,7 +93,7 @@ namespace Hot_Pursuit
             // 
             // AbortButton
             // 
-            this.AbortButton.Location = new System.Drawing.Point(214, 113);
+            this.AbortButton.Location = new System.Drawing.Point(214, 120);
             this.AbortButton.Name = "AbortButton";
             this.AbortButton.Size = new System.Drawing.Size(75, 23);
             this.AbortButton.TabIndex = 2;
@@ -164,7 +165,7 @@ namespace Hot_Pursuit
             // 
             this.label3.AutoSize = true;
             this.label3.ForeColor = System.Drawing.Color.White;
-            this.label3.Location = new System.Drawing.Point(18, 43);
+            this.label3.Location = new System.Drawing.Point(18, 50);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(83, 13);
             this.label3.TabIndex = 9;
@@ -209,7 +210,7 @@ namespace Hot_Pursuit
             // 
             this.label4.AutoSize = true;
             this.label4.ForeColor = System.Drawing.Color.White;
-            this.label4.Location = new System.Drawing.Point(18, 66);
+            this.label4.Location = new System.Drawing.Point(18, 73);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(88, 13);
             this.label4.TabIndex = 14;
@@ -243,10 +244,37 @@ namespace Hot_Pursuit
             this.SequencerGroupBox.ForeColor = System.Drawing.Color.MintCream;
             this.SequencerGroupBox.Location = new System.Drawing.Point(380, 9);
             this.SequencerGroupBox.Name = "SequencerGroupBox";
-            this.SequencerGroupBox.Size = new System.Drawing.Size(182, 126);
+            this.SequencerGroupBox.Size = new System.Drawing.Size(182, 134);
             this.SequencerGroupBox.TabIndex = 17;
             this.SequencerGroupBox.TabStop = false;
             this.SequencerGroupBox.Text = "QAD Imaging";
+            // 
+            // RepsBox
+            // 
+            this.RepsBox.Location = new System.Drawing.Point(42, 39);
+            this.RepsBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.RepsBox.Name = "RepsBox";
+            this.RepsBox.Size = new System.Drawing.Size(37, 20);
+            this.RepsBox.TabIndex = 25;
+            this.RepsBox.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.ForeColor = System.Drawing.Color.White;
+            this.label9.Location = new System.Drawing.Point(6, 43);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(32, 13);
+            this.label9.TabIndex = 24;
+            this.label9.Text = "Reps";
             // 
             // FiltersListBox
             // 
@@ -260,7 +288,7 @@ namespace Hot_Pursuit
             // ImageAbort
             // 
             this.ImageAbort.ForeColor = System.Drawing.Color.Teal;
-            this.ImageAbort.Location = new System.Drawing.Point(102, 96);
+            this.ImageAbort.Location = new System.Drawing.Point(101, 102);
             this.ImageAbort.Name = "ImageAbort";
             this.ImageAbort.Size = new System.Drawing.Size(75, 23);
             this.ImageAbort.TabIndex = 18;
@@ -327,7 +355,7 @@ namespace Hot_Pursuit
             // ImageButton
             // 
             this.ImageButton.ForeColor = System.Drawing.Color.Teal;
-            this.ImageButton.Location = new System.Drawing.Point(6, 96);
+            this.ImageButton.Location = new System.Drawing.Point(5, 102);
             this.ImageButton.Name = "ImageButton";
             this.ImageButton.Size = new System.Drawing.Size(75, 23);
             this.ImageButton.TabIndex = 18;
@@ -338,7 +366,7 @@ namespace Hot_Pursuit
             // HPStatusBox
             // 
             this.HPStatusBox.AllowDrop = true;
-            this.HPStatusBox.Location = new System.Drawing.Point(6, 142);
+            this.HPStatusBox.Location = new System.Drawing.Point(6, 148);
             this.HPStatusBox.Multiline = true;
             this.HPStatusBox.Name = "HPStatusBox";
             this.HPStatusBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
@@ -350,7 +378,7 @@ namespace Hot_Pursuit
             // 
             this.label7.AutoSize = true;
             this.label7.ForeColor = System.Drawing.Color.White;
-            this.label7.Location = new System.Drawing.Point(18, 90);
+            this.label7.Location = new System.Drawing.Point(18, 97);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(55, 13);
             this.label7.TabIndex = 19;
@@ -358,7 +386,7 @@ namespace Hot_Pursuit
             // 
             // CorrectionBox
             // 
-            this.CorrectionBox.Location = new System.Drawing.Point(89, 88);
+            this.CorrectionBox.Location = new System.Drawing.Point(89, 95);
             this.CorrectionBox.Name = "CorrectionBox";
             this.CorrectionBox.Size = new System.Drawing.Size(100, 20);
             this.CorrectionBox.TabIndex = 20;
@@ -366,7 +394,7 @@ namespace Hot_Pursuit
             // 
             // DecRateBox
             // 
-            this.DecRateBox.Location = new System.Drawing.Point(112, 63);
+            this.DecRateBox.Location = new System.Drawing.Point(112, 70);
             this.DecRateBox.Name = "DecRateBox";
             this.DecRateBox.Size = new System.Drawing.Size(77, 20);
             this.DecRateBox.TabIndex = 23;
@@ -374,7 +402,7 @@ namespace Hot_Pursuit
             // 
             // RARateBox
             // 
-            this.RARateBox.Location = new System.Drawing.Point(111, 39);
+            this.RARateBox.Location = new System.Drawing.Point(111, 46);
             this.RARateBox.Name = "RARateBox";
             this.RARateBox.Size = new System.Drawing.Size(77, 20);
             this.RARateBox.TabIndex = 24;
@@ -385,7 +413,7 @@ namespace Hot_Pursuit
             this.LookUpCheckBox.AutoSize = true;
             this.LookUpCheckBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.LookUpCheckBox.ForeColor = System.Drawing.Color.White;
-            this.LookUpCheckBox.Location = new System.Drawing.Point(42, 24);
+            this.LookUpCheckBox.Location = new System.Drawing.Point(34, 29);
             this.LookUpCheckBox.Name = "LookUpCheckBox";
             this.LookUpCheckBox.Size = new System.Drawing.Size(67, 17);
             this.LookUpCheckBox.TabIndex = 25;
@@ -394,7 +422,7 @@ namespace Hot_Pursuit
             // 
             // HorizonsButton
             // 
-            this.HorizonsButton.Location = new System.Drawing.Point(72, 113);
+            this.HorizonsButton.Location = new System.Drawing.Point(72, 120);
             this.HorizonsButton.Name = "HorizonsButton";
             this.HorizonsButton.Size = new System.Drawing.Size(60, 23);
             this.HorizonsButton.TabIndex = 26;
@@ -404,7 +432,7 @@ namespace Hot_Pursuit
             // 
             // MPESButton
             // 
-            this.MPESButton.Location = new System.Drawing.Point(138, 113);
+            this.MPESButton.Location = new System.Drawing.Point(138, 120);
             this.MPESButton.Name = "MPESButton";
             this.MPESButton.Size = new System.Drawing.Size(60, 23);
             this.MPESButton.TabIndex = 27;
@@ -430,39 +458,26 @@ namespace Hot_Pursuit
             this.label8.TabIndex = 29;
             this.label8.Text = "Range";
             // 
-            // label9
+            // CLSBox
             // 
-            this.label9.AutoSize = true;
-            this.label9.ForeColor = System.Drawing.Color.White;
-            this.label9.Location = new System.Drawing.Point(6, 43);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(32, 13);
-            this.label9.TabIndex = 24;
-            this.label9.Text = "Reps";
-            // 
-            // RepsBox
-            // 
-            this.RepsBox.Location = new System.Drawing.Point(42, 39);
-            this.RepsBox.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.RepsBox.Name = "RepsBox";
-            this.RepsBox.Size = new System.Drawing.Size(37, 20);
-            this.RepsBox.TabIndex = 25;
-            this.RepsBox.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.CLSBox.AutoSize = true;
+            this.CLSBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.CLSBox.ForeColor = System.Drawing.Color.White;
+            this.CLSBox.Location = new System.Drawing.Point(121, 28);
+            this.CLSBox.Name = "CLSBox";
+            this.CLSBox.Size = new System.Drawing.Size(46, 17);
+            this.CLSBox.TabIndex = 30;
+            this.CLSBox.Text = "CLS";
+            this.CLSBox.UseVisualStyleBackColor = true;
+            this.CLSBox.CheckedChanged += new System.EventHandler(this.CLSBox_CheckedChanged);
             // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkCyan;
-            this.ClientSize = new System.Drawing.Size(569, 185);
+            this.ClientSize = new System.Drawing.Size(569, 191);
+            this.Controls.Add(this.CLSBox);
             this.Controls.Add(this.label8);
             this.Controls.Add(this.RangeBox);
             this.Controls.Add(this.MPESButton);
@@ -494,8 +509,8 @@ namespace Hot_Pursuit
             this.groupBox1.PerformLayout();
             this.SequencerGroupBox.ResumeLayout(false);
             this.SequencerGroupBox.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -537,6 +552,7 @@ namespace Hot_Pursuit
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.NumericUpDown RepsBox;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.CheckBox CLSBox;
     }
 }
 
