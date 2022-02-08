@@ -36,6 +36,7 @@ namespace Hot_Pursuit
             string tgtName = tsxoi.ObjInfoPropOut;
             return tgtName;
         }
+
         public static bool CLSToTarget(string tgtName, SpeedVector sv, bool IsPrecision = false)
         {
             //first, couple dome to telescope, if there is one
@@ -66,12 +67,20 @@ namespace Hot_Pursuit
                 bool returnStatus = true;
            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
             double tgtDecD = sv.Dec_Degrees;
+            // diagnostic
+            string strRA = Utils.HourString(tgtRAH, false);
+            string strDec = Utils.DegreeString(tgtDecD, false);
+            //
             tsxsc.Find(tgtRAH.ToString() + ", " + tgtDecD.ToString());
             tsxmt.Connect();
+            sky6Utils tsxu = new sky6Utils();
+            tsxu.Precess2000ToNow(tgtRAH, tgtDecD);
+            double jnRAH = tsxu.dOut0;
+            double jnDecD = tsxu.dOut1;
             //tsxmt.Asynchronous = 0;
             try
             {
-                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, tgtName);
+                tsxmt.SlewToRaDec(jnRAH, jnDecD, tgtName);
             }
             catch (Exception ex)
             {

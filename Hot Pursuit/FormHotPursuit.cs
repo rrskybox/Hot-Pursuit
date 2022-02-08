@@ -96,7 +96,7 @@ namespace Hot_Pursuit
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = ScoutData.GetNextRateUpdate(ScoutData.EphStart);
             //CLS to where target should be currently, deal with CLS failure
-            if (!Utils.CLSToTarget(ScoutData.TgtName, nextUpdateSV))
+            if (!Utils.CLSToTarget(ScoutData.TgtName, nextUpdateSV, CLSBox.Checked))
             {
                 UpdateStatusLine("Tracking failed: Problem with CLS.");
                 CleanupOnFault();
@@ -221,7 +221,7 @@ namespace Hot_Pursuit
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = HorizonsData.GetNextRateUpdate(DateTime.UtcNow);
             //CLS to where target should be currently, deal with CLS failure
-            if (!Utils.CLSToTarget(HorizonsData.TgtName, nextUpdateSV))
+            if (!Utils.CLSToTarget(HorizonsData.TgtName, nextUpdateSV, CLSBox.Checked))
             {
                 UpdateStatusLine("Tracking failed: Problem with CLS.");
                 CleanupOnFault();
@@ -348,7 +348,7 @@ namespace Hot_Pursuit
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = MPESData.GetNextRateUpdate(DateTime.UtcNow);
             //CLS to where target should be currently, deal with CLS failure
-            if (!Utils.CLSToTarget(MPESData.TgtName, nextUpdateSV))
+            if (!Utils.CLSToTarget(MPESData.TgtName, nextUpdateSV, CLSBox.Checked))
             {
                 UpdateStatusLine("Tracking failed: Problem with CLS.");
                 CleanupOnFault();
@@ -532,7 +532,6 @@ namespace Hot_Pursuit
                 }
             }
         }
-
 
 
         private void ClearFields()
