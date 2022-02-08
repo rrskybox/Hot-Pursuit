@@ -448,6 +448,7 @@ namespace Hot_Pursuit
         {
             ccdsoftCamera tsxc = new ccdsoftCamera()
             {
+                Frame = ccdsoftImageFrame.cdLight,
                 Subframe = 0,
                 Delay = 0,
                 AutoSaveOn = 1,

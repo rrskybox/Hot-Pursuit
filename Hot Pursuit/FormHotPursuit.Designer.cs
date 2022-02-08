@@ -333,7 +333,7 @@ namespace Hot_Pursuit
             // 
             this.ExposureBox.Location = new System.Drawing.Point(120, 15);
             this.ExposureBox.Maximum = new decimal(new int[] {
-            1000,
+            3600,
             0,
             0,
             0});
