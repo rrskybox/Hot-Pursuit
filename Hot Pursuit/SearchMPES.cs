@@ -57,6 +57,28 @@ namespace Hot_Pursuit
         const string mUncertaintyPh = "UncertaintyPh";
         //ignore the rest
 
+        //Column Positions
+        const int colUTDateY = 0;
+        const int colUTDateM =5;
+        const int colUTDateD = 8;
+        const int colUTHrMin = 11;
+        const int colRA = 18;
+        const int colDec = 29;
+        const int colDelta = 39;
+        const int colr = 48;
+        const int colEl = 55;
+        const int colPh =62;
+        const int colV = 68;
+        const int coldRACosD = 74;
+        const int coldDec = 82;
+        const int colAzi = 91;
+        const int colAlt = 98;
+        const int colSunAlt = 104;
+        const int colMoonPhase = 109;
+        const int colMoonDist = 118;
+        const int colMoonAlt = 122;
+
+
         private string[] headerNames =
         {
             mUTDate,
@@ -147,20 +169,32 @@ namespace Hot_Pursuit
             for (int i = soeIdx; i < eoeIdx; i++)
             {
                 XElement ephmRecord = new XElement("Data");
-                string[] columns = mpcLineItems[i].Split(spc, StringSplitOptions.RemoveEmptyEntries);
-                ephmRecord.Add(new XElement(mUTDate, columns[0] + "-" + columns[1] + "-" + columns[2]));
-                string timestring = columns[3];
+                string mpcDataLine = mpcLineItems[i];
+                ephmRecord.Add(new XElement(mUTDate, mpcDataLine.Substring(colUTDateY,4) + "-" + mpcDataLine.Substring(colUTDateM,2)+ "-" + mpcDataLine.Substring(colUTDateD,2)));
+                string timestring = mpcDataLine.Substring(colUTHrMin,6);
                 string sTime = timestring[0].ToString() + timestring[1].ToString() + ":" + timestring[2].ToString() + timestring[3].ToString() + ":" + timestring[4].ToString() + timestring[5].ToString();
                 ephmRecord.Add(new XElement(mUTHrMin, sTime));
-                for (int r = 2; r < headerNames.Count(); r++)
-                    ephmRecord.Add(new XElement(headerNames[r], columns[r + 2]));
+                ephmRecord.Add(new XElement(mRA, mpcDataLine.Substring(colRA,8)));
+                ephmRecord.Add(new XElement(mDec, mpcDataLine.Substring(colDec,9)));
+                ephmRecord.Add(new XElement(mDelta, mpcDataLine.Substring(colDelta,9)));
+                ephmRecord.Add(new XElement(mr, mpcDataLine.Substring(colr,7)));
+                ephmRecord.Add(new XElement(mEl, mpcDataLine.Substring(colEl,6)));
+                ephmRecord.Add(new XElement(mPh, mpcDataLine.Substring(colPh,5)));
+                ephmRecord.Add(new XElement(mV, mpcDataLine.Substring(colV,5)));
+                ephmRecord.Add(new XElement(mdRACosD, mpcDataLine.Substring(coldRACosD,8)));
+                ephmRecord.Add(new XElement(mdDec, mpcDataLine.Substring(coldDec,8)));
+                ephmRecord.Add(new XElement(mAzi, mpcDataLine.Substring(colAzi,6)));
+                ephmRecord.Add(new XElement(mAlt, mpcDataLine.Substring(colAlt,5)));
+                ephmRecord.Add(new XElement(mSunAlt, mpcDataLine.Substring(colSunAlt,5)));
+                ephmRecord.Add(new XElement(mMoonPhase, mpcDataLine.Substring(colMoonPhase,6)));
+                ephmRecord.Add(new XElement(mMoonDist, mpcDataLine.Substring(colMoonDist,5)));
+                ephmRecord.Add(new XElement(mMoonAlt, mpcDataLine.Substring(colMoonAlt,4)));
+
                 ephmList.Add(ephmRecord);
             }
 
             //Convert XML to speed vector array
             SpeedVector currentSpeedVector;
-            double changeRaArcSec = 0;
-            double changeDecArcSec = 0;
             foreach (XElement ephX in ephmList.Elements("Data"))
             {
                 string sDate = ephX.Element(mUTDate).Value;

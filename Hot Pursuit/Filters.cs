@@ -41,11 +41,18 @@ namespace Hot_Pursuit
             {
                 return null;
             }
-            int filterCount = tsxc.lNumberFilters;
-            string[] TSXFilterList = new string[filterCount];
-            for (int f = 0; f < filterCount; f++)
-                TSXFilterList[f] = (tsxc.szFilterName(f));
-            return TSXFilterList;
+            try
+            {
+                int filterCount = tsxc.lNumberFilters;
+                string[] TSXFilterList = new string[filterCount];
+                for (int f = 0; f < filterCount; f++)
+                    TSXFilterList[f] = (tsxc.szFilterName(f));
+                return TSXFilterList;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
         }
 
         public static string LookUpFilterName(int filterIndex)

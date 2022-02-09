@@ -55,6 +55,18 @@ namespace Hot_Pursuit
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             ClosedLoopSlew tsx_cl = new ClosedLoopSlew();
             sky6StarChart tsxsc = new sky6StarChart();
+            sky6Utils tsxu = new sky6Utils();
+            //Check to see if target is above horizon
+            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
+            double tgtDecD = sv.Dec_Degrees;
+            tsxu.ConvertRADecToAzAlt(tgtRAH, tgtDecD);
+            double tgtAzmD = tsxu.dOut0;
+            double tgtAltD = tsxu.dOut1;
+            if (tgtAltD <=0 )
+            {
+                MessageBox.Show("Slew failure: Target is below the horizon");
+                return false;
+            }
             //Clear any image reduction, otherwise full reduction might cause a problem
             ccdsoftCamera tsxcam = new ccdsoftCamera()
             {
@@ -65,15 +77,12 @@ namespace Hot_Pursuit
             tsxcam.Abort();
 
                 bool returnStatus = true;
-           double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
-            double tgtDecD = sv.Dec_Degrees;
             // diagnostic
             string strRA = Utils.HourString(tgtRAH, false);
             string strDec = Utils.DegreeString(tgtDecD, false);
             //
             tsxsc.Find(tgtRAH.ToString() + ", " + tgtDecD.ToString());
             tsxmt.Connect();
-            sky6Utils tsxu = new sky6Utils();
             tsxu.Precess2000ToNow(tgtRAH, tgtDecD);
             double jnRAH = tsxu.dOut0;
             double jnDecD = tsxu.dOut1;

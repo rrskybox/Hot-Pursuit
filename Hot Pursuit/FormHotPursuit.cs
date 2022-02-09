@@ -98,7 +98,7 @@ namespace Hot_Pursuit
             //CLS to where target should be currently, deal with CLS failure
             if (!Utils.CLSToTarget(ScoutData.TgtName, nextUpdateSV, CLSBox.Checked))
             {
-                UpdateStatusLine("Tracking failed: Problem with CLS.");
+                UpdateStatusLine("Tracking failed: Problem with Slew.");
                 CleanupOnFault();
                 return;
             }
@@ -223,7 +223,7 @@ namespace Hot_Pursuit
             //CLS to where target should be currently, deal with CLS failure
             if (!Utils.CLSToTarget(HorizonsData.TgtName, nextUpdateSV, CLSBox.Checked))
             {
-                UpdateStatusLine("Tracking failed: Problem with CLS.");
+                UpdateStatusLine("Tracking failed: Problem with Slew.");
                 CleanupOnFault();
                 return;
             }
@@ -327,8 +327,12 @@ namespace Hot_Pursuit
             }
             UpdateStatusLine("Now targetting: " + MPESData.TgtName);
             //fill in Filters list
-            FiltersListBox.Items.AddRange(Filters.FilterNameSet());
-            FiltersListBox.SelectedIndex = Properties.Settings.Default.FilterIndexZeroBased;
+            string[] fset = Filters.FilterNameSet();
+            if (fset != null)
+            {
+                FiltersListBox.Items.AddRange(Filters.FilterNameSet());
+                FiltersListBox.SelectedIndex = Properties.Settings.Default.FilterIndexZeroBased;
+            }
             this.Show();
             //Set start time for ephemeris to current UTC, then set update step period from form
             MPESData.EphStart = DateTime.UtcNow;
@@ -350,7 +354,7 @@ namespace Hot_Pursuit
             //CLS to where target should be currently, deal with CLS failure
             if (!Utils.CLSToTarget(MPESData.TgtName, nextUpdateSV, CLSBox.Checked))
             {
-                UpdateStatusLine("Tracking failed: Problem with CLS.");
+                UpdateStatusLine("Tracking failed: Problem with Slew.");
                 CleanupOnFault();
                 return;
             }
@@ -444,7 +448,7 @@ namespace Hot_Pursuit
             return;
         }
 
-        private void TakeImage()
+        private bool TakeImage()
         {
             ccdsoftCamera tsxc = new ccdsoftCamera()
             {
@@ -452,10 +456,13 @@ namespace Hot_Pursuit
                 Subframe = 0,
                 Delay = 0,
                 AutoSaveOn = 1,
-                FilterIndexZeroBased = (int)Filters.LookUpFilterIndex(FiltersListBox.Text),
                 ExposureTime = (double)ExposureBox.Value,
                 Asynchronous = 1 //asychronous is on
             };
+            //try to set filter, if any
+            if (FiltersListBox.Text != "")
+                tsxc.FilterIndexZeroBased = (int)Filters.LookUpFilterIndex(FiltersListBox.Text);
+
             if (FullReductionCheckBox.Checked)
             {
                 tsxc.ImageReduction = ccdsoftImageReduction.cdBiasDarkFlat;
@@ -464,7 +471,18 @@ namespace Hot_Pursuit
                 calLib.SetReductionGroup(tsxc.FilterIndexZeroBased, tsxc.ExposureTime, (int)tsxc.TemperatureSetPoint, binning);
             }
             ImageAbort.BackColor = Color.LightGreen;
-            tsxc.Connect();
+            try
+            {
+                tsxc.Connect();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Camera connect failure: " + ex.Message);
+                IsImaging = true;
+                tsxc = null;
+                RepsBox.Value = 1;
+                return false;
+            }
             try
             {
                 tsxc.TakeImage();
@@ -475,10 +493,13 @@ namespace Hot_Pursuit
                 IsImaging = false;
                 UpdateStatusLine("Imaging Error: " + ex.Message);
                 RepsBox.Value = 1;
+                IsImaging = true;
+                tsxc = null;
+                return false;
             }
             IsImaging = true;
             tsxc = null;
-            return;
+            return true;
         }
 
         private void CleanupOnFault()
@@ -520,7 +541,7 @@ namespace Hot_Pursuit
                     {
                         RepsBox.Value--;
                         ImageButton.BackColor = Color.Salmon;
-                        TakeImage();
+                        TakeImage();                            ;
                     }
                     else
                         ImageButton.BackColor = Color.LightGreen;
