@@ -27,7 +27,7 @@
     <ProductName>Hot Pursuit</ProductName>
     <PublisherName>TSXToolKit</PublisherName>
     <SuiteName>TSXToolKit</SuiteName>
-    <ApplicationRevision>33</ApplicationRevision>
+    <ApplicationRevision>35</ApplicationRevision>
     <ApplicationVersion>0.4.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -65,6 +65,9 @@
     <SignManifests>true</SignManifests>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AstroImage">
+      <HintPath>..\..\AstroImage\AstroImage\bin\Release\AstroImage.dll</HintPath>
+    </Reference>
     <Reference Include="AstroMath, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\AstroMath\AstroMath\bin\Release\AstroMath.dll</HintPath>
@@ -93,6 +96,12 @@
     <Compile Include="FormHotPursuit.Designer.cs">
       <DependentUpon>FormHotPursuit.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormImageStack.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormImageStack.Designer.cs">
+      <DependentUpon>FormImageStack.cs</DependentUpon>
+    </Compile>
     <Compile Include="Interpolate.cs" />
     <Compile Include="Observatory.cs" />
     <Compile Include="Program.cs" />
@@ -105,6 +114,9 @@
     <Compile Include="Utils.cs" />
     <EmbeddedResource Include="FormHotPursuit.resx">
       <DependentUpon>FormHotPursuit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormImageStack.resx">
+      <DependentUpon>FormImageStack.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

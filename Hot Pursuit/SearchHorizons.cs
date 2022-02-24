@@ -305,6 +305,7 @@ namespace Hot_Pursuit
                 double sdRAdt = Convert.ToDouble(ephX.Element(hzdRACosD).Value) / 60;  //convert to arcsec/min
                 double sPA_D = Math.Atan2(sdDecdt, sdRAdt);
                 double sRange = Convert.ToDouble(ephX.Element(hzr).Value);
+               
                 currentSpeedVector = new SpeedVector
                 {
                     Time_UTC = sUT,
