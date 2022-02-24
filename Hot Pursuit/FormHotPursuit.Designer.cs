@@ -64,6 +64,7 @@ namespace Hot_Pursuit
             this.RangeBox = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.CLSBox = new System.Windows.Forms.CheckBox();
+            this.LiveStackBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.UpdateBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SequencerGroupBox.SuspendLayout();
@@ -232,6 +233,7 @@ namespace Hot_Pursuit
             // SequencerGroupBox
             // 
             this.SequencerGroupBox.BackColor = System.Drawing.Color.LightSeaGreen;
+            this.SequencerGroupBox.Controls.Add(this.LiveStackBox);
             this.SequencerGroupBox.Controls.Add(this.RepsBox);
             this.SequencerGroupBox.Controls.Add(this.label9);
             this.SequencerGroupBox.Controls.Add(this.FiltersListBox);
@@ -303,9 +305,9 @@ namespace Hot_Pursuit
             this.FullReductionCheckBox.ForeColor = System.Drawing.Color.White;
             this.FullReductionCheckBox.Location = new System.Drawing.Point(100, 71);
             this.FullReductionCheckBox.Name = "FullReductionCheckBox";
-            this.FullReductionCheckBox.Size = new System.Drawing.Size(75, 17);
+            this.FullReductionCheckBox.Size = new System.Drawing.Size(64, 17);
             this.FullReductionCheckBox.TabIndex = 18;
-            this.FullReductionCheckBox.Text = "Reduction";
+            this.FullReductionCheckBox.Text = "Reduce";
             this.FullReductionCheckBox.UseVisualStyleBackColor = true;
             this.FullReductionCheckBox.CheckedChanged += new System.EventHandler(this.FullReductionCheckBox_CheckedChanged);
             // 
@@ -471,6 +473,18 @@ namespace Hot_Pursuit
             this.CLSBox.UseVisualStyleBackColor = true;
             this.CLSBox.CheckedChanged += new System.EventHandler(this.CLSBox_CheckedChanged);
             // 
+            // LiveStackBox
+            // 
+            this.LiveStackBox.AutoSize = true;
+            this.LiveStackBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.LiveStackBox.ForeColor = System.Drawing.Color.White;
+            this.LiveStackBox.Location = new System.Drawing.Point(6, 71);
+            this.LiveStackBox.Name = "LiveStackBox";
+            this.LiveStackBox.Size = new System.Drawing.Size(77, 17);
+            this.LiveStackBox.TabIndex = 26;
+            this.LiveStackBox.Text = "Live Stack";
+            this.LiveStackBox.UseVisualStyleBackColor = true;
+            // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -553,6 +567,7 @@ namespace Hot_Pursuit
         private System.Windows.Forms.NumericUpDown RepsBox;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.CheckBox CLSBox;
+        private System.Windows.Forms.CheckBox LiveStackBox;
     }
 }
 

@@ -209,6 +209,7 @@ namespace Hot_Pursuit
                 double sdRAdt = Convert.ToDouble(ephX.Element(mdRACosD).Value);  //arcsec/min
                 double sPA_D = Math.Atan2(sdDecdt, sdRAdt);
                 double sRange = Convert.ToDouble(ephX.Element(mr).Value);
+
                 currentSpeedVector = new SpeedVector
                 {
                     Time_UTC = sUT,
@@ -310,7 +311,7 @@ namespace Hot_Pursuit
         const String mSiteLatitude = "lat"; //: lat= x.xxx
         const String mSiteAltitude = "alt"; //:alt = x.xxx
         const String mDataType = "raty"; //:  raty= “d” for decimal, “x” for decimal degrees
-        const String mRADecMotions = "s"; //: s= t for together, c for separate
+        const String mRADecMotions = "s"; //: s= t for total, c for coordinate motion, s for sky motion
         const String mDisplayMotion = "m";  //: m=”s” for sec, “m” for min, “h” for hour
         const String mMeasureAzimuth = "adir"; // = "S"  //Measure Azimuths: adir=S for West from South Meridian, N for East from North Meridian
         const String moed = "oed";  // don't know
@@ -353,7 +354,7 @@ namespace Hot_Pursuit
             queryString[mSiteLatitude] = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
             queryString[mSiteAltitude] = MPC_Observatory.BestObservatory.MySiteElev.ToString("0");
             queryString[mDataType] = "x"; //Decimal data
-            queryString[mRADecMotions] = "s";  //Separate sky coordinates
+            queryString[mRADecMotions] = "c";  // t for total, c for coordinate motion, s for sky motion 
             queryString[mDisplayMotion] = "m";  //motion in arcsec/min
             queryString[mMeasureAzimuth] = "S";
             queryString[moed] = "";

@@ -2,10 +2,12 @@
 using System.Deployment.Application;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using AstroMath;
+using AstroImage;
 using TheSky64Lib;
 
 namespace Hot_Pursuit
@@ -23,6 +25,11 @@ namespace Hot_Pursuit
         public string HPLogFilePath;
         public string HPImageFilePath;
 
+        public List<FitsFile> ImageFrames;
+        public FormImageStack formStack = null;
+
+        public Thread StackThread = null;
+        public Point StackFormLocation = new Point(0,0);
 
         public FormHotPursuit()
         {
@@ -114,7 +121,7 @@ namespace Hot_Pursuit
                 CleanupOnFault();
                 return;
             }
-            (double r, double d) = GetCurrentTelePosition();
+            (double r, double d) = Utils.GetCurrentTelePosition();
             //Prompt for imaging
             ImageButton.BackColor = Color.LightGreen;
             //Set custom tracking 
@@ -139,14 +146,7 @@ namespace Hot_Pursuit
                                 Utils.DegreeString(ScoutData.Site_Corrected_Dec, false) + " (RA/Dec)");
             //**************************
             //Update status
-            UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)");
-            UpdateStatusLine("MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": "
-                                + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false)
-                                + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees), false) + "(RA/Dec)");
-            UpdateStatusLine("Site corrected: " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees - MPESData.RA_CorrectionD), false)
-                             + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)");
-            UpdateStatusLine("dRA/dt = " + nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000") +
-                                          " / dDec/dt = " + nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000"));
+            AssembleStatusUpdate(nextUpdateSV);
             //Set up for next tracking instruction
             while (!AbortRequested)
             {
@@ -171,14 +171,7 @@ namespace Hot_Pursuit
                     DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
                     RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
                     //Update status
-                    UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)");
-                    UpdateStatusLine("MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": "
-                                        + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false)
-                                        + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees), false) + "(RA/Dec)");
-                    UpdateStatusLine("Site corrected: " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees - MPESData.RA_CorrectionD), false)
-                                     + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)");
-                    UpdateStatusLine("dRA/dt = " + nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000") +
-                                                  " / dDec/dt = " + nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000"));
+                    AssembleStatusUpdate(nextUpdateSV);
                     //
                 }
                 else //no new update -- go get another
@@ -270,14 +263,7 @@ namespace Hot_Pursuit
                                 Utils.DegreeString(HorizonsData.Site_Corrected_Dec, false) + " (RA/Dec)");
             //**************************
             //Update status
-            UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)");
-            UpdateStatusLine("MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": "
-                                + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false)
-                                + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees), false) + "(RA/Dec)");
-            UpdateStatusLine("Site corrected: " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees - MPESData.RA_CorrectionD), false)
-                             + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)");
-            UpdateStatusLine("dRA/dt = " + nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000") +
-                                          " / dDec/dt = " + nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000"));
+            AssembleStatusUpdate(nextUpdateSV);
 
             //Set up for next tracking instruction
             while (!AbortRequested)
@@ -302,15 +288,7 @@ namespace Hot_Pursuit
                     RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
                     DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
                     //Update status
-                    //Update status
-                    UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)");
-                    UpdateStatusLine("MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": "
-                                        + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false)
-                                        + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees), false) + "(RA/Dec)");
-                    UpdateStatusLine("Site corrected: " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees - MPESData.RA_CorrectionD), false)
-                                     + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)");
-                    UpdateStatusLine("dRA/dt = " + nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000") +
-                                                  " / dDec/dt = " + nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000"));
+                    AssembleStatusUpdate(nextUpdateSV);
                     //
                 }
                 else //no new update -- go get another
@@ -408,14 +386,7 @@ namespace Hot_Pursuit
                                 Utils.DegreeString(MPESData.Site_Corrected_Dec, false) + " (RA/Dec)");
             //**************************
             //Update status
-            UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)");
-            UpdateStatusLine("MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": "
-                                + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false)
-                                + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees), false) + "(RA/Dec)");
-            UpdateStatusLine("Site corrected: " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees - MPESData.RA_CorrectionD), false)
-                             + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)");
-            UpdateStatusLine("dRA/dt = " + nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000") +
-                                          " / dDec/dt = " + nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000"));
+            AssembleStatusUpdate(nextUpdateSV);
 
             //Set up for next tracking instruction
             while (!AbortRequested)
@@ -441,15 +412,7 @@ namespace Hot_Pursuit
                     DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
                     RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
                     //Update status
-                    UpdateStatusLine("Ephemeris @" + nextUpdateSV.Time_UTC.ToString("HH:mm:ss") + " (UTC)");
-                    UpdateStatusLine("    MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": "
-                                        + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees), false)
-                                        + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees), false) + "(RA/Dec)");
-                    UpdateStatusLine("    Site corrected: " + Utils.HourString(Transform.DegreesToHours(nextUpdateSV.RA_Degrees - MPESData.RA_CorrectionD), false)
-                                     + " / " + Utils.DegreeString((nextUpdateSV.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)");
-                    UpdateStatusLine("dRA/dt = " + nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000") +
-                                                  " / dDec/dt = " + nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000"));
-                    //
+                    AssembleStatusUpdate(nextUpdateSV);
                 }
                 else //no new update -- go get another
                 {
@@ -473,6 +436,8 @@ namespace Hot_Pursuit
             ImageAbort.Visible = true;
             ImageAbort.BackColor = Color.LightGreen;
             ImageAbort.Enabled = true;
+
+            ImageFrames = new List<FitsFile>();  //Clear image stack
 
             TakeImage();
             return;
@@ -569,14 +534,37 @@ namespace Hot_Pursuit
             {
                 if (InPursuit)
                 {
-                    if (RepsBox.Value > 1)
                     {
-                        RepsBox.Value--;
-                        ImageButton.BackColor = Color.Salmon;
-                        TakeImage(); ;
+                        if (RepsBox.Value > 1)
+                        {
+                            RepsBox.Value--;
+                            ImageButton.BackColor = Color.Salmon;
+                            TakeImage();
+                        }
+                        else
+                        {
+                            ImageButton.BackColor = Color.LightGreen;
+                            IsImaging = false;
+                        }
+                        //display the most recent image stack
+                        if (LiveStackBox.Checked)
+                        {
+                            FitsFile nextFF = new FitsFile(tsxc.LastImageFileName, true);
+                            ImageFrames.Add(nextFF);  //load most recent fits file
+                            if (StackThread != null)
+                            {
+                                StackFormLocation = formStack.Location;
+                                StackThread.Abort();
+                            }
+                            else
+                            {
+                                StackFormLocation = new Point(200,200);
+                            }
+                            ThreadStart displayStackForm = DisplayFrameStack;                        
+                            StackThread = new Thread(displayStackForm);
+                            StackThread.Start();
+                        }
                     }
-                    else
-                        ImageButton.BackColor = Color.LightGreen;
                 }
                 else
                 {
@@ -587,6 +575,13 @@ namespace Hot_Pursuit
             }
         }
 
+        private void DisplayFrameStack()
+        {
+            formStack = new FormImageStack(ImageFrames);
+            formStack.Location = new Point(StackFormLocation.X,StackFormLocation.Y);
+            formStack.ShowDialog(); 
+            return;
+        }
 
         private void ClearFields()
         {
@@ -619,7 +614,6 @@ namespace Hot_Pursuit
             return;
         }
 
-
         private void ImageAbort_Click(object sender, EventArgs e)
         {
             //Stop the imaging, clean up form
@@ -642,16 +636,7 @@ namespace Hot_Pursuit
             return;
         }
 
-        public static (double, double) GetCurrentTelePosition()
-        {
-            sky6RASCOMTele tsxm = new sky6RASCOMTele();
-            tsxm.GetRaDec();
-            sky6Utils tsxu = new sky6Utils();
-            tsxu.PrecessNowTo2000(tsxm.dRa, tsxm.dDec);
-            return (tsxu.dOut0, tsxu.dOut1);
-        }
-
-        private void FullReductionCheckBox_CheckedChanged(object sender, EventArgs e)
+       private void FullReductionCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.FullReduction = FullReductionCheckBox.Checked;
             Properties.Settings.Default.Save();
@@ -676,6 +661,34 @@ namespace Hot_Pursuit
             Properties.Settings.Default.UseCLS = CLSBox.Checked;
             Properties.Settings.Default.Save();
             return;
+        }
+
+        private void AssembleStatusUpdate(SpeedVector sv)
+        {
+            //Update status
+            string returnStatus;
+            (double dRAout, double dDecout) = Utils.GetTargetTracking();
+            (double dRATSX, double dDecTSX) = Utils.GetObjectRates();
+            returnStatus = "Ephemeris @" + sv.Time_UTC.ToString("HH:mm:ss") + " (UTC)"
+                           + "    MPC Obs " + MPESData.MPC_Observatory.BestObservatory.MPC_Code + ": "
+                           + Utils.HourString(Transform.DegreesToHours(sv.RA_Degrees), false)
+                           + " / " + Utils.DegreeString((sv.Dec_Degrees), false) + "(RA/Dec)";
+            UpdateStatusLine(returnStatus);
+            returnStatus = "    Site corrected: " + Utils.HourString(Transform.DegreesToHours(sv.RA_Degrees - MPESData.RA_CorrectionD), false)
+                           + " / " + Utils.DegreeString((sv.Dec_Degrees - MPESData.Dec_CorrectionD), false) + "(RA/Dec)";
+            UpdateStatusLine(returnStatus);
+            returnStatus = "dRA/dt & dDec/dt (set) = "
+                                + sv.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000")
+                                + "/"
+                                + sv.Rate_Dec_ArcsecPerMinute.ToString("0.000")
+                                + " (get) = "
+                                + dRAout.ToString("0.000")
+                                + "/"
+                                + dDecout.ToString("0.000");
+            UpdateStatusLine(returnStatus);
+            returnStatus = "  (HP in arcsec/sec) = " + (sv.Rate_RA_CosDec_ArcsecPerMinute / 60).ToString("0.000000") + "/" + (sv.Rate_Dec_ArcsecPerMinute / 60).ToString("0.000000")
+                             + " (TSX in arcsec/sec) = " + (dRATSX).ToString("0.000000") + "/" + (dDecTSX).ToString("0.000000");
+            UpdateStatusLine(returnStatus);
         }
 
         private void LogEntry(string entryStuff)

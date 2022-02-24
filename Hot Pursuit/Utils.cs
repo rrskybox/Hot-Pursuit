@@ -168,6 +168,20 @@ namespace Hot_Pursuit
             return true;
         }
 
+        /// <summary>
+        /// Retrieve tracking rate in arc min
+        /// </summary>
+        /// <returns>double dRA, double dDec</returns>
+        public static (double,double) GetTargetTracking()
+        {
+            //Retrieve current tracking rates in arcmin
+            sky6RASCOMTele tsxmt = new sky6RASCOMTele();
+            tsxmt.Connect();
+            double dRA = tsxmt.dRaTrackingRate*60;
+            double dDec = tsxmt.dDecTrackingRate*60;
+            return (dRA,dDec);
+        }
+
         public static bool SetStandardTracking()
         {
             const int ionTrackingOn = 1;
@@ -214,5 +228,26 @@ namespace Hot_Pursuit
             else
                 return (iSign * iHrs).ToString("00") + "d" + iMin.ToString("00") + "m" + dSec.ToString("00") + "s";
         }
+
+        public static (double,double) GetObjectRates()
+        {
+            //Get dRA/dDec rates for current target
+            sky6ObjectInformation tsxo = new sky6ObjectInformation();
+            tsxo.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_RA_RATE_ASPERSEC);
+            double dRA = tsxo.ObjInfoPropOut;
+            tsxo.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_DEC_RATE_ASPERSEC);
+            double dDec = tsxo.ObjInfoPropOut;
+            return (dRA, dDec);
+        }
+  
+        public static (double, double) GetCurrentTelePosition()
+        {
+            sky6RASCOMTele tsxm = new sky6RASCOMTele();
+            tsxm.GetRaDec();
+            sky6Utils tsxu = new sky6Utils();
+            tsxu.PrecessNowTo2000(tsxm.dRa, tsxm.dDec);
+            return (tsxu.dOut0, tsxu.dOut1);
+        }
+
     }
 }
