@@ -568,6 +568,7 @@ namespace Hot_Pursuit
                 }
                 else
                 {
+                    tsxc.AutoSavePrefix = "";  //Clear target name prefix
                     ImageButton.BackColor = Color.Yellow;
                     IsImaging = false;
                     ImageAbort.Visible = false;
@@ -693,7 +694,7 @@ namespace Hot_Pursuit
 
         private void LogEntry(string entryStuff)
         {
-            string logtime = DateTime.Now.ToString("hh:mm:ss");
+            string logtime = DateTime.Now.ToString("HH:mm:ss");
             File.AppendAllText(HPLogFilePath, (logtime + ": " + entryStuff + "\r\n"));
         }
     }
