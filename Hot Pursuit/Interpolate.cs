@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 
 namespace Hot_Pursuit
 {
-    //this class is only used by SearchScout, not by SearchHorizons
-    //  so, PA is not required for Horizons
+ 
 
     public class Interpolate
     {
@@ -24,7 +23,7 @@ namespace Hot_Pursuit
             double diffRARate = (endSV.RA_Degrees - startSV.RA_Degrees) / updatePeriods;
             double diffDecRate = (endSV.Dec_Degrees - startSV.Dec_Degrees) / updatePeriods;
 
-            DateTime updateTime = startSV.Time_UTC;
+            DateTime updateTime = startSV.Time_UTC+TimeSpan.FromSeconds(updateSeconds);
             double updateRate = startSV.Rate_ArcsecPerMinute;
             double updatePA = startSV.PA_Degrees;
             double updateRARate = startSV.Rate_RA_CosDec_ArcsecPerMinute;
@@ -41,30 +40,5 @@ namespace Hot_Pursuit
                 updateDecRate += diffDecRate;
             }
         }
-    }
-    public class SpeedVector
-    {
-        //Structure to hold RA and Dec tracking speeds
-        public DateTime Time_UTC { get; set; }
-        public double RA_Degrees { get; set; }
-        public double Dec_Degrees { get; set; }
-        public double Rate_ArcsecPerMinute { get; set; }
-        public double PA_Degrees { get; set; }
-        public double Rate_RA_CosDec_ArcsecPerMinute { get; set; }
-        public double Rate_Dec_ArcsecPerMinute { get; set; }
-        public double Elevation_KM { get; set; }  //Meters?
-        public double Range_AU { get; set; }  //AU 
-
-        public SpeedVector() { }
-
-        public double VelocityRA()
-        {
-            return Rate_ArcsecPerMinute * Math.Sin(Transform.DegreesToRadians(PA_Degrees));
-        }
-        public double VelocityDec()
-        {
-            return Rate_ArcsecPerMinute * Math.Cos(Transform.DegreesToRadians(PA_Degrees));
-        }
-
     }
 }
