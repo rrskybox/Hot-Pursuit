@@ -577,6 +577,9 @@ namespace Hot_Pursuit
             MPC_Observatory = new Observatory();
 
             //Don't need geocentric ephemeris for Horizons -- using topocentric
+            if (!GeoToMPESSiteCalibration())
+                return false;
+            //Get Geocentric ephemeris
             if (HorizonsQueryToSpeedVectors(isMinutes, updateInterval))
                 return true;
             else
@@ -670,6 +673,15 @@ namespace Hot_Pursuit
             }
             return scrub;
         }
+
+        private bool GeoToHorizonsSiteCalibration()
+        {
+            Topo_Dec_Correction_Factor = 1.0;
+            Topo_RA_Correction_Factor = 1.0;  //degrees per arcdegree
+            return true;
+        }
+
+
 
         #region Horizons Query Strings
 
@@ -931,6 +943,8 @@ namespace Hot_Pursuit
 
         private bool GeoToMPESSiteCalibration()
         {
+            Topo_Dec_Correction_Factor = 1.0;
+            Topo_RA_Correction_Factor = 1.0;  //degrees per arcdegree
             return true;
         }
 
