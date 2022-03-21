@@ -26,13 +26,23 @@ namespace Hot_Pursuit
             DateTime updateTime = startSV.Time_UTC+TimeSpan.FromSeconds(updateSeconds);
             double updateRate = startSV.Rate_ArcsecPerMinute;
             double updatePA = startSV.PA_Degrees;
-            double updateRARate = startSV.Rate_RA_CosDec_ArcsecPerMinute;
+            double updateRACosDecRate = startSV.Rate_RA_CosDec_ArcsecPerMinute;
+            double updateRARate = startSV.Rate_RA_ArcsecPerMinute;
             double updateDecRate = startSV.Rate_Dec_ArcsecPerMinute;
             double startRA = startSV.RA_Degrees;
             double startDec = startSV.Dec_Degrees;
             while (updateTime < endSV.Time_UTC)
             {
-                WayPoints.Add(new SpeedVector { Time_UTC = updateTime, Rate_ArcsecPerMinute = updateRate, PA_Degrees = updatePA, RA_Degrees = startRA, Dec_Degrees = startDec, Rate_RA_CosDec_ArcsecPerMinute = updateRARate, Rate_Dec_ArcsecPerMinute = updateDecRate });
+                WayPoints.Add(new SpeedVector 
+                { 
+                    Time_UTC = updateTime, 
+                    Rate_ArcsecPerMinute = updateRate, 
+                    PA_Degrees = updatePA, 
+                    RA_Degrees = startRA, 
+                    Dec_Degrees = startDec, 
+                    Rate_RA_CosDec_ArcsecPerMinute = updateRACosDecRate, 
+                    Rate_RA_ArcsecPerMinute = updateRARate,
+                    Rate_Dec_ArcsecPerMinute = updateDecRate });
                 updateTime += TimeSpan.FromSeconds(updateSeconds);
                 updateRate += diffRate;
                 updatePA += diffPA;

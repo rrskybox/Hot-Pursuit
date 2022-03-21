@@ -116,8 +116,9 @@ namespace Hot_Pursuit
                 double sElevation_KM = MPC_Observatory.BestObservatory.MySiteElev;
                 //Compute PA
                 double sdDecdt = Convert.ToDouble(ephX.Element(xdDec).Value);  //arcsec/min
-                double sdRAdt = Convert.ToDouble(ephX.Element(xdRACosD).Value);  //arcsec/min
-                double sPA_D = Math.Atan2(sdDecdt, sdRAdt);
+                double sdRACosDecdt = Convert.ToDouble(ephX.Element(xdRACosD).Value);  //arcsec/min
+                double sdRAdt = sdRACosDecdt / Math.Cos(AstroMath.Transform.DegreesToRadians(sDec_D));
+                double sPA_D = Math.Atan2(sdDecdt, sdRACosDecdt);
                 double sRange = Convert.ToDouble(ephX.Element(xRng).Value);
 
                 if (sUT >= beginningTime)
@@ -126,8 +127,9 @@ namespace Hot_Pursuit
                         Time_UTC = sUT,
                         RA_Degrees = sRA_D,  //Scout delivers RA in degrees
                         Dec_Degrees = sDec_D,
-                        Rate_RA_CosDec_ArcsecPerMinute = sdRAdt,
+                        Rate_RA_CosDec_ArcsecPerMinute = sdRACosDecdt,
                         Rate_Dec_ArcsecPerMinute = sdDecdt,
+                        Rate_RA_ArcsecPerMinute = sdRAdt,
                         PA_Degrees = sPA_D,
                         Range_AU = sRange,  //AU
                         Elevation_KM = sElevation_KM
@@ -244,18 +246,14 @@ namespace Hot_Pursuit
                 ephmRecord.Add(new XElement(xDec, Convert.ToDouble(sPositionList[idx_dec].Value)));
                 ephmRecord.Add(new XElement(mr, Convert.ToDouble(sPositionList[idx_reO_Geo].Value))); //AU
                 ephmRecord.Add(new XElement(mEl, "0"));
-                double pa_Degrees = (Convert.ToDouble(sPositionList[idx_pa].Value));
+                double pa_Degrees = (Convert.ToDouble(sPositionList[idx_pa].Value));  //Plane of sky
                 ephmRecord.Add(new XElement(xPA, pa_Degrees.ToString()));
                 double rate_ArcsecPerMinute = Convert.ToDouble(sPositionList[idx_rate].Value);  //Arcsec/min
                 ephmRecord.Add(new XElement(xdRate, rate_ArcsecPerMinute.ToString()));
                 double dDec = rate_ArcsecPerMinute * Math.Cos(AstroMath.Transform.DegreesToRadians(pa_Degrees));
                 ephmRecord.Add(new XElement(xdDec, dDec.ToString()));
-                double dRA = rate_ArcsecPerMinute * Math.Sin(AstroMath.Transform.DegreesToRadians(pa_Degrees));
-                ephmRecord.Add(new XElement(xdRACosD, dRA.ToString()));
-                double dec = Convert.ToDouble(sPositionList[idx_dec].Value);
-                dRA = rate_ArcsecPerMinute * Math.Sin(AstroMath.Transform.DegreesToRadians(pa_Degrees));
-                dRA = dRA * Math.Cos(AstroMath.Transform.DegreesToRadians(dec));
-                ephmRecord.Add(new XElement(xdRACosD, dRA.ToString()));
+                double dRACosD = rate_ArcsecPerMinute * Math.Sin(AstroMath.Transform.DegreesToRadians(pa_Degrees));
+                ephmRecord.Add(new XElement(xdRACosD, dRACosD.ToString()));
                 ephmRecord.Add(new XElement(xRng, Convert.ToDouble(sPositionList[idx_reO_Geo].Value)));  //AU
                 ephmList.Add(ephmRecord);
             }
@@ -635,7 +633,7 @@ namespace Hot_Pursuit
             return EphemerisListToSpeedVector(ephmList, isMinutes, updateInterval);
         }
 
-        private string ScrubSmallBodyNameHorizons(string longName)
+       private string ScrubSmallBodyNameHorizons(string longName)
         {
             //Decoder for small body name input.  Horizon's does not do well parsing numbers and names
             //This program reduces a standard comet, asteroid or other name to something
@@ -680,8 +678,6 @@ namespace Hot_Pursuit
             Topo_RA_Correction_Factor = 1.0;  //degrees per arcdegree
             return true;
         }
-
-
 
         #region Horizons Query Strings
 
@@ -773,7 +769,7 @@ namespace Hot_Pursuit
             queryString[hAngleFormat] = hAngleFormatDegrees;
             queryString[hTimeDigits] = "Seconds";
             queryString[hRangeUnits] = "AU";
-            //queryString[hQuantities ] = "'1,9,20,23,24,29'";
+            //queryString[hQuantities ] = "'46'";
             queryString[hOutUnits] = hUnitTypeKMS;
             queryString[hExtraPrecisionFormat] = hYes;
             queryString[hCSVFormat] = hYes;
@@ -785,8 +781,6 @@ namespace Hot_Pursuit
             return q; // Returns "key1=value1&key2=value2", all URL-encoded
         }
         #endregion
-
-
 
         #region mpes
 
@@ -1023,7 +1017,7 @@ namespace Hot_Pursuit
             queryString[mSiteLatitude] = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
             queryString[mSiteAltitude] = MPC_Observatory.BestObservatory.MySiteElev.ToString("0");
             queryString[mDataType] = "x"; //Decimal data
-            queryString[mRADecMotions] = "c";  // t for total, c for coordinate motion, s for sky motion 
+            queryString[mRADecMotions] = "s";  // t for total, c for coordinate motion, s for sky motion 
             queryString[mDisplayMotion] = "m";  //motion in arcsec/min
             queryString[mMeasureAzimuth] = "S";
             queryString[moed] = "";
@@ -1055,7 +1049,8 @@ namespace Hot_Pursuit
         public double Dec_Degrees { get; set; }
         public double Rate_ArcsecPerMinute { get; set; }
         public double PA_Degrees { get; set; }
-        public double Rate_RA_CosDec_ArcsecPerMinute { get; set; }
+        public double Rate_RA_CosDec_ArcsecPerMinute { get; set; }  //Fixed image rate
+        public double Rate_RA_ArcsecPerMinute { get; set; }  //Tracking image rate
         public double Rate_Dec_ArcsecPerMinute { get; set; }
         public double Elevation_KM { get; set; }  //Meters?
         public double Range_AU { get; set; }  //AU 

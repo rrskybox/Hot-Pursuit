@@ -169,7 +169,7 @@ namespace Hot_Pursuit
                 TargetBox.BackColor = Color.LightSalmon;
             else
                 TargetBox.BackColor = Color.LightGreen;
-            RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
+            RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
             DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
             CorrectionBox.Text = Utils.HourString(EphemTable.RA_CorrectionD, true) + "/" + Utils.DegreeString(EphemTable.Dec_CorrectionD, true);
             RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
@@ -207,7 +207,7 @@ namespace Hot_Pursuit
                         TargetBox.BackColor = Color.LightSalmon;
                     else
                         TargetBox.BackColor = Color.LightGreen;
-                    RARateBox.Text = nextUpdateSV.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000");
+                    RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
                     DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
                     RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
                     //Update status
@@ -479,7 +479,7 @@ namespace Hot_Pursuit
                 UpdateStatusLine(returnStatus);
             }
             returnStatus = "dRA/dt & dDec/dt (set) = "
-                                + sv.Rate_RA_CosDec_ArcsecPerMinute.ToString("0.000")
+                                + sv.Rate_RA_ArcsecPerMinute.ToString("0.000")
                                 + "/"
                                 + sv.Rate_Dec_ArcsecPerMinute.ToString("0.000")
                                 + " (get) = "
@@ -487,7 +487,7 @@ namespace Hot_Pursuit
                                 + "/"
                                 + dDecout.ToString("0.000");
             UpdateStatusLine(returnStatus);
-            returnStatus = "  (HP in arcsec/sec) = " + (sv.Rate_RA_CosDec_ArcsecPerMinute / 60).ToString("0.000000") + "/" + (sv.Rate_Dec_ArcsecPerMinute / 60).ToString("0.000000")
+            returnStatus = "  (HP in arcsec/sec) = " + (sv.Rate_RA_ArcsecPerMinute / 60).ToString("0.000000") + "/" + (sv.Rate_Dec_ArcsecPerMinute / 60).ToString("0.000000")
                              + " (TSX in arcsec/sec) = " + (dRATSX).ToString("0.000000") + "/" + (dDecTSX).ToString("0.000000");
             UpdateStatusLine(returnStatus);
         }

@@ -145,7 +145,7 @@ namespace Hot_Pursuit
             const int ignoreRates = 1;
             const int useRates = 0;
 
-            double tgtRateRA = sv.Rate_RA_CosDec_ArcsecPerMinute;
+            double tgtRateRA = sv.Rate_RA_ArcsecPerMinute;
             double tgtRateDec = sv.Rate_Dec_ArcsecPerMinute;
             double adjtgtRateRA = tgtRateRA * topo_Adjustment_RA;
             double adjtgtRateDec = tgtRateDec * topo_Adjustment_Dec;
