@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using AstroMath;
-using System.Threading.Tasks;
 
 namespace Hot_Pursuit
 {
- 
+
 
     public class Interpolate
     {
@@ -23,7 +19,7 @@ namespace Hot_Pursuit
             double diffRARate = (endSV.RA_Degrees - startSV.RA_Degrees) / updatePeriods;
             double diffDecRate = (endSV.Dec_Degrees - startSV.Dec_Degrees) / updatePeriods;
 
-            DateTime updateTime = startSV.Time_UTC+TimeSpan.FromSeconds(updateSeconds);
+            DateTime updateTime = startSV.Time_UTC + TimeSpan.FromSeconds(updateSeconds);
             double updateRate = startSV.Rate_ArcsecPerMinute;
             double updatePA = startSV.PA_Degrees;
             double updateRACosDecRate = startSV.Rate_RA_CosDec_ArcsecPerMinute;
@@ -33,16 +29,17 @@ namespace Hot_Pursuit
             double startDec = startSV.Dec_Degrees;
             while (updateTime < endSV.Time_UTC)
             {
-                WayPoints.Add(new SpeedVector 
-                { 
-                    Time_UTC = updateTime, 
-                    Rate_ArcsecPerMinute = updateRate, 
-                    PA_Degrees = updatePA, 
-                    RA_Degrees = startRA, 
-                    Dec_Degrees = startDec, 
-                    Rate_RA_CosDec_ArcsecPerMinute = updateRACosDecRate, 
+                WayPoints.Add(new SpeedVector
+                {
+                    Time_UTC = updateTime,
+                    Rate_ArcsecPerMinute = updateRate,
+                    PA_Degrees = updatePA,
+                    RA_Degrees = startRA,
+                    Dec_Degrees = startDec,
+                    Rate_RA_CosDec_ArcsecPerMinute = updateRACosDecRate,
                     Rate_RA_ArcsecPerMinute = updateRARate,
-                    Rate_Dec_ArcsecPerMinute = updateDecRate });
+                    Rate_Dec_ArcsecPerMinute = updateDecRate
+                });
                 updateTime += TimeSpan.FromSeconds(updateSeconds);
                 updateRate += diffRate;
                 updatePA += diffPA;

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AstroMath;
-using TheSky64Lib;
+﻿using AstroMath;
+using System;
 using System.Windows.Forms;
+using TheSky64Lib;
 
 namespace Hot_Pursuit
 {
@@ -62,7 +58,7 @@ namespace Hot_Pursuit
             tsxu.ConvertRADecToAzAlt(tgtRAH, tgtDecD);
             double tgtAzmD = tsxu.dOut0;
             double tgtAltD = tsxu.dOut1;
-            if (tgtAltD <=0 )
+            if (tgtAltD <= 0)
             {
                 MessageBox.Show("Slew failure: Target is below the horizon");
                 return false;
@@ -76,7 +72,7 @@ namespace Hot_Pursuit
             //Abort any ongoing imaging
             tsxcam.Abort();
 
-                bool returnStatus = true;
+            bool returnStatus = true;
             // diagnostic
             string strRA = Utils.HourString(tgtRAH, false);
             string strDec = Utils.DegreeString(tgtDecD, false);
@@ -94,7 +90,7 @@ namespace Hot_Pursuit
             catch (Exception ex)
             {
                 MessageBox.Show("Slew Failure: " + ex.Message);
-                returnStatus=false;
+                returnStatus = false;
             }
             if (IsPrecision && returnStatus)
             {
@@ -172,14 +168,14 @@ namespace Hot_Pursuit
         /// Retrieve tracking rate in arc min
         /// </summary>
         /// <returns>double dRA, double dDec</returns>
-        public static (double,double) GetTargetTracking()
+        public static (double, double) GetTargetTracking()
         {
             //Retrieve current tracking rates in arcmin
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            double dRA = tsxmt.dRaTrackingRate*60;
-            double dDec = tsxmt.dDecTrackingRate*60;
-            return (dRA,dDec);
+            double dRA = tsxmt.dRaTrackingRate * 60;
+            double dDec = tsxmt.dDecTrackingRate * 60;
+            return (dRA, dDec);
         }
 
         public static bool SetStandardTracking()
@@ -229,7 +225,7 @@ namespace Hot_Pursuit
                 return (iSign * iHrs).ToString("00") + "d" + iMin.ToString("00") + "m" + dSec.ToString("00") + "s";
         }
 
-        public static (double,double) GetObjectRates()
+        public static (double, double) GetObjectRates()
         {
             //Get dRA/dDec rates for current target
             sky6ObjectInformation tsxo = new sky6ObjectInformation();
@@ -239,7 +235,7 @@ namespace Hot_Pursuit
             double dDec = tsxo.ObjInfoPropOut;
             return (dRA, dDec);
         }
-  
+
         public static (double, double) GetCurrentTelePosition()
         {
             sky6RASCOMTele tsxm = new sky6RASCOMTele();

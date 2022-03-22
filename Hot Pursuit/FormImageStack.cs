@@ -1,13 +1,7 @@
-﻿using System;
+﻿using AstroImage;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using AstroImage;
 
 namespace Hot_Pursuit
 {
@@ -20,7 +14,7 @@ namespace Hot_Pursuit
             AstroPic ap = new AstroPic(af);
             Image baseImage = ap.ResizeImage(ImageBox.Size, true);
             ImageBox.Image = baseImage;
-            this.Text = "Image Stack "+ fitsNames.Count.ToString();
+            this.Text = "Image Stack " + fitsNames.Count.ToString();
         }
     }
 }

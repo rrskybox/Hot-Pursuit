@@ -1,13 +1,12 @@
-﻿using System;
+﻿using AstroImage;
+using AstroMath;
+using System;
+using System.Collections.Generic;
 using System.Deployment.Application;
 using System.Drawing;
-using System.Windows.Forms;
-using System.Threading;
-using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using AstroMath;
-using AstroImage;
+using System.Threading;
+using System.Windows.Forms;
 using TheSky64Lib;
 
 namespace Hot_Pursuit
@@ -16,10 +15,7 @@ namespace Hot_Pursuit
     {
         public bool InPursuit = false;
         public bool IsImaging = false;
-        //public SearchScout ScoutData;
-        //public SearchHorizons HorizonsData;
-        //public SearchMPES MPESData;
-
+ 
         public Ephemeris EphemTable;
 
         public string HPDirectoryPath;
@@ -171,7 +167,7 @@ namespace Hot_Pursuit
                 TargetBox.BackColor = Color.LightGreen;
             RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
             DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
-            CorrectionBox.Text = Utils.HourString(EphemTable.RA_CorrectionD, true) + "/" + Utils.DegreeString(EphemTable.Dec_CorrectionD, true);
+            //CorrectionBox.Text = Utils.HourString(EphemTable.RA_CorrectionD, true) + "/" + Utils.DegreeString(EphemTable.Dec_CorrectionD, true);
             RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
             DateTime nextUpdate = nextUpdateSV.Time_UTC;
             if (MinutesButton.Checked)
@@ -180,7 +176,7 @@ namespace Hot_Pursuit
                 nextUpdate += TimeSpan.FromSeconds((int)UpdateBox.Value);
             NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
             //**************************  site location status code
-            UpdateStatusLine("This site astometry: " +
+            UpdateStatusLine("Site corrected astrometry: " +
                                 EphemTable.Site_Corrected_Range.ToString("0.00") + " AU:  " +
                                 Utils.HourString(Transform.DegreesToHours(EphemTable.Site_Corrected_RA), false) + " / " +
                                 Utils.DegreeString(EphemTable.Site_Corrected_Dec, false) + " (RA/Dec)");
@@ -386,7 +382,7 @@ namespace Hot_Pursuit
             //Removes text from all fields
             RARateBox.Text = "";
             DecRateBox.Text = "";
-            CorrectionBox.Text = "";
+            //CorrectionBox.Text = "";
             NextUpdateBox.Text = "";
             RangeBox.Text = "";
         }
@@ -487,9 +483,9 @@ namespace Hot_Pursuit
                                 + "/"
                                 + dDecout.ToString("0.000");
             UpdateStatusLine(returnStatus);
-            returnStatus = "  (HP in arcsec/sec) = " + (sv.Rate_RA_ArcsecPerMinute / 60).ToString("0.000000") + "/" + (sv.Rate_Dec_ArcsecPerMinute / 60).ToString("0.000000")
-                             + " (TSX in arcsec/sec) = " + (dRATSX).ToString("0.000000") + "/" + (dDecTSX).ToString("0.000000");
-            UpdateStatusLine(returnStatus);
+            //returnStatus = "  (HP in arcsec/sec) = " + (sv.Rate_RA_ArcsecPerMinute / 60).ToString("0.000000") + "/" + (sv.Rate_Dec_ArcsecPerMinute / 60).ToString("0.000000")
+            //                 + " (TSX in arcsec/sec) = " + (dRATSX).ToString("0.000000") + "/" + (dDecTSX).ToString("0.000000");
+            //UpdateStatusLine(returnStatus);
         }
 
         private void LogEntry(string entryStuff)

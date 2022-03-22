@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+﻿using AstroMath;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Windows.Forms;
-using Newtonsoft.Json;
+using System.Linq;
 using System.Net;
-using AstroMath;
+using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace Hot_Pursuit
 {
@@ -633,7 +630,7 @@ namespace Hot_Pursuit
             return EphemerisListToSpeedVector(ephmList, isMinutes, updateInterval);
         }
 
-       private string ScrubSmallBodyNameHorizons(string longName)
+        private string ScrubSmallBodyNameHorizons(string longName)
         {
             //Decoder for small body name input.  Horizon's does not do well parsing numbers and names
             //This program reduces a standard comet, asteroid or other name to something

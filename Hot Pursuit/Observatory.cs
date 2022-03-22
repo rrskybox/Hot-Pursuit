@@ -1,13 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 using System.Reflection;
-using System.Resources;
 using TheSky64Lib;
-using AstroMath;
 
 //Observatory codes can be found at https://www.projectpluto.com/obsc.htm
 //Copy text data to Observatories.txt
@@ -40,14 +35,14 @@ namespace Hot_Pursuit
                     obsList.Add(parsedline);
             }
             //convert MPC longitude from +/- to 360 (format of MPC site)
-            double topolng360 = 360 - BestObservatory.MySiteLong ;
+            double topolng360 = 360 - BestObservatory.MySiteLong;
             double leastRMS = 360;
             //Find the closest observatory to input lst and lng by simple RMS
             foreach (Location ob in obsList)
             {
                 double oLat = ob.MPC_ObsLat;
                 double oLong = ob.MPC_ObsLong;
-                double dLat = Math.Abs(ob.MPC_ObsLat -  BestObservatory.MySiteLat);
+                double dLat = Math.Abs(ob.MPC_ObsLat - BestObservatory.MySiteLat);
                 double dLng = Math.Abs(ob.MPC_ObsLong - topolng360);
                 double siteRMS = Math.Sqrt((Math.Pow(dLat, 2) + Math.Pow(dLng, 2)) / 2);
                 if (siteRMS < leastRMS)
@@ -98,7 +93,7 @@ namespace Hot_Pursuit
 
     public class Location
     {
-        public string MPC_Code{ get; set; }
+        public string MPC_Code { get; set; }
         public double MySiteLat { get; set; }
         public double MySiteLong { get; set; }
         public double MySiteElev { get; set; }

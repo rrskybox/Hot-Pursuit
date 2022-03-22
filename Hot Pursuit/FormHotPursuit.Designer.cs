@@ -44,6 +44,7 @@ namespace Hot_Pursuit
             this.label4 = new System.Windows.Forms.Label();
             this.OnTopBox = new System.Windows.Forms.CheckBox();
             this.SequencerGroupBox = new System.Windows.Forms.GroupBox();
+            this.LiveStackBox = new System.Windows.Forms.CheckBox();
             this.RepsBox = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
             this.FiltersListBox = new System.Windows.Forms.ComboBox();
@@ -54,8 +55,6 @@ namespace Hot_Pursuit
             this.ExposureBox = new System.Windows.Forms.NumericUpDown();
             this.ImageButton = new System.Windows.Forms.Button();
             this.HPStatusBox = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.CorrectionBox = new System.Windows.Forms.TextBox();
             this.DecRateBox = new System.Windows.Forms.TextBox();
             this.RARateBox = new System.Windows.Forms.TextBox();
             this.LookUpCheckBox = new System.Windows.Forms.CheckBox();
@@ -64,7 +63,6 @@ namespace Hot_Pursuit
             this.RangeBox = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.CLSBox = new System.Windows.Forms.CheckBox();
-            this.LiveStackBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.UpdateBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SequencerGroupBox.SuspendLayout();
@@ -251,6 +249,18 @@ namespace Hot_Pursuit
             this.SequencerGroupBox.TabStop = false;
             this.SequencerGroupBox.Text = "QAD Imaging";
             // 
+            // LiveStackBox
+            // 
+            this.LiveStackBox.AutoSize = true;
+            this.LiveStackBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.LiveStackBox.ForeColor = System.Drawing.Color.White;
+            this.LiveStackBox.Location = new System.Drawing.Point(6, 71);
+            this.LiveStackBox.Name = "LiveStackBox";
+            this.LiveStackBox.Size = new System.Drawing.Size(77, 17);
+            this.LiveStackBox.TabIndex = 26;
+            this.LiveStackBox.Text = "Live Stack";
+            this.LiveStackBox.UseVisualStyleBackColor = true;
+            // 
             // RepsBox
             // 
             this.RepsBox.Location = new System.Drawing.Point(42, 39);
@@ -376,24 +386,6 @@ namespace Hot_Pursuit
             this.HPStatusBox.TabIndex = 18;
             this.HPStatusBox.Text = "Status Box";
             // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.ForeColor = System.Drawing.Color.White;
-            this.label7.Location = new System.Drawing.Point(18, 97);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(55, 13);
-            this.label7.TabIndex = 19;
-            this.label7.Text = "Correction";
-            // 
-            // CorrectionBox
-            // 
-            this.CorrectionBox.Location = new System.Drawing.Point(89, 95);
-            this.CorrectionBox.Name = "CorrectionBox";
-            this.CorrectionBox.Size = new System.Drawing.Size(100, 20);
-            this.CorrectionBox.TabIndex = 20;
-            this.CorrectionBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
             // DecRateBox
             // 
             this.DecRateBox.Location = new System.Drawing.Point(112, 70);
@@ -473,18 +465,6 @@ namespace Hot_Pursuit
             this.CLSBox.UseVisualStyleBackColor = true;
             this.CLSBox.CheckedChanged += new System.EventHandler(this.CLSBox_CheckedChanged);
             // 
-            // LiveStackBox
-            // 
-            this.LiveStackBox.AutoSize = true;
-            this.LiveStackBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.LiveStackBox.ForeColor = System.Drawing.Color.White;
-            this.LiveStackBox.Location = new System.Drawing.Point(6, 71);
-            this.LiveStackBox.Name = "LiveStackBox";
-            this.LiveStackBox.Size = new System.Drawing.Size(77, 17);
-            this.LiveStackBox.TabIndex = 26;
-            this.LiveStackBox.Text = "Live Stack";
-            this.LiveStackBox.UseVisualStyleBackColor = true;
-            // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -499,8 +479,6 @@ namespace Hot_Pursuit
             this.Controls.Add(this.LookUpCheckBox);
             this.Controls.Add(this.RARateBox);
             this.Controls.Add(this.DecRateBox);
-            this.Controls.Add(this.CorrectionBox);
-            this.Controls.Add(this.label7);
             this.Controls.Add(this.HPStatusBox);
             this.Controls.Add(this.SequencerGroupBox);
             this.Controls.Add(this.OnTopBox);
@@ -555,8 +533,6 @@ namespace Hot_Pursuit
         private System.Windows.Forms.CheckBox FullReductionCheckBox;
         private System.Windows.Forms.ComboBox FiltersListBox;
         private System.Windows.Forms.TextBox HPStatusBox;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox CorrectionBox;
         private System.Windows.Forms.TextBox DecRateBox;
         private System.Windows.Forms.TextBox RARateBox;
         private System.Windows.Forms.CheckBox LookUpCheckBox;
