@@ -206,9 +206,9 @@ namespace Hot_Pursuit
             int iMin = (int)((((double)iSign * ha) - (double)iHrs) * 60.0);
             double dSec = (double)((((double)iSign * ha) - ((double)iHrs + ((double)iMin / 60.0))) * 60.0 * 60.0);
             if (shorten && iHrs == 0)
-                return (iSign * iMin).ToString("00") + "m" + dSec.ToString("00") + "s";
+                return (iSign * iMin).ToString("00") + "m" + dSec.ToString("00.0") + "s";
             else
-                return (iSign * iHrs).ToString("00") + "h" + iMin.ToString("00") + "m" + dSec.ToString("00") + "s";
+                return (iSign * iHrs).ToString("00") + "h" + iMin.ToString("00") + "m" + dSec.ToString("00.0") + "s";
 
         }
 

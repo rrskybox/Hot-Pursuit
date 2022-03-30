@@ -15,7 +15,7 @@ namespace Hot_Pursuit
     {
         public bool InPursuit = false;
         public bool IsImaging = false;
- 
+       
         public Ephemeris EphemTable;
 
         public string HPDirectoryPath;
@@ -48,11 +48,10 @@ namespace Hot_Pursuit
             ScoutButton.BackColor = Color.LightGreen;
             HorizonsButton.BackColor = Color.LightGreen;
             MPESButton.BackColor = Color.LightGreen;
-            AbortButton.BackColor = Color.LightGreen;
+            StopButton.BackColor = Color.LightGreen;
             CloseButton.BackColor = Color.LightGreen;
 
             ImageButton.BackColor = Color.Yellow;
-            ImageAbort.Visible = false;
 
             HPDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Hot Pursuit";
             if (!Directory.Exists(HPDirectoryPath)) Directory.CreateDirectory(HPDirectoryPath);
@@ -74,12 +73,12 @@ namespace Hot_Pursuit
             ClearFields();
             //Retrieve current target name from TSX and set in ss
             string tName;
-            if (LookUpCheckBox.Checked)
+            if (!TSXLookUpCheckBox.Checked)
                 tName = TargetBox.Text;
             else
                 tName = Utils.GetTargetName();
             TargetBox.Text = tName;
-            EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)UpdateBox.Value);
+            EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
 
             WalkEphemerisTable(ScoutButton, Ephemeris.EphemSource.Scout);
         }
@@ -93,12 +92,12 @@ namespace Hot_Pursuit
             ClearFields();
             //Retrieve current target name from TSX and set in ss
             string tName;
-            if (LookUpCheckBox.Checked)
+            if (!TSXLookUpCheckBox.Checked)
                 tName = TargetBox.Text;
             else
                 tName = Utils.GetTargetName();
             TargetBox.Text = tName;
-            EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)UpdateBox.Value);
+            EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
 
             WalkEphemerisTable(HorizonsButton, Ephemeris.EphemSource.Horizons);
         }
@@ -112,12 +111,12 @@ namespace Hot_Pursuit
             ClearFields();
             //Retrieve current target name from TSX and set in ss
             string tName;
-            if (LookUpCheckBox.Checked)
+            if (!TSXLookUpCheckBox.Checked)
                 tName = TargetBox.Text;
             else
                 tName = Utils.GetTargetName();
             TargetBox.Text = tName;
-            EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)UpdateBox.Value);
+            EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
 
             WalkEphemerisTable(MPESButton, Ephemeris.EphemSource.MPES);
         }
@@ -150,31 +149,7 @@ namespace Hot_Pursuit
                             " (Lon)");
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = EphemTable.GetNextRateUpdate(EphemTable.EphStart);
-            //CLS to where target should be currently, deal with CLS failure
-            if (!Utils.CLSToTarget(EphemTable.TgtName, nextUpdateSV, CLSBox.Checked))
-            {
-                UpdateStatusLine("Tracking failed: Problem with Slew.");
-                CleanupOnFault();
-                return;
-            }
-            (double r, double d) = Utils.GetCurrentTelePosition();
-            //Prompt for imaging
-            ImageButton.BackColor = Color.LightGreen;
-            //Set custom tracking 
-            if (!Utils.SetTargetTracking(nextUpdateSV, EphemTable.Topo_RA_Correction_Factor, EphemTable.Topo_Dec_Correction_Factor))
-                TargetBox.BackColor = Color.LightSalmon;
-            else
-                TargetBox.BackColor = Color.LightGreen;
-            RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
-            DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
-            //CorrectionBox.Text = Utils.HourString(EphemTable.RA_CorrectionD, true) + "/" + Utils.DegreeString(EphemTable.Dec_CorrectionD, true);
-            RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
-            DateTime nextUpdate = nextUpdateSV.Time_UTC;
-            if (MinutesButton.Checked)
-                nextUpdate += TimeSpan.FromMinutes((int)UpdateBox.Value);
-            else
-                nextUpdate += TimeSpan.FromSeconds((int)UpdateBox.Value);
-            NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+            InitializeTargetTracking(nextUpdateSV);
             //**************************  site location status code
             UpdateStatusLine("Site corrected astrometry: " +
                                 EphemTable.Site_Corrected_Range.ToString("0.00") + " AU:  " +
@@ -190,10 +165,10 @@ namespace Hot_Pursuit
                 nextUpdateSV = EphemTable.GetNextRateUpdate(DateTime.UtcNow);
                 if (nextUpdateSV != null)
                 {
-                    nextUpdate = nextUpdateSV.Time_UTC;
+                    DateTime nextUpdate = nextUpdateSV.Time_UTC;
                     while (DateTime.UtcNow <= nextUpdate)
                     {
-                        NextUpdateBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+                        NextRecenterBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
                         OneSecondPulse(cmdButton);
                         CheckImaging();
                         if (AbortRequested)
@@ -212,9 +187,9 @@ namespace Hot_Pursuit
                 }
                 else //no new update -- go get another
                 {
-                    EphemTable = new Ephemeris(dSource, TargetBox.Text, MinutesButton.Checked, (int)UpdateBox.Value);
+                    EphemTable = new Ephemeris(dSource, TargetBox.Text, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
                     EphemTable.EphStart = DateTime.UtcNow;
-                    EphemTable.EphStep = TimeSpan.FromMinutes((double)UpdateBox.Value);
+                    EphemTable.EphStep = TimeSpan.FromMinutes((double)RefreshIntervalBox.Value);
                     EphemTable.EphEnd = EphemTable.EphStart + TimeSpan.FromMinutes((100 * EphemTable.EphStep.TotalMinutes));
                 }
             }
@@ -226,12 +201,7 @@ namespace Hot_Pursuit
         {
             //Sets up and runs a single shot using the exposure and filter set by the form
             ImageButton.BackColor = Color.LightSalmon;
-            ImageAbort.Visible = true;
-            ImageAbort.BackColor = Color.LightGreen;
-            ImageAbort.Enabled = true;
-
             ImageFrames = new List<FitsFile>();  //Clear image stack
-
             TakeImage();
             return;
         }
@@ -259,7 +229,6 @@ namespace Hot_Pursuit
                 Reduction calLib = new Reduction();
                 calLib.SetReductionGroup(tsxc.FilterIndexZeroBased, tsxc.ExposureTime, (int)tsxc.TemperatureSetPoint, binning);
             }
-            ImageAbort.BackColor = Color.LightGreen;
             try
             {
                 tsxc.Connect();
@@ -332,6 +301,11 @@ namespace Hot_Pursuit
                         {
                             RepsBox.Value--;
                             ImageButton.BackColor = Color.Salmon;
+                            if (RecenterBox.Checked)
+                            {
+                                SpeedVector nextUpdateSV = EphemTable.GetNextRateUpdate(DateTime.UtcNow);
+                                InPursuit = InitializeTargetTracking(nextUpdateSV);
+                            }
                             TakeImage();
                         }
                         else
@@ -364,7 +338,6 @@ namespace Hot_Pursuit
                     tsxc.AutoSavePrefix = "";  //Clear target name prefix
                     ImageButton.BackColor = Color.Yellow;
                     IsImaging = false;
-                    ImageAbort.Visible = false;
                 }
             }
         }
@@ -383,17 +356,19 @@ namespace Hot_Pursuit
             RARateBox.Text = "";
             DecRateBox.Text = "";
             //CorrectionBox.Text = "";
-            NextUpdateBox.Text = "";
+            NextRecenterBox.Text = "";
             RangeBox.Text = "";
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
         {
+            if (IsImaging)
+                ImageAbort();
             Properties.Settings.Default.Save();
             Close();
         }
 
-        private void AbortButton_Click(object sender, EventArgs e)
+        private void StopButton_Click(object sender, EventArgs e)
         {
             if (InPursuit)
                 AbortRequested = true;
@@ -408,13 +383,12 @@ namespace Hot_Pursuit
             return;
         }
 
-        private void ImageAbort_Click(object sender, EventArgs e)
+        private void ImageAbort()
         {
             //Stop the imaging, clean up form
             ccdsoftCamera tsxc = new ccdsoftCamera();
             tsxc.Abort();
             ImageButton.BackColor = Color.LightGreen;
-            ImageAbort.Visible = false;
             RepsBox.Value = 1;
             return;
         }
@@ -446,7 +420,7 @@ namespace Hot_Pursuit
 
         private void TargetBox_Click(object sender, EventArgs e)
         {
-            LookUpCheckBox.Checked = true;
+            TSXLookUpCheckBox.Checked = false;
             return;
         }
 
@@ -483,16 +457,45 @@ namespace Hot_Pursuit
                                 + "/"
                                 + dDecout.ToString("0.000");
             UpdateStatusLine(returnStatus);
-            //returnStatus = "  (HP in arcsec/sec) = " + (sv.Rate_RA_ArcsecPerMinute / 60).ToString("0.000000") + "/" + (sv.Rate_Dec_ArcsecPerMinute / 60).ToString("0.000000")
-            //                 + " (TSX in arcsec/sec) = " + (dRATSX).ToString("0.000000") + "/" + (dDecTSX).ToString("0.000000");
-            //UpdateStatusLine(returnStatus);
+          }
+
+ private bool InitializeTargetTracking(SpeedVector nextUpdateSV)
+        {
+            //CLS to where target should be currently, deal with CLS failure
+            if (!Utils.CLSToTarget(EphemTable.TgtName, nextUpdateSV, CLSBox.Checked))
+            {
+                UpdateStatusLine("Tracking failed: Problem with Slew.");
+                CleanupOnFault();
+                return false;
+            }
+            (double r, double d) = Utils.GetCurrentTelePosition();
+            //Prompt for imaging
+            ImageButton.BackColor = Color.LightGreen;
+            //Set custom tracking 
+            if (!Utils.SetTargetTracking(nextUpdateSV, EphemTable.Topo_RA_Correction_Factor, EphemTable.Topo_Dec_Correction_Factor))
+                TargetBox.BackColor = Color.LightSalmon;
+            else
+                TargetBox.BackColor = Color.LightGreen;
+            RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
+            DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+            RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
+            DateTime nextUpdate = nextUpdateSV.Time_UTC;
+            if (MinutesButton.Checked)
+                nextUpdate += TimeSpan.FromMinutes((int)RefreshIntervalBox.Value);
+            else
+                nextUpdate += TimeSpan.FromSeconds((int)RefreshIntervalBox.Value);
+            NextRecenterBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
+            return true;
         }
+
 
         private void LogEntry(string entryStuff)
         {
             string logtime = DateTime.Now.ToString("HH:mm:ss");
             File.AppendAllText(HPLogFilePath, (logtime + ": " + entryStuff + "\r\n"));
         }
+
+
     }
 }
 
