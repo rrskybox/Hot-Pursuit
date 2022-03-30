@@ -311,6 +311,7 @@ namespace Hot_Pursuit
                         else
                         {
                             ImageButton.BackColor = Color.LightGreen;
+                            tsxc.AutoSavePrefix = "";  //Clear target name prefix
                             IsImaging = false;
                         }
                         //display the most recent image stack
@@ -337,6 +338,8 @@ namespace Hot_Pursuit
                 {
                     tsxc.AutoSavePrefix = "";  //Clear target name prefix
                     ImageButton.BackColor = Color.Yellow;
+                    if (IsImaging)
+                        tsxc.Abort();
                     IsImaging = false;
                 }
             }
@@ -487,7 +490,6 @@ namespace Hot_Pursuit
             NextRecenterBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
             return true;
         }
-
 
         private void LogEntry(string entryStuff)
         {
