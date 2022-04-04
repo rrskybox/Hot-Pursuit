@@ -40,6 +40,8 @@ namespace Hot_Pursuit
             this.ImageBox.Size = new System.Drawing.Size(506, 340);
             this.ImageBox.TabIndex = 0;
             this.ImageBox.TabStop = false;
+            this.ImageBox.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.MouseWheel_Handler);
+
             // 
             // FormImageStack
             // 
