@@ -15,7 +15,7 @@ namespace Hot_Pursuit
     {
         public bool InPursuit = false;
         public bool IsImaging = false;
-       
+
         public Ephemeris EphemTable;
 
         public string HPDirectoryPath;
@@ -45,9 +45,7 @@ namespace Hot_Pursuit
             OnTopBox.Checked = Properties.Settings.Default.IsOnTop;
             CLSBox.Checked = Properties.Settings.Default.UseCLS;
 
-            ScoutButton.BackColor = Color.LightGreen;
-            HorizonsButton.BackColor = Color.LightGreen;
-            MPESButton.BackColor = Color.LightGreen;
+            StartButton.BackColor = Color.LightGreen;
             StopButton.BackColor = Color.LightGreen;
             CloseButton.BackColor = Color.LightGreen;
 
@@ -64,64 +62,46 @@ namespace Hot_Pursuit
 
         public bool AbortRequested { get; set; } = false;
 
-        private void ScoutButton_Click(object sender, EventArgs e)
+        private void StartButton_Click(object sender, EventArgs e)
         {
             if (InPursuit)
                 return;
-            InPursuit = true;
-            ScoutButton.BackColor = Color.Salmon;
-            ClearFields();
             //Retrieve current target name from TSX and set in ss
             string tName;
-            if (!TSXLookUpCheckBox.Checked)
-                tName = TargetBox.Text;
-            else
+            if (TargetBox.Text == "")
                 tName = Utils.GetTargetName();
+            else
+                tName = TargetBox.Text;
             TargetBox.Text = tName;
-            EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-
-            WalkEphemerisTable(ScoutButton, Ephemeris.EphemSource.Scout);
-        }
-
-        private void HorizonsButton_Click(object sender, EventArgs e)
-        {
-            if (InPursuit)
+            Show();
+            System.Windows.Forms.Application.DoEvents();
+            if (tName == "")
                 return;
-            InPursuit = true;
-            HorizonsButton.BackColor = Color.Salmon;
-            ClearFields();
-            //Retrieve current target name from TSX and set in ss
-            string tName;
-            if (!TSXLookUpCheckBox.Checked)
-                tName = TargetBox.Text;
-            else
-                tName = Utils.GetTargetName();
-            TargetBox.Text = tName;
-            EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
 
-            WalkEphemerisTable(HorizonsButton, Ephemeris.EphemSource.Horizons);
+            InPursuit = true;
+            ClearFields();
+
+            if (ScoutRadioButton.Checked)
+            {
+                EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                WalkEphemerisTable(Ephemeris.EphemSource.Scout);
+            }
+
+            if (HorizonsRadioButton.Checked)
+            {
+                EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                WalkEphemerisTable(Ephemeris.EphemSource.Horizons);
+            }
+
+            if (MPCRadioButton.Checked)
+            {
+                EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                WalkEphemerisTable(Ephemeris.EphemSource.MPES);
+            }
+
         }
 
-        private void MPESButton_Click(object sender, EventArgs e)
-        {
-            if (InPursuit)
-                return;
-            InPursuit = true;
-            MPESButton.BackColor = Color.Salmon;
-            ClearFields();
-            //Retrieve current target name from TSX and set in ss
-            string tName;
-            if (!TSXLookUpCheckBox.Checked)
-                tName = TargetBox.Text;
-            else
-                tName = Utils.GetTargetName();
-            TargetBox.Text = tName;
-            EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-
-            WalkEphemerisTable(MPESButton, Ephemeris.EphemSource.MPES);
-        }
-
-        private void WalkEphemerisTable(Button cmdButton, Ephemeris.EphemSource dSource)
+        private void WalkEphemerisTable(Ephemeris.EphemSource dSource)
         {
             if (!EphemTable.HasData)
             {
@@ -150,6 +130,10 @@ namespace Hot_Pursuit
             //Fire off first tracking instruction
             SpeedVector nextUpdateSV = EphemTable.GetNextRateUpdate(EphemTable.EphStart);
             InitializeTargetTracking(nextUpdateSV);
+
+            //Wait for 20 seconds for this to stablize
+            System.Threading.Thread.Sleep(20);
+
             //**************************  site location status code
             UpdateStatusLine("Site corrected astrometry: " +
                                 EphemTable.Site_Corrected_Range.ToString("0.00") + " AU:  " +
@@ -169,7 +153,7 @@ namespace Hot_Pursuit
                     while (DateTime.UtcNow <= nextUpdate)
                     {
                         NextRecenterBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
-                        OneSecondPulse(cmdButton);
+                        OneSecondPulse(StartButton);
                         CheckImaging();
                         if (AbortRequested)
                             break;
@@ -265,9 +249,7 @@ namespace Hot_Pursuit
         {
             AbortRequested = false;
             InPursuit = false;
-            ScoutButton.BackColor = Color.LightGreen;
-            MPESButton.BackColor = Color.LightGreen;
-            HorizonsButton.BackColor = Color.LightGreen;
+            StartButton.BackColor = Color.LightGreen;
             TargetBox.BackColor = Color.White;
             CheckImaging();
             return;
@@ -292,9 +274,9 @@ namespace Hot_Pursuit
         {
             //Checks to see if imaging is going on, if not, turn off indicators that it is
             ccdsoftCamera tsxc = new ccdsoftCamera();
-            if (tsxc.State == ccdsoftCameraState.cdStateNone && IsImaging)
+            if (InPursuit)
             {
-                if (InPursuit)
+                if (tsxc.State == ccdsoftCameraState.cdStateNone && IsImaging)
                 {
                     {
                         if (RepsBox.Value > 1)
@@ -305,6 +287,10 @@ namespace Hot_Pursuit
                             {
                                 SpeedVector nextUpdateSV = EphemTable.GetNextRateUpdate(DateTime.UtcNow);
                                 InPursuit = InitializeTargetTracking(nextUpdateSV);
+
+                                //Wait for 20 seconds for this to stablize
+                                System.Threading.Thread.Sleep(20);
+
                             }
                             TakeImage();
                         }
@@ -334,14 +320,14 @@ namespace Hot_Pursuit
                         }
                     }
                 }
-                else
-                {
-                    tsxc.AutoSavePrefix = "";  //Clear target name prefix
-                    ImageButton.BackColor = Color.Yellow;
-                    if (IsImaging)
-                        tsxc.Abort();
-                    IsImaging = false;
-                }
+            }
+            else
+            {
+                tsxc.AutoSavePrefix = "";  //Clear target name prefix
+                ImageButton.BackColor = Color.Yellow;
+                if (IsImaging)
+                    tsxc.Abort();
+                IsImaging = false;
             }
         }
 
@@ -421,12 +407,6 @@ namespace Hot_Pursuit
             return;
         }
 
-        private void TargetBox_Click(object sender, EventArgs e)
-        {
-            TSXLookUpCheckBox.Checked = false;
-            return;
-        }
-
         private void CLSBox_CheckedChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.UseCLS = CLSBox.Checked;
@@ -460,9 +440,9 @@ namespace Hot_Pursuit
                                 + "/"
                                 + dDecout.ToString("0.000");
             UpdateStatusLine(returnStatus);
-          }
+        }
 
- private bool InitializeTargetTracking(SpeedVector nextUpdateSV)
+        private bool InitializeTargetTracking(SpeedVector nextUpdateSV)
         {
             //CLS to where target should be currently, deal with CLS failure
             if (!Utils.CLSToTarget(EphemTable.TgtName, nextUpdateSV, CLSBox.Checked))
@@ -496,7 +476,6 @@ namespace Hot_Pursuit
             string logtime = DateTime.Now.ToString("HH:mm:ss");
             File.AppendAllText(HPLogFilePath, (logtime + ": " + entryStuff + "\r\n"));
         }
-
 
     }
 }

@@ -159,8 +159,6 @@ namespace Hot_Pursuit
             {
                 return false;
             }
-            //double dRA2 = tsxmt.dRaTrackingRate;
-            //double dDec2 = tsxmt.dDecTrackingRate;
             return true;
         }
 
