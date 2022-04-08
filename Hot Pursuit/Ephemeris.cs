@@ -44,11 +44,15 @@ namespace Hot_Pursuit
             TgtName = targetName;
             EphStart = DateTime.UtcNow;
             if (isMinutes)
+            {
                 EphStep = TimeSpan.FromMinutes(updateRate);
+                EphEnd = EphStart + TimeSpan.FromMinutes((100 * updateRate));
+            }
             else
-                EphStep = TimeSpan.FromMinutes(1);
-            EphEnd = EphStart + TimeSpan.FromMinutes((100 * EphStep.TotalMinutes));
-
+            {
+                EphStep = TimeSpan.FromSeconds(updateRate);
+                EphEnd = EphStart + TimeSpan.FromSeconds(EphStep.TotalSeconds * 100);
+            }
             switch (eps)
             {
                 case EphemSource.Scout:
@@ -85,6 +89,7 @@ namespace Hot_Pursuit
         const string xdDec = "dDec";
         const string xPA = "PA";
         const string xdRate = "Rate";
+
         //const string xAzi = "Azimuth";
         //const string xAlt = "Altitude";
         //const string xSunAlt = "SunAlt";
@@ -98,7 +103,7 @@ namespace Hot_Pursuit
 
         private bool EphemerisListToSpeedVector(XElement ephmList, bool isMinutes, int updateInterval)
         {
-            DateTime beginningTime = DateTime.UtcNow;
+            //DateTime beginningTime = DateTime.UtcNow;
             //Convert XML to speed vector array
             List<SpeedVector> BasicRateTable = new List<SpeedVector>();
             UpdateRateTable = new List<SpeedVector>();
@@ -118,19 +123,18 @@ namespace Hot_Pursuit
                 double sPA_D = Math.Atan2(sdDecdt, sdRACosDecdt);
                 double sRange = Convert.ToDouble(ephX.Element(xRng).Value);
 
-                if (sUT >= beginningTime)
-                    BasicRateTable.Add(new SpeedVector
-                    {
-                        Time_UTC = sUT,
-                        RA_Degrees = sRA_D,  //Scout delivers RA in degrees
-                        Dec_Degrees = sDec_D,
-                        Rate_RA_CosDec_ArcsecPerMinute = sdRACosDecdt,
-                        Rate_Dec_ArcsecPerMinute = sdDecdt,
-                        Rate_RA_ArcsecPerMinute = sdRAdt,
-                        PA_Degrees = sPA_D,
-                        Range_AU = sRange,  //AU
-                        Elevation_KM = sElevation_KM
-                    });
+                BasicRateTable.Add(new SpeedVector
+                {
+                    Time_UTC = sUT,
+                    RA_Degrees = sRA_D,  //Scout delivers RA in degrees
+                    Dec_Degrees = sDec_D,
+                    Rate_RA_CosDec_ArcsecPerMinute = sdRACosDecdt,
+                    Rate_Dec_ArcsecPerMinute = sdDecdt,
+                    Rate_RA_ArcsecPerMinute = sdRAdt,
+                    PA_Degrees = sPA_D,
+                    Range_AU = sRange,  //AU
+                    Elevation_KM = sElevation_KM
+                });
             }
             if (isMinutes)
             {
@@ -140,28 +144,37 @@ namespace Hot_Pursuit
             {
                 //must add interpolated ephemeras
                 //Horizons delivers a full day worth of data at 1 minute intervals
-                // throwaway all but the first hour (60 readings) so we don't run out of memory interpolating
-                for (int bIdx = 0; bIdx < BasicRateTable.Count - 1; bIdx++)
+                // only do the first 100 readings
+                for (int bIdx = 0; (bIdx < BasicRateTable.Count - 1 && bIdx < 100); bIdx++)
                 {
-                    if (BasicRateTable[bIdx].Time_UTC > DateTime.UtcNow && BasicRateTable[bIdx].Time_UTC < DateTime.UtcNow + TimeSpan.FromHours(1))
-                    {
-                        UpdateRateTable.Add(BasicRateTable[bIdx]);
-                        Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
-                        foreach (SpeedVector sv in intp.WayPoints)
-                            UpdateRateTable.Add(sv);
-                    }
+                    UpdateRateTable.Add(BasicRateTable[bIdx]);
+                    Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
+                    foreach (SpeedVector sv in intp.WayPoints)
+                        UpdateRateTable.Add(sv);
                 }
+
             }
             UpdateRateTable.Sort((x, y) => x.Time_UTC.CompareTo(y.Time_UTC));
             return true;
         }
 
-        public SpeedVector? GetNextRateUpdate(DateTime nextTime)
+        public SpeedVector? GetNearestRateUpdate(DateTime nearTime)
         {
+            TimeSpan closeApproach = TimeSpan.MaxValue;
+            int closest = 0;
             for (int i = 0; i < UpdateRateTable.Count; i++)
-                if (UpdateRateTable[i].Time_UTC > nextTime)
-                    return UpdateRateTable[i];
-            return null;
+            {
+                TimeSpan interval = (UpdateRateTable[i].Time_UTC - nearTime).Duration();
+                if (interval < closeApproach)
+                {
+                    closest = i;
+                    closeApproach = interval;
+                }
+            }
+            if (closest != UpdateRateTable.Count - 1)
+                return UpdateRateTable[closest];
+            else
+                return null;
         }
 
 
@@ -235,23 +248,38 @@ namespace Hot_Pursuit
                 DateTime datetimeX = Convert.ToDateTime(ephX.Element("time").Value);
                 string dateString = datetimeX.ToString("yyyy-MM-dd");
                 string timeString = datetimeX.ToString("HH:mm:ss");
-                IEnumerable<XElement> sPositionX = ephX.Element("data").Elements("data");
-                List<XElement> sPositionList = sPositionX.ToList();
+                XElement sPositionX = ephX.Element("median");
+
                 ephmRecord.Add(new XElement(xUTDate, dateString));
                 ephmRecord.Add(new XElement(xUTHrMin, timeString));
-                ephmRecord.Add(new XElement(xRA, Convert.ToDouble(sPositionList[idx_ra].Value)));//Scout delivers RA in degrees
-                ephmRecord.Add(new XElement(xDec, Convert.ToDouble(sPositionList[idx_dec].Value)));
-                ephmRecord.Add(new XElement(mr, Convert.ToDouble(sPositionList[idx_reO_Geo].Value))); //AU
-                ephmRecord.Add(new XElement(mEl, "0"));
-                double pa_Degrees = (Convert.ToDouble(sPositionList[idx_pa].Value));  //Plane of sky
-                ephmRecord.Add(new XElement(xPA, pa_Degrees.ToString()));
-                double rate_ArcsecPerMinute = Convert.ToDouble(sPositionList[idx_rate].Value);  //Arcsec/min
-                ephmRecord.Add(new XElement(xdRate, rate_ArcsecPerMinute.ToString()));
-                double dDec = rate_ArcsecPerMinute * Math.Cos(AstroMath.Transform.DegreesToRadians(pa_Degrees));
-                ephmRecord.Add(new XElement(xdDec, dDec.ToString()));
-                double dRACosD = rate_ArcsecPerMinute * Math.Sin(AstroMath.Transform.DegreesToRadians(pa_Degrees));
-                ephmRecord.Add(new XElement(xdRACosD, dRACosD.ToString()));
-                ephmRecord.Add(new XElement(xRng, Convert.ToDouble(sPositionList[idx_reO_Geo].Value)));  //AU
+                ephmRecord.Add(new XElement(xRA, sPositionX.Element("ra").Value));//Scout delivers RA in degrees
+                ephmRecord.Add(new XElement(xDec, sPositionX.Element("dec").Value)); ;
+                ephmRecord.Add(new XElement(xPA, sPositionX.Element("pa").Value));
+                ephmRecord.Add(new XElement(xdRate, sPositionX.Element("rate").Value));
+                ephmRecord.Add(new XElement(xdRACosD, sPositionX.Element("dra").Value));
+                ephmRecord.Add(new XElement(xdDec, sPositionX.Element("ddec").Value));
+                ephmRecord.Add(new XElement(xRng, sPositionX.Element("rs").Value));  //AU
+                ephmRecord.Add(new XElement(xV, sPositionX.Element("vmag").Value));  //Magnitude
+
+                //IEnumerable<XElement> sPositionX = ephX.Element("data").Elements("data");
+                //List<XElement> sPositionList = sPositionX.ToList();
+                //ephmRecord.Add(new XElement(xUTDate, dateString));
+                //ephmRecord.Add(new XElement(xUTHrMin, timeString));
+                //ephmRecord.Add(new XElement(xRA, Convert.ToDouble(sPositionList[idx_ra].Value)));//Scout delivers RA in degrees
+                //double dec = Convert.ToDouble(sPositionList[idx_dec].Value);
+                //ephmRecord.Add(new XElement(xDec, dec.ToString()));
+                //ephmRecord.Add(new XElement(mr, Convert.ToDouble(sPositionList[idx_reO_Geo].Value))); //AU
+                //ephmRecord.Add(new XElement(mEl, "0"));
+                //double pa_Degrees = (Convert.ToDouble(sPositionList[idx_pa].Value));  //Plane of sky
+                //ephmRecord.Add(new XElement(xPA, pa_Degrees.ToString()));
+                //double rate_ArcsecPerMinute = Convert.ToDouble(sPositionList[idx_rate].Value);  //Arcsec/min
+                //ephmRecord.Add(new XElement(xdRate, rate_ArcsecPerMinute.ToString()));
+                //double dDec = rate_ArcsecPerMinute * Math.Cos(AstroMath.Transform.DegreesToRadians(pa_Degrees));
+                //ephmRecord.Add(new XElement(xdDec, dDec.ToString()));
+                //double dRA = rate_ArcsecPerMinute * Math.Sin(AstroMath.Transform.DegreesToRadians(pa_Degrees));
+                //double dRACosD = dRA * Math.Cos(AstroMath.Transform.DegreesToRadians(dec));
+                //ephmRecord.Add(new XElement(xdRACosD, dRACosD.ToString()));
+                //ephmRecord.Add(new XElement(xRng, Convert.ToDouble(sPositionList[idx_reO_Geo].Value)));  //AU
                 ephmList.Add(ephmRecord);
             }
             return EphemerisListToSpeedVector(ephmList, isMinutes, updateInterval);
@@ -364,7 +392,10 @@ namespace Hot_Pursuit
             queryString["n-orbits"] = "1";
             queryString["eph-start"] = EphStart.ToString("yyyy-MM-ddTHH:mm:ss");
             queryString["eph-stop"] = EphEnd.ToString("yyyy-MM-ddTHH:mm:ss");
-            queryString["eph-step"] = EphStep.Minutes.ToString("0") + "m";
+            if (EphStep.Minutes < 1)
+                queryString["eph-step"] = "1" + "m";
+            else
+                queryString["eph-step"] = EphStep.Minutes.ToString("0") + "m";
             queryString["obs-code"] = mpc_observatory_code;
             queryString["ranges"] = "true";
             return queryString.ToString();
@@ -908,13 +939,6 @@ namespace Hot_Pursuit
                 ephmRecord.Add(new XElement(xV, mpcDataLine.Substring(colV, 5)));
                 ephmRecord.Add(new XElement(xdRACosD, mpcDataLine.Substring(coldRACosD, 9)));
                 ephmRecord.Add(new XElement(xdDec, mpcDataLine.Substring(coldDec, 9)));
-                //ephmRecord.Add(new XElement(xAzi, mpcDataLine.Substring(colAzi, 6)));
-                //ephmRecord.Add(new XElement(xAlt, mpcDataLine.Substring(colAlt, 5)));
-                //ephmRecord.Add(new XElement(xSunAlt, mpcDataLine.Substring(colSunAlt, 5)));
-                //ephmRecord.Add(new XElement(xMoonPhase, mpcDataLine.Substring(colMoonPhase, 6)));
-                //ephmRecord.Add(new XElement(xMoonDist, mpcDataLine.Substring(colMoonDist, 5)));
-                //ephmRecord.Add(new XElement(xMoonAlt, mpcDataLine.Substring(colMoonAlt, 4)));
-
                 ephmList.Add(ephmRecord);
             }
 
@@ -1004,11 +1028,13 @@ namespace Hot_Pursuit
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[mEphemerisType] = "e";
             queryString[mTarget] = scrubbedTgtName;
-            queryString[mStartDate] = EphStart.ToString("yyyy-MM-dd"); // "2021-01-12";
+            //queryString[mStartDate] = EphStart.ToString("yyyy-MM-dd"); // "2021-01-12";
+            queryString[mStartDate] = ""; // Current ephemeris
+            //queryString[mUTOffset] = EphStart.Hour.ToString("0");  //puts us in the correct hour of the day
+            queryString[mUTOffset] = "";  //No offset for current ephemeris
             queryString[mNumberOfRecords] = "1440";  // one day's worth at 1 min
             queryString[mInterval] = "1";
             queryString[mIntervalUnits] = "m";
-            queryString[mUTOffset] = "0";
             queryString[mObservatoryCode] = "";
             queryString[mSiteLongitude] = MPC_Observatory.BestObservatory.MySiteLong.ToString("0.000");
             queryString[mSiteLatitude] = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
@@ -1026,8 +1052,8 @@ namespace Hot_Pursuit
             queryString[mch] = "c";  // set to "c"
             queryString[mce] = "f"; //set to  f
             queryString[mjs] = "f"; // = "js"; //set to f
-            //queryString[mSuppressSun] = "n"; // = "igd"; // SuppressSun: igd = “y” or “n” (default) Suppress output if sun above horizon
-            //queryString[mSuppressHorizon] = "n"; // = "igd";  // igd = “y” or “n” (default) Suppress output if target is below horizon
+                                    //queryString[mSuppressSun] = "n"; // = "igd"; // SuppressSun: igd = “y” or “n” (default) Suppress output if sun above horizon
+                                    //queryString[mSuppressHorizon] = "n"; // = "igd";  // igd = “y” or “n” (default) Suppress output if target is below horizon
             string q = queryString.ToString();
             // May be problem with "/" = %2F rather than %2f
             q = q.Replace("%2f", "%2F");

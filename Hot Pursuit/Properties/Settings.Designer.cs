@@ -70,5 +70,17 @@ namespace Hot_Pursuit.Properties {
                 this["UseCLS"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int StartDelay {
+            get {
+                return ((int)(this["StartDelay"]));
+            }
+            set {
+                this["StartDelay"] = value;
+            }
+        }
     }
 }

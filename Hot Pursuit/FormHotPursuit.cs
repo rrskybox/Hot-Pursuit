@@ -26,6 +26,8 @@ namespace Hot_Pursuit
         public List<FitsFile> ImageFrames;
         public FormImageStack formStack = null;
 
+        public DateTime refreshTime;
+
         public Thread StackThread = null;
         public Point StackFormLocation = new Point(0, 0);
 
@@ -44,6 +46,7 @@ namespace Hot_Pursuit
             FullReductionCheckBox.Checked = Properties.Settings.Default.FullReduction;
             OnTopBox.Checked = Properties.Settings.Default.IsOnTop;
             CLSBox.Checked = Properties.Settings.Default.UseCLS;
+            SlewSettlingTimeDelayBox.Value = (decimal)Properties.Settings.Default.StartDelay;
 
             StartButton.BackColor = Color.LightGreen;
             StopButton.BackColor = Color.LightGreen;
@@ -84,37 +87,40 @@ namespace Hot_Pursuit
             if (ScoutRadioButton.Checked)
             {
                 EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                WalkEphemerisTable(Ephemeris.EphemSource.Scout);
+                while (WalkEphemerisTable(Ephemeris.EphemSource.Scout))
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
             }
 
             if (HorizonsRadioButton.Checked)
             {
-                EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                WalkEphemerisTable(Ephemeris.EphemSource.Horizons);
+                EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                while (WalkEphemerisTable(Ephemeris.EphemSource.Horizons))
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
             }
 
             if (MPCRadioButton.Checked)
             {
                 EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                WalkEphemerisTable(Ephemeris.EphemSource.MPES);
+                while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
             }
 
         }
 
-        private void WalkEphemerisTable(Ephemeris.EphemSource dSource)
+        private bool WalkEphemerisTable(Ephemeris.EphemSource dSource)
         {
             if (!EphemTable.HasData)
             {
                 UpdateStatusLine("Problem with loading target data. The target may no longer be in the CNEOS Listing.");
                 CleanupOnFault();
-                return;
+                return false;
             }
             //Handle exceptions
             if (EphemTable.TgtName == null)
             {
                 UpdateStatusLine("No target is found.  Check TheSkyX for target assignment.");
                 CleanupOnFault();
-                return;
+                return false;
             }
             UpdateStatusLine("Now targetting: " + EphemTable.TgtName);
             //fill in Filters list
@@ -128,12 +134,14 @@ namespace Hot_Pursuit
                             "(Lat) / " + Utils.DegreeString(EphemTable.MPC_Observatory.BestObservatory.VarianceDec, true) +
                             " (Lon)");
             //Fire off first tracking instruction
-            SpeedVector nextUpdateSV = EphemTable.GetNextRateUpdate(EphemTable.EphStart);
-            InitializeTargetTracking(nextUpdateSV);
-
-            //Wait for 20 seconds for this to stablize
-            System.Threading.Thread.Sleep(20);
-
+            SpeedVector nextUpdateSV = EphemTable.GetNearestRateUpdate(DateTime.UtcNow);
+            if (!InitializeTargetTracking(nextUpdateSV))
+            {
+                CleanupOnFault();
+                return false;
+            }
+            //Set refresh countdown timer;
+            refreshTime = nextUpdateSV.Time_UTC + EphemTable.EphStep;
             //**************************  site location status code
             UpdateStatusLine("Site corrected astrometry: " +
                                 EphemTable.Site_Corrected_Range.ToString("0.00") + " AU:  " +
@@ -142,43 +150,90 @@ namespace Hot_Pursuit
             //**************************
             //Update status
             AssembleStatusUpdate(nextUpdateSV, true);
-            //Set up for next tracking instruction
-            while (!AbortRequested)
+            //Loop while no abort has been set
+            while (!AbortRequested) //refresh loop
             {
-                //the next target ephemeris has been loaded into the ss object, but assume not
-                nextUpdateSV = EphemTable.GetNextRateUpdate(DateTime.UtcNow);
+                //Check to see if we are still within the refresh interval
+                while (DateTime.UtcNow < refreshTime)
+                {
+                    //If still within the refresh interval,
+                    //Update the refresh display
+                    NextRefreshBox.Text = (DateTime.UtcNow - refreshTime).Duration().TotalSeconds.ToString("0");
+                    //Perform a one second wait and pulse the Start Command button
+                    OneSecondPulse(StartButton);
+                    //Check to see if imaging is happening and, if so, handle it
+                    CheckImaging();
+                    //Quick check to see if an abort was set while sitting out for a sec and checking imaging
+                    if (AbortRequested)
+                        break;
+                }
+                //Quick check to see if an abort was set while looping on refresh period, if so exit
+                if (AbortRequested)
+                    break;
+                //Refrest period has expired, get next ephemeris entry, if any
+                nextUpdateSV = EphemTable.GetNearestRateUpdate(DateTime.UtcNow);
+                //If closest ephemeris entry is not null, 
+                //  then update the tracking with no delay and display new numbers
+                //  if the update fails then exit
                 if (nextUpdateSV != null)
                 {
-                    DateTime nextUpdate = nextUpdateSV.Time_UTC;
-                    while (DateTime.UtcNow <= nextUpdate)
+                    if (Utils.SetTargetTracking(nextUpdateSV, EphemTable.Topo_RA_Correction_Factor, EphemTable.Topo_Dec_Correction_Factor))
                     {
-                        NextRecenterBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
-                        OneSecondPulse(StartButton);
-                        CheckImaging();
-                        if (AbortRequested)
-                            break;
-                    }
-                    if (!Utils.SetTargetTracking(nextUpdateSV, EphemTable.Topo_RA_Correction_Factor, EphemTable.Topo_Dec_Correction_Factor))
+                        //Set refresh countdown timer;
+                        refreshTime = nextUpdateSV.Time_UTC + EphemTable.EphStep;
+                        RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
+                        DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+                        RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
+                        //Update status
+                        AssembleStatusUpdate(nextUpdateSV, false);
                         TargetBox.BackColor = Color.LightSalmon;
-                    else
-                        TargetBox.BackColor = Color.LightGreen;
-                    RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
-                    DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
-                    RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
-                    //Update status
-                    AssembleStatusUpdate(nextUpdateSV, false);
-                    //
+                    }
+                    else  //Set tracking failure, so exit refresh loop
+                        break;
                 }
-                else //no new update -- go get another
+                else  //no ephemeris entry -- get new table
                 {
-                    EphemTable = new Ephemeris(dSource, TargetBox.Text, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    EphemTable.EphStart = DateTime.UtcNow;
-                    EphemTable.EphStep = TimeSpan.FromMinutes((double)RefreshIntervalBox.Value);
-                    EphemTable.EphEnd = EphemTable.EphStart + TimeSpan.FromMinutes((100 * EphemTable.EphStep.TotalMinutes));
+                    return true;
                 }
             }
             CleanupOnFault();
-            return;
+            return false;
+        }
+
+        private bool InitializeTargetTracking(SpeedVector nextUpdateSV)
+        {
+            //CLS to where target should be currently, deal with CLS failure
+            if (!Utils.CLSToTarget(EphemTable.TgtName, nextUpdateSV, CLSBox.Checked))
+            {
+                UpdateStatusLine("Tracking failed: Problem with Slew.");
+                return false;
+            }
+            //Prompt for imaging
+            ImageButton.BackColor = Color.LightGreen;
+            //Set custom tracking 
+            if (Utils.SetTargetTracking(nextUpdateSV, EphemTable.Topo_RA_Correction_Factor, EphemTable.Topo_Dec_Correction_Factor))
+                TargetBox.BackColor = Color.LightSalmon;
+            else
+            {
+                UpdateStatusLine("Set non-sidereal tracking failed.");
+                TargetBox.BackColor = Color.LightGreen;
+                return false;
+            }
+            //Wait out delay, if any
+            if ((int)SlewSettlingTimeDelayBox.Value > 0)
+            {
+                TargetBox.BackColor = Color.Yellow;
+                Show();
+                System.Windows.Forms.Application.DoEvents();
+                System.Threading.Thread.Sleep((int)SlewSettlingTimeDelayBox.Value * 1000);
+                TargetBox.BackColor = Color.LightSalmon;
+                Show();
+                System.Windows.Forms.Application.DoEvents();
+            }
+            RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
+            DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+            RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
+            return true;
         }
 
         private void ImageButton_Click(object sender, EventArgs e)
@@ -276,59 +331,92 @@ namespace Hot_Pursuit
             ccdsoftCamera tsxc = new ccdsoftCamera();
             if (InPursuit)
             {
+                //Target Tracking is running
                 if (tsxc.State == ccdsoftCameraState.cdStateNone && IsImaging)
                 {
+                    //Save the current image path
+                    string lastImagePath = tsxc.LastImageFileName;
+                    if (RepsBox.Value > 1)
                     {
-                        if (RepsBox.Value > 1)
+                        //More Reps to do
+                        RepsBox.Value--;
+                        bool IsReady = false;
+                        if (RecenterBox.Checked)
                         {
-                            RepsBox.Value--;
-                            ImageButton.BackColor = Color.Salmon;
-                            if (RecenterBox.Checked)
-                            {
-                                SpeedVector nextUpdateSV = EphemTable.GetNextRateUpdate(DateTime.UtcNow);
-                                InPursuit = InitializeTargetTracking(nextUpdateSV);
-
-                                //Wait for 20 seconds for this to stablize
-                                System.Threading.Thread.Sleep(20);
-
-                            }
+                            SpeedVector nextUpdateSV = EphemTable.GetNearestRateUpdate(DateTime.UtcNow);
+                            IsReady = InitializeTargetTracking(nextUpdateSV);
+                        }
+                        ImageButton.BackColor = Color.Salmon;
+                        if (IsReady)
                             TakeImage();
+                        else //Something went bad in the target tracking
+                            UpdateStatusLine("Failed to recenter target. Terminating image sequence.");
+                    }
+                    else //All reps are done
+                    {
+                        ImageButton.BackColor = Color.LightGreen;
+                        tsxc.AutoSavePrefix = "";  //Clear target name prefix
+                        IsImaging = false;
+                    }
+                    //display the most recent image stack
+                    if (LiveStackBox.Checked)
+                    {
+                        FitsFile nextFF = new FitsFile(lastImagePath, true);
+                        ImageFrames.Add(nextFF);  //load most recent fits file
+                        if (StackThread != null)
+                        {
+                            StackFormLocation = formStack.Location;
+                            StackThread.Abort();
                         }
                         else
                         {
-                            ImageButton.BackColor = Color.LightGreen;
-                            tsxc.AutoSavePrefix = "";  //Clear target name prefix
-                            IsImaging = false;
+                            StackFormLocation = new Point(200, 200);
                         }
-                        //display the most recent image stack
-                        if (LiveStackBox.Checked)
-                        {
-                            FitsFile nextFF = new FitsFile(tsxc.LastImageFileName, true);
-                            ImageFrames.Add(nextFF);  //load most recent fits file
-                            if (StackThread != null)
-                            {
-                                StackFormLocation = formStack.Location;
-                                StackThread.Abort();
-                            }
-                            else
-                            {
-                                StackFormLocation = new Point(200, 200);
-                            }
-                            ThreadStart displayStackForm = DisplayFrameStack;
-                            StackThread = new Thread(displayStackForm);
-                            StackThread.Start();
-                        }
+                        ThreadStart displayStackForm = DisplayFrameStack;
+                        StackThread = new Thread(displayStackForm);
+                        StackThread.Start();
                     }
                 }
             }
-            else
+            else //Target Tracking is off
             {
-                tsxc.AutoSavePrefix = "";  //Clear target name prefix
-                ImageButton.BackColor = Color.Yellow;
+                //Check if imaging is underway, if so, shut it down
                 if (IsImaging)
+                {
                     tsxc.Abort();
-                IsImaging = false;
+                    tsxc.AutoSavePrefix = "";  //Clear target name prefix
+                    ImageButton.BackColor = Color.Yellow;
+                    IsImaging = false;
+                }
             }
+        }
+
+        private void AssembleStatusUpdate(SpeedVector sv, Boolean fullStatus)
+        {
+            //Update status
+            string returnStatus;
+            (double dRAout, double dDecout) = Utils.GetTargetTracking();
+            (double dRATSX, double dDecTSX) = Utils.GetObjectRates();
+            returnStatus = "Ephemeris @" + sv.Time_UTC.ToString("HH:mm:ss") + " (UTC)"
+                           + "    MPC Obs " + EphemTable.MPC_Observatory.BestObservatory.MPC_Code + ": "
+                           + Utils.HourString(Transform.DegreesToHours(sv.RA_Degrees), false)
+                           + " / " + Utils.DegreeString((sv.Dec_Degrees), false) + "(RA/Dec)";
+            UpdateStatusLine(returnStatus);
+            if (fullStatus)
+            {
+                returnStatus = "    Site corrected: " + Utils.HourString(Transform.DegreesToHours(sv.RA_Degrees - EphemTable.RA_CorrectionD), false)
+                           + " / " + Utils.DegreeString((sv.Dec_Degrees - EphemTable.Dec_CorrectionD), false) + "(RA/Dec)";
+                UpdateStatusLine(returnStatus);
+            }
+            returnStatus = "dRA/dt & dDec/dt (set) = "
+                                + sv.Rate_RA_ArcsecPerMinute.ToString("0.000")
+                                + "/"
+                                + sv.Rate_Dec_ArcsecPerMinute.ToString("0.000")
+                                + " (get) = "
+                                + dRAout.ToString("0.000")
+                                + "/"
+                                + dDecout.ToString("0.000");
+            UpdateStatusLine(returnStatus);
         }
 
         private void DisplayFrameStack()
@@ -345,7 +433,7 @@ namespace Hot_Pursuit
             RARateBox.Text = "";
             DecRateBox.Text = "";
             //CorrectionBox.Text = "";
-            NextRecenterBox.Text = "";
+            NextRefreshBox.Text = "";
             RangeBox.Text = "";
         }
 
@@ -414,61 +502,18 @@ namespace Hot_Pursuit
             return;
         }
 
-        private void AssembleStatusUpdate(SpeedVector sv, Boolean fullStatus)
+        private void StartDelayBox_ValueChanged(object sender, EventArgs e)
         {
-            //Update status
-            string returnStatus;
-            (double dRAout, double dDecout) = Utils.GetTargetTracking();
-            (double dRATSX, double dDecTSX) = Utils.GetObjectRates();
-            returnStatus = "Ephemeris @" + sv.Time_UTC.ToString("HH:mm:ss") + " (UTC)"
-                           + "    MPC Obs " + EphemTable.MPC_Observatory.BestObservatory.MPC_Code + ": "
-                           + Utils.HourString(Transform.DegreesToHours(sv.RA_Degrees), false)
-                           + " / " + Utils.DegreeString((sv.Dec_Degrees), false) + "(RA/Dec)";
-            UpdateStatusLine(returnStatus);
-            if (fullStatus)
-            {
-                returnStatus = "    Site corrected: " + Utils.HourString(Transform.DegreesToHours(sv.RA_Degrees - EphemTable.RA_CorrectionD), false)
-                           + " / " + Utils.DegreeString((sv.Dec_Degrees - EphemTable.Dec_CorrectionD), false) + "(RA/Dec)";
-                UpdateStatusLine(returnStatus);
-            }
-            returnStatus = "dRA/dt & dDec/dt (set) = "
-                                + sv.Rate_RA_ArcsecPerMinute.ToString("0.000")
-                                + "/"
-                                + sv.Rate_Dec_ArcsecPerMinute.ToString("0.000")
-                                + " (get) = "
-                                + dRAout.ToString("0.000")
-                                + "/"
-                                + dDecout.ToString("0.000");
-            UpdateStatusLine(returnStatus);
+            Properties.Settings.Default.StartDelay = (int)SlewSettlingTimeDelayBox.Value;
+            Properties.Settings.Default.Save();
+            return;
         }
 
-        private bool InitializeTargetTracking(SpeedVector nextUpdateSV)
+        private void TargetBox_DoubleClick(object sender, EventArgs e)
         {
-            //CLS to where target should be currently, deal with CLS failure
-            if (!Utils.CLSToTarget(EphemTable.TgtName, nextUpdateSV, CLSBox.Checked))
-            {
-                UpdateStatusLine("Tracking failed: Problem with Slew.");
-                CleanupOnFault();
-                return false;
-            }
-            (double r, double d) = Utils.GetCurrentTelePosition();
-            //Prompt for imaging
-            ImageButton.BackColor = Color.LightGreen;
-            //Set custom tracking 
-            if (!Utils.SetTargetTracking(nextUpdateSV, EphemTable.Topo_RA_Correction_Factor, EphemTable.Topo_Dec_Correction_Factor))
-                TargetBox.BackColor = Color.LightSalmon;
-            else
-                TargetBox.BackColor = Color.LightGreen;
-            RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
-            DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
-            RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
-            DateTime nextUpdate = nextUpdateSV.Time_UTC;
-            if (MinutesButton.Checked)
-                nextUpdate += TimeSpan.FromMinutes((int)RefreshIntervalBox.Value);
-            else
-                nextUpdate += TimeSpan.FromSeconds((int)RefreshIntervalBox.Value);
-            NextRecenterBox.Text = (nextUpdate - DateTime.UtcNow).TotalSeconds.ToString("0");
-            return true;
+            if (!InPursuit)
+                TargetBox.Text = "";
+            return;
         }
 
         private void LogEntry(string entryStuff)

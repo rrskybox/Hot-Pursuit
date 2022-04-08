@@ -35,6 +35,7 @@ namespace Hot_Pursuit
             zoomDistance += e.Delta / 3;
             Size subSize = new Size(ImageBox.Size.Width + zoomDistance, ImageBox.Size.Height + zoomDistance);
             Image baseImage = ap.ResizeImage(subSize, true);
+            ImageBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
             ImageBox.Image = baseImage;
             return;
         }

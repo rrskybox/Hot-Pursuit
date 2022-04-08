@@ -27,7 +27,7 @@
     <ProductName>Hot Pursuit</ProductName>
     <PublisherName>TSXToolKit</PublisherName>
     <SuiteName>TSXToolKit</SuiteName>
-    <ApplicationRevision>48</ApplicationRevision>
+    <ApplicationRevision>53</ApplicationRevision>
     <ApplicationVersion>0.4.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -111,6 +111,7 @@
     <Compile Include="Utils.cs" />
     <EmbeddedResource Include="FormHotPursuit.resx">
       <DependentUpon>FormHotPursuit.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormImageStack.resx">
       <DependentUpon>FormImageStack.cs</DependentUpon>

@@ -17,7 +17,6 @@ namespace Hot_Pursuit
             double raRate = rate * Math.Sin(paR);
             return raRate;
         }
-
         public static double PARateToDec(double paD, double rate)
         {
             //Calculates dDec/dt for PA in Degrees and rate in arcsec/min (but really doesn't matter
@@ -148,8 +147,6 @@ namespace Hot_Pursuit
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            //double dRA1 = tsxmt.dRaTrackingRate;
-            //double dDec1 = tsxmt.dDecTrackingRate;
             try
             {
                 //TSX expects tracking rates in arcsec/sec: convert it from arcsec/min
