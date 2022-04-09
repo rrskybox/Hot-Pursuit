@@ -181,6 +181,7 @@ namespace Hot_Pursuit
         #region scout
 
         const string URL_NEO_search = "https://ssd-api.jpl.nasa.gov/scout.api?";
+        const int SAMPLEORBITS = 100;
 
         const int idx_ra = 0;
         const int idx_dec = 1;
@@ -389,7 +390,8 @@ namespace Hot_Pursuit
 
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString["tdes"] = TgtName;
-            queryString["n-orbits"] = "1";
+            queryString["orbits"] = "0";
+            queryString["n-orbits"] = SAMPLEORBITS.ToString();
             queryString["eph-start"] = EphStart.ToString("yyyy-MM-ddTHH:mm:ss");
             queryString["eph-stop"] = EphEnd.ToString("yyyy-MM-ddTHH:mm:ss");
             if (EphStep.Minutes < 1)

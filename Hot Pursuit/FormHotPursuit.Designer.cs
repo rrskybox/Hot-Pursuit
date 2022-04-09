@@ -40,8 +40,10 @@ namespace Hot_Pursuit
             this.label4 = new System.Windows.Forms.Label();
             this.OnTopBox = new System.Windows.Forms.CheckBox();
             this.SequencerGroupBox = new System.Windows.Forms.GroupBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.RecenterBox = new System.Windows.Forms.CheckBox();
             this.LiveStackBox = new System.Windows.Forms.CheckBox();
+            this.SlewSettlingTimeDelayBox = new System.Windows.Forms.NumericUpDown();
             this.RepsBox = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
             this.FiltersListBox = new System.Windows.Forms.ComboBox();
@@ -50,8 +52,6 @@ namespace Hot_Pursuit
             this.label5 = new System.Windows.Forms.Label();
             this.ExposureBox = new System.Windows.Forms.NumericUpDown();
             this.ImageButton = new System.Windows.Forms.Button();
-            this.label7 = new System.Windows.Forms.Label();
-            this.SlewSettlingTimeDelayBox = new System.Windows.Forms.NumericUpDown();
             this.HPStatusBox = new System.Windows.Forms.TextBox();
             this.DecRateBox = new System.Windows.Forms.TextBox();
             this.RARateBox = new System.Windows.Forms.TextBox();
@@ -68,9 +68,9 @@ namespace Hot_Pursuit
             this.MPCRadioButton = new System.Windows.Forms.RadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIntervalBox)).BeginInit();
             this.SequencerGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.SlewSettlingTimeDelayBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.SlewSettlingTimeDelayBox)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -212,6 +212,16 @@ namespace Hot_Pursuit
             this.SequencerGroupBox.TabStop = false;
             this.SequencerGroupBox.Text = "QAD Imaging";
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.ForeColor = System.Drawing.Color.White;
+            this.label7.Location = new System.Drawing.Point(110, 90);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(60, 13);
+            this.label7.TabIndex = 29;
+            this.label7.Text = "Settle (sec)";
+            // 
             // RecenterBox
             // 
             this.RecenterBox.AutoSize = true;
@@ -237,6 +247,20 @@ namespace Hot_Pursuit
             this.LiveStackBox.TabIndex = 26;
             this.LiveStackBox.Text = "Live Stack";
             this.LiveStackBox.UseVisualStyleBackColor = true;
+            // 
+            // SlewSettlingTimeDelayBox
+            // 
+            this.SlewSettlingTimeDelayBox.Location = new System.Drawing.Point(120, 108);
+            this.SlewSettlingTimeDelayBox.Maximum = new decimal(new int[] {
+            3600,
+            0,
+            0,
+            0});
+            this.SlewSettlingTimeDelayBox.Name = "SlewSettlingTimeDelayBox";
+            this.SlewSettlingTimeDelayBox.Size = new System.Drawing.Size(41, 20);
+            this.SlewSettlingTimeDelayBox.TabIndex = 28;
+            this.SlewSettlingTimeDelayBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.SlewSettlingTimeDelayBox.ValueChanged += new System.EventHandler(this.StartDelayBox_ValueChanged);
             // 
             // RepsBox
             // 
@@ -341,30 +365,6 @@ namespace Hot_Pursuit
             this.ImageButton.UseVisualStyleBackColor = true;
             this.ImageButton.Click += new System.EventHandler(this.ImageButton_Click);
             // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.ForeColor = System.Drawing.Color.White;
-            this.label7.Location = new System.Drawing.Point(110, 90);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(60, 13);
-            this.label7.TabIndex = 29;
-            this.label7.Text = "Settle (sec)";
-            // 
-            // SlewSettlingTimeDelayBox
-            // 
-            this.SlewSettlingTimeDelayBox.Location = new System.Drawing.Point(120, 108);
-            this.SlewSettlingTimeDelayBox.Maximum = new decimal(new int[] {
-            3600,
-            0,
-            0,
-            0});
-            this.SlewSettlingTimeDelayBox.Name = "SlewSettlingTimeDelayBox";
-            this.SlewSettlingTimeDelayBox.Size = new System.Drawing.Size(41, 20);
-            this.SlewSettlingTimeDelayBox.TabIndex = 28;
-            this.SlewSettlingTimeDelayBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.SlewSettlingTimeDelayBox.ValueChanged += new System.EventHandler(this.StartDelayBox_ValueChanged);
-            // 
             // HPStatusBox
             // 
             this.HPStatusBox.AllowDrop = true;
@@ -374,7 +374,6 @@ namespace Hot_Pursuit
             this.HPStatusBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.HPStatusBox.Size = new System.Drawing.Size(576, 45);
             this.HPStatusBox.TabIndex = 18;
-            this.HPStatusBox.Text = "Log";
             // 
             // DecRateBox
             // 
@@ -499,6 +498,7 @@ namespace Hot_Pursuit
             this.ScoutRadioButton.TabStop = true;
             this.ScoutRadioButton.Text = "Scout";
             this.ScoutRadioButton.UseVisualStyleBackColor = true;
+            this.ScoutRadioButton.CheckedChanged += new System.EventHandler(this.ScoutRadioButton_CheckedChanged);
             // 
             // HorizonsRadioButton
             // 
@@ -510,6 +510,7 @@ namespace Hot_Pursuit
             this.HorizonsRadioButton.TabIndex = 35;
             this.HorizonsRadioButton.Text = "Horizons";
             this.HorizonsRadioButton.UseVisualStyleBackColor = true;
+            this.HorizonsRadioButton.CheckedChanged += new System.EventHandler(this.HorizonsRadioButton_CheckedChanged);
             // 
             // MPCRadioButton
             // 
@@ -521,6 +522,7 @@ namespace Hot_Pursuit
             this.MPCRadioButton.TabIndex = 36;
             this.MPCRadioButton.Text = "MPC";
             this.MPCRadioButton.UseVisualStyleBackColor = true;
+            this.MPCRadioButton.CheckedChanged += new System.EventHandler(this.MPCRadioButton_CheckedChanged);
             // 
             // FormHotPursuit
             // 
@@ -549,9 +551,9 @@ namespace Hot_Pursuit
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIntervalBox)).EndInit();
             this.SequencerGroupBox.ResumeLayout(false);
             this.SequencerGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.SlewSettlingTimeDelayBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.SlewSettlingTimeDelayBox)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);

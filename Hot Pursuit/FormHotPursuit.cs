@@ -15,6 +15,7 @@ namespace Hot_Pursuit
     {
         public bool InPursuit = false;
         public bool IsImaging = false;
+        public string QuerySite = "Scout";
 
         public Ephemeris EphemTable;
 
@@ -47,6 +48,9 @@ namespace Hot_Pursuit
             OnTopBox.Checked = Properties.Settings.Default.IsOnTop;
             CLSBox.Checked = Properties.Settings.Default.UseCLS;
             SlewSettlingTimeDelayBox.Value = (decimal)Properties.Settings.Default.StartDelay;
+            if (ScoutRadioButton.Checked) QuerySite = "Scout";
+            if (HorizonsRadioButton.Checked) QuerySite = "Horizons";
+            if (MPCRadioButton.Checked) QuerySite = "MPC";
 
             StartButton.BackColor = Color.LightGreen;
             StopButton.BackColor = Color.LightGreen;
@@ -76,6 +80,7 @@ namespace Hot_Pursuit
             else
                 tName = TargetBox.Text;
             TargetBox.Text = tName;
+            UpdateStatusLine("Querying " + QuerySite + " for " + tName);
             Show();
             System.Windows.Forms.Application.DoEvents();
             if (tName == "")
@@ -522,6 +527,20 @@ namespace Hot_Pursuit
             File.AppendAllText(HPLogFilePath, (logtime + ": " + entryStuff + "\r\n"));
         }
 
+        private void ScoutRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            QuerySite = "Scout";
+        }
+
+        private void HorizonsRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            QuerySite = "Horizons";
+        }
+
+        private void MPCRadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            QuerySite = "MPC";
+        }
     }
 }
 
