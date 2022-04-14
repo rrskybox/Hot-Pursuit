@@ -29,8 +29,6 @@ namespace Hot_Pursuit
         public Observatory MPC_Observatory { get; set; }
         public double RA_CorrectionD { get; set; } //Hours
         public double Dec_CorrectionD { get; set; } //Degrees
-        public double Diff_RA_CorrectionD { get; set; } //Hours
-        public double Diff_Dec_CorrectionD { get; set; } //Degrees
         public double RangeAU { get; set; } //AU
         public double Range_CorrectionAU { get; set; } //AU
         public double Site_Corrected_Range { get; set; }
@@ -181,7 +179,8 @@ namespace Hot_Pursuit
         #region scout
 
         const string URL_NEO_search = "https://ssd-api.jpl.nasa.gov/scout.api?";
-        const int SAMPLEORBITS = 100;
+        const int SAMPLEORBITS = 1000;
+        const string GEOCENTRIC_OBSERVATORY_CODE = "500";
 
         const int idx_ra = 0;
         const int idx_dec = 1;
@@ -212,6 +211,8 @@ namespace Hot_Pursuit
             //Get Geocentric ephemeris
             if (!GeoToScoutSiteCalibration())
                 return false;
+            //Topo_Dec_Correction_Factor = 1;
+            //Topo_RA_Correction_Factor = 1;
             //Find geocentric ephemeris at current time (single ephemeris)
             //Find observatory ephemeris at current time (100 count)
             //Calculate geocentric to geodetic transformation for RA/Dec and dRA/dDec
@@ -226,10 +227,9 @@ namespace Hot_Pursuit
             string neoResultText;
             string urlSearch;
             WebClient client = new WebClient();
-            System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
             try
             {
-                urlSearch = URL_NEO_search + MakeScoutQuery();
+                urlSearch = URL_NEO_search + MakeScoutQuery(MPC_Observatory.BestObservatory.MPC_Code);
                 neoResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
@@ -261,26 +261,6 @@ namespace Hot_Pursuit
                 ephmRecord.Add(new XElement(xdDec, sPositionX.Element("ddec").Value));
                 ephmRecord.Add(new XElement(xRng, sPositionX.Element("rs").Value));  //AU
                 ephmRecord.Add(new XElement(xV, sPositionX.Element("vmag").Value));  //Magnitude
-
-                //IEnumerable<XElement> sPositionX = ephX.Element("data").Elements("data");
-                //List<XElement> sPositionList = sPositionX.ToList();
-                //ephmRecord.Add(new XElement(xUTDate, dateString));
-                //ephmRecord.Add(new XElement(xUTHrMin, timeString));
-                //ephmRecord.Add(new XElement(xRA, Convert.ToDouble(sPositionList[idx_ra].Value)));//Scout delivers RA in degrees
-                //double dec = Convert.ToDouble(sPositionList[idx_dec].Value);
-                //ephmRecord.Add(new XElement(xDec, dec.ToString()));
-                //ephmRecord.Add(new XElement(mr, Convert.ToDouble(sPositionList[idx_reO_Geo].Value))); //AU
-                //ephmRecord.Add(new XElement(mEl, "0"));
-                //double pa_Degrees = (Convert.ToDouble(sPositionList[idx_pa].Value));  //Plane of sky
-                //ephmRecord.Add(new XElement(xPA, pa_Degrees.ToString()));
-                //double rate_ArcsecPerMinute = Convert.ToDouble(sPositionList[idx_rate].Value);  //Arcsec/min
-                //ephmRecord.Add(new XElement(xdRate, rate_ArcsecPerMinute.ToString()));
-                //double dDec = rate_ArcsecPerMinute * Math.Cos(AstroMath.Transform.DegreesToRadians(pa_Degrees));
-                //ephmRecord.Add(new XElement(xdDec, dDec.ToString()));
-                //double dRA = rate_ArcsecPerMinute * Math.Sin(AstroMath.Transform.DegreesToRadians(pa_Degrees));
-                //double dRACosD = dRA * Math.Cos(AstroMath.Transform.DegreesToRadians(dec));
-                //ephmRecord.Add(new XElement(xdRACosD, dRACosD.ToString()));
-                //ephmRecord.Add(new XElement(xRng, Convert.ToDouble(sPositionList[idx_reO_Geo].Value)));  //AU
                 ephmList.Add(ephmRecord);
             }
             return EphemerisListToSpeedVector(ephmList, isMinutes, updateInterval);
@@ -289,22 +269,22 @@ namespace Hot_Pursuit
         private bool GeoToScoutSiteCalibration()
         {
             //MPC_Observatory must be set before calibration
-            string mpcResultText;
+            string scoutResultText;
             string urlSearch;
             WebClient client = new WebClient();
-            System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
+
             //Get geocentric ephemeris for this target at eph start
             try
             {
-                urlSearch = URL_NEO_search + MakeScoutQuery();
-                mpcResultText = client.DownloadString(urlSearch);
+                urlSearch = URL_NEO_search + MakeScoutQuery(GEOCENTRIC_OBSERVATORY_CODE);
+                scoutResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Geocentric Ephemeris Download Error: " + ex.Message);
                 return false;
             };
-            XDocument geoResultsX = JsonConvert.DeserializeXNode(mpcResultText, "Root");
+            XDocument geoResultsX = JsonConvert.DeserializeXNode(scoutResultText, "Root");
             XElement sEphXGeo = geoResultsX.Element("Root").Element("eph");
             if (sEphXGeo == null)
                 return false;
@@ -319,22 +299,23 @@ namespace Hot_Pursuit
                 Dec_Degrees = Convert.ToDouble(gPositionList[idx_dec].Value),
                 Range_AU = Convert.ToDouble(gPositionList[idx_reG_Geo].Value)
             };
+
             //Get topocentric ephemeris for the observatory nearest this site
             try
             {
                 urlSearch = URL_NEO_search + MakeScoutQuery(MPC_Observatory.BestObservatory.MPC_Code);
-                mpcResultText = client.DownloadString(urlSearch);
+                scoutResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Topocentric Ephemeris Download Error: " + ex.Message);
                 return false;
             };
-            XDocument mpcResultsX = JsonConvert.DeserializeXNode(mpcResultText, "Root");
+            XDocument mpcResultsX = JsonConvert.DeserializeXNode(scoutResultText, "Root");
             XElement mpcEphXTopo = mpcResultsX.Element("Root").Element("eph");
             IEnumerable<XElement> mPositionX = mpcEphXTopo.Element("data").Elements("data");
             List<XElement> mPositionList = mPositionX.ToList();
-            SpeedVector mpcResultsSV = new SpeedVector
+            SpeedVector scoutResultsSV = new SpeedVector
             {
                 Time_UTC = Convert.ToDateTime(mpcEphXTopo.Element("time").Value),
                 Rate_ArcsecPerMinute = Convert.ToDouble(mPositionList[idx_rate].Value),
@@ -369,20 +350,19 @@ namespace Hot_Pursuit
             //Convert new neo coordinates to RADec
             AstroMath.Spherical.PointRangeRADec transNEO_RD = Spherical.SphericalToRADec(transNEO_Sph);
 
+            //Compute corrections for rates, range
             Site_Corrected_Range = transNEO_RD.Range / Utils.Astronomical_Unit;
             Site_Corrected_Dec = Transform.RadiansToDegrees(transNEO_RD.Dec);
             Site_Corrected_RA = Transform.RadiansToDegrees(transNEO_RD.RA);
 
-            Dec_CorrectionD = mpcResultsSV.Dec_Degrees - Site_Corrected_Dec;  //degrees Dec
-            RA_CorrectionD = mpcResultsSV.RA_Degrees - Site_Corrected_RA;  //degrees RA
-            Topo_Dec_Correction_Factor = 1.0 / (1.0 + Math.Pow(Dec_CorrectionD, 2));  //degrees per arcdegree
-            Topo_RA_Correction_Factor = 1.0 / (1.0 + Math.Pow(RA_CorrectionD, 2));  //degrees per arcdegree
-            RangeAU = mpcResultsSV.Range_AU; //AU
+            Dec_CorrectionD = scoutResultsSV.Dec_Degrees - Site_Corrected_Dec;  //offset in minutes Dec
+            RA_CorrectionD = scoutResultsSV.RA_Degrees - Site_Corrected_RA;  //offset in minutes RA
+            RangeAU = scoutResultsSV.Range_AU; //AU
             Range_CorrectionAU = RangeAU - Site_Corrected_Range;  //AU
             return true;
         }
 
-        private string MakeScoutQuery(string mpc_observatory_code = "500")
+        private string MakeScoutQuery(string mpc_observatory_code)
         {
             //Returns a url query string for Scout website
             // "key1=value1&key2=value2", all URL-encoded   
@@ -393,11 +373,19 @@ namespace Hot_Pursuit
             queryString["orbits"] = "0";
             queryString["n-orbits"] = SAMPLEORBITS.ToString();
             queryString["eph-start"] = EphStart.ToString("yyyy-MM-ddTHH:mm:ss");
-            queryString["eph-stop"] = EphEnd.ToString("yyyy-MM-ddTHH:mm:ss");
             if (EphStep.Minutes < 1)
+            {
                 queryString["eph-step"] = "1" + "m";
+                //Compute new eph-stop based on limiting data point to 100
+                DateTime EphEnd = EphStart + TimeSpan.FromMinutes(99);
+            }
             else
+            {
                 queryString["eph-step"] = EphStep.Minutes.ToString("0") + "m";
+                //Compute new eph-stop based on limiting data point to 100
+                DateTime EphEnd = EphStart + TimeSpan.FromMinutes(EphStep.Minutes * 99);
+            }
+            queryString["eph-stop"] = EphEnd.ToString("yyyy-MM-ddTHH:mm:ss");
             queryString["obs-code"] = mpc_observatory_code;
             queryString["ranges"] = "true";
             return queryString.ToString();
@@ -619,7 +607,6 @@ namespace Hot_Pursuit
             string hzResultText;
             string urlSearch;
             WebClient client = new WebClient();
-            System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
             try
             {
                 urlSearch = URL_Horizons_Search + MakeHorizonsQuery();
@@ -901,7 +888,6 @@ namespace Hot_Pursuit
             string mpesResultText;
             string urlSearch;
             WebClient client = new WebClient();
-            System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
             try
             {
                 urlSearch = URL_MPES_Search + MakeMPESQuery();

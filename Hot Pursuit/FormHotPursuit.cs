@@ -44,6 +44,9 @@ namespace Hot_Pursuit
                 version = "  **in Debug**";
             }
             this.Text = "Hot Pursuit V" + version;
+            //Configure app to ignore SSL problems -- optional if servers are not working
+            //System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
+
             FullReductionCheckBox.Checked = Properties.Settings.Default.FullReduction;
             OnTopBox.Checked = Properties.Settings.Default.IsOnTop;
             CLSBox.Checked = Properties.Settings.Default.UseCLS;
@@ -81,6 +84,8 @@ namespace Hot_Pursuit
                 tName = TargetBox.Text;
             TargetBox.Text = tName;
             UpdateStatusLine("Querying " + QuerySite + " for " + tName);
+            if (QuerySite == "Scout")
+                UpdateStatusLine("Scout takes time; Be patient...");
             Show();
             System.Windows.Forms.Application.DoEvents();
             if (tName == "")
@@ -182,12 +187,12 @@ namespace Hot_Pursuit
                 //  if the update fails then exit
                 if (nextUpdateSV != null)
                 {
-                    if (Utils.SetTargetTracking(nextUpdateSV, EphemTable.Topo_RA_Correction_Factor, EphemTable.Topo_Dec_Correction_Factor))
+                    if (Utils.SetTargetTracking(nextUpdateSV))
                     {
                         //Set refresh countdown timer;
                         refreshTime = nextUpdateSV.Time_UTC + EphemTable.EphStep;
-                        RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
-                        DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+                        RARateBox.Text = (nextUpdateSV.Rate_RA_ArcsecPerMinute * EphemTable.Topo_RA_Correction_Factor).ToString("0.000");
+                        DecRateBox.Text = (nextUpdateSV.Rate_Dec_ArcsecPerMinute * EphemTable.Topo_Dec_Correction_Factor).ToString("0.000");
                         RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
                         //Update status
                         AssembleStatusUpdate(nextUpdateSV, false);
@@ -216,7 +221,7 @@ namespace Hot_Pursuit
             //Prompt for imaging
             ImageButton.BackColor = Color.LightGreen;
             //Set custom tracking 
-            if (Utils.SetTargetTracking(nextUpdateSV, EphemTable.Topo_RA_Correction_Factor, EphemTable.Topo_Dec_Correction_Factor))
+            if (Utils.SetTargetTracking(nextUpdateSV))
                 TargetBox.BackColor = Color.LightSalmon;
             else
             {
@@ -401,7 +406,7 @@ namespace Hot_Pursuit
             //Update status
             string returnStatus;
             (double dRAout, double dDecout) = Utils.GetTargetTracking();
-            (double dRATSX, double dDecTSX) = Utils.GetObjectRates();
+            //(double dRATSX, double dDecTSX) = Utils.GetObjectRates();
             returnStatus = "Ephemeris @" + sv.Time_UTC.ToString("HH:mm:ss") + " (UTC)"
                            + "    MPC Obs " + EphemTable.MPC_Observatory.BestObservatory.MPC_Code + ": "
                            + Utils.HourString(Transform.DegreesToHours(sv.RA_Degrees), false)
@@ -414,9 +419,9 @@ namespace Hot_Pursuit
                 UpdateStatusLine(returnStatus);
             }
             returnStatus = "dRA/dt & dDec/dt (set) = "
-                                + sv.Rate_RA_ArcsecPerMinute.ToString("0.000")
+                                + (sv.Rate_RA_ArcsecPerMinute*EphemTable.Topo_RA_Correction_Factor).ToString("0.000")
                                 + "/"
-                                + sv.Rate_Dec_ArcsecPerMinute.ToString("0.000")
+                                + (sv.Rate_Dec_ArcsecPerMinute*EphemTable.Topo_Dec_Correction_Factor).ToString("0.000")
                                 + " (get) = "
                                 + dRAout.ToString("0.000")
                                 + "/"

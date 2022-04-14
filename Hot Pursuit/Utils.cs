@@ -133,7 +133,7 @@ namespace Hot_Pursuit
             return true;
         }
 
-        public static bool SetTargetTracking(SpeedVector sv, double topo_Adjustment_RA, double topo_Adjustment_Dec)
+        public static bool SetTargetTracking(SpeedVector sv)
         {
             const int ionTrackingOn = 1;
             const int ionTrackingOff = 0;
@@ -142,15 +142,13 @@ namespace Hot_Pursuit
 
             double tgtRateRA = sv.Rate_RA_ArcsecPerMinute;
             double tgtRateDec = sv.Rate_Dec_ArcsecPerMinute;
-            double adjtgtRateRA = tgtRateRA * topo_Adjustment_RA;
-            double adjtgtRateDec = tgtRateDec * topo_Adjustment_Dec;
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
             try
             {
                 //TSX expects tracking rates in arcsec/sec: convert it from arcsec/min
-                tsxmt.SetTracking(ionTrackingOn, useRates, adjtgtRateRA / 60.0, adjtgtRateDec / 60.0);
+                tsxmt.SetTracking(ionTrackingOn, useRates, tgtRateRA / 60.0, tgtRateDec / 60.0);
             }
             catch
             {
@@ -168,8 +166,8 @@ namespace Hot_Pursuit
             //Retrieve current tracking rates in arcmin
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            double dRA = tsxmt.dRaTrackingRate * 60;
-            double dDec = tsxmt.dDecTrackingRate * 60;
+            double dRA = tsxmt.dRaTrackingRate * 60.0;
+            double dDec = tsxmt.dDecTrackingRate * 60.0;
             return (dRA, dDec);
         }
 
