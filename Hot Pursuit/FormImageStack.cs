@@ -13,16 +13,16 @@ namespace Hot_Pursuit
         public FormImageStack(List<FitsFile> fitsNames)
         {
             InitializeComponent();
-            FitsFile af = Stack.StraightStack(fitsNames.ToArray());
-            ap = new AstroPic(af);
+            Stack iStack = new Stack(fitsNames.ToArray());
+            ap = new AstroPic(iStack.FitsStack);
             ap.LinearStretch();
             //Add target cross
             //target cross hairs
             Point target;
             double pixSize = 1;
-            if (af.FocalLength != 0)
-                pixSize = (206.265 / af.FocalLength) * af.XpixSz;
-            target = af.RADECtoImageXY(af.RA, af.Dec);
+            if (iStack.FitsStack.FocalLength != 0)
+                pixSize = (206.265 / iStack.FitsStack.FocalLength) * iStack.FitsStack.XpixSz;
+            target = iStack.FitsStack.RADECtoImageXY(iStack.FitsStack.RA, iStack.FitsStack.Dec);
             ap.AddCrossHair(target, 400, 5);
             //Create image
             Image baseImage = ap.ResizeImage(ImageBox.Size, true);
