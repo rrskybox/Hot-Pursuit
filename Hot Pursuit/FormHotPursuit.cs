@@ -115,6 +115,13 @@ namespace Hot_Pursuit
                     EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
             }
 
+            if (TLERadioButton.Checked)
+            {
+                EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+            }
+
         }
 
         private bool WalkEphemerisTable(Ephemeris.EphemSource dSource)
@@ -216,6 +223,7 @@ namespace Hot_Pursuit
             if (!Utils.CLSToTarget(EphemTable.TgtName, nextUpdateSV, CLSBox.Checked))
             {
                 UpdateStatusLine("Tracking failed: Problem with Slew.");
+                ReportSpeeds(nextUpdateSV);
                 return false;
             }
             //Prompt for imaging
@@ -226,6 +234,7 @@ namespace Hot_Pursuit
             else
             {
                 UpdateStatusLine("Set non-sidereal tracking failed.");
+                ReportSpeeds(nextUpdateSV);
                 TargetBox.BackColor = Color.LightGreen;
                 return false;
             }
@@ -240,10 +249,15 @@ namespace Hot_Pursuit
                 Show();
                 System.Windows.Forms.Application.DoEvents();
             }
-            RARateBox.Text = nextUpdateSV.Rate_RA_ArcsecPerMinute.ToString("0.000");
-            DecRateBox.Text = nextUpdateSV.Rate_Dec_ArcsecPerMinute.ToString("0.000");
-            RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
+            ReportSpeeds(nextUpdateSV);
             return true;
+        }
+
+        private void ReportSpeeds(SpeedVector sv)
+        {
+            RARateBox.Text = sv.Rate_RA_ArcsecPerMinute.ToString("0.000");
+            DecRateBox.Text = sv.Rate_Dec_ArcsecPerMinute.ToString("0.000");
+            RangeBox.Text = sv.Range_AU.ToString("0.00");
         }
 
         private void ImageButton_Click(object sender, EventArgs e)
@@ -419,9 +433,9 @@ namespace Hot_Pursuit
                 UpdateStatusLine(returnStatus);
             }
             returnStatus = "dRA/dt & dDec/dt (set) = "
-                                + (sv.Rate_RA_ArcsecPerMinute*EphemTable.Topo_RA_Correction_Factor).ToString("0.000")
+                                + (sv.Rate_RA_ArcsecPerMinute * EphemTable.Topo_RA_Correction_Factor).ToString("0.000")
                                 + "/"
-                                + (sv.Rate_Dec_ArcsecPerMinute*EphemTable.Topo_Dec_Correction_Factor).ToString("0.000")
+                                + (sv.Rate_Dec_ArcsecPerMinute * EphemTable.Topo_Dec_Correction_Factor).ToString("0.000")
                                 + " (get) = "
                                 + dRAout.ToString("0.000")
                                 + "/"
@@ -545,6 +559,24 @@ namespace Hot_Pursuit
         private void MPCRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "MPC";
+        }
+        private void TLERadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            QuerySite = "TLE";
+            string hpDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Hot Pursuit\\TLE";
+            string[] tleFiles = Directory.GetFiles(hpDirectoryPath, "*.txt");
+            TLE tleCatalog = new TLE(tleFiles[0]);
+
+            TLENameListBox.Items.Clear();
+            foreach (string ls in tleCatalog.TLECatalog)
+                TLENameListBox.Items.Add(ls);
+            Show(); System.Windows.Forms.Application.DoEvents();
+
+        }
+
+        private void TLENameListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            TargetBox.Text = TLENameListBox.SelectedItem.ToString();
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.IO;
 
 namespace Hot_Pursuit
 {
@@ -16,7 +17,8 @@ namespace Hot_Pursuit
         {
             Scout,
             MPES,
-            Horizons
+            Horizons,
+            HorizonsTLE
         }
 
         public bool HasData { get; set; } = false;
@@ -60,12 +62,17 @@ namespace Hot_Pursuit
                     }
                 case EphemSource.Horizons:
                     {
-                        HasData = DownloadHorizonsData(isMinutes, updateRate);
+                        HasData = DownloadHorizonsData(isMinutes, updateRate,false);
                         break;
                     }
                 case EphemSource.MPES:
                     {
                         HasData = DownloadMPESData(isMinutes, updateRate);
+                        break;
+                    }
+                 case EphemSource.HorizonsTLE:
+                    {
+                        HasData = DownloadHorizonsData(isMinutes, updateRate, true);
                         break;
                     }
             }
@@ -394,12 +401,19 @@ namespace Hot_Pursuit
         #endregion
 
         #region horizons
+        const string tleName = "YAOGAN-34 02";
+        const string tleLine1 = "1 52084U 22027A   22106.14505350 -.00008930  00000+0 -14988-1 0  9998";
+        const string tleLine2 = "2 52084  63.3984 152.9793 0006802 260.6369 187.0003 13.45177047  4022";
+
+        const string tleTest = tleName + "\n" + tleLine1 + "\n" + tleLine2;
 
         const string URL_Horizons_Search = "https://ssd.jpl.nasa.gov/api/horizons.api?";
         //const string URL_Horizons_Search = "https://cgi.minorplanetcenter.net/cgi-bin";
 
         #region horizon results header conversion
 
+        const string hzCommand = "Command";
+        const string hzTLE = "TLE";
         const string hzUTDate = xUTDate;
         const string hzUTHrMin = xUTHrMin;
         const string hzB1 = "B1";
@@ -587,7 +601,7 @@ namespace Hot_Pursuit
         };
         #endregion
 
-        public bool DownloadHorizonsData(bool isMinutes, int updateInterval)
+        public bool DownloadHorizonsData(bool isMinutes, int updateInterval, bool IsTLE)
         {
             //Get site location and closest MPC observatory
             MPC_Observatory = new Observatory();
@@ -596,20 +610,28 @@ namespace Hot_Pursuit
             if (!GeoToMPESSiteCalibration())
                 return false;
             //Get Geocentric ephemeris
-            if (HorizonsQueryToSpeedVectors(isMinutes, updateInterval))
+            if (HorizonsQueryToSpeedVectors(isMinutes, updateInterval, IsTLE))
                 return true;
             else
                 return false;
         }
 
-        private bool HorizonsQueryToSpeedVectors(bool isMinutes, int updateInterval)
+        private bool HorizonsQueryToSpeedVectors(bool isMinutes, int updateInterval, bool IsTLE)
         {
             string hzResultText;
             string urlSearch;
             WebClient client = new WebClient();
             try
             {
-                urlSearch = URL_Horizons_Search + MakeHorizonsQuery();
+                if (IsTLE)
+                {
+                    string hpDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Hot Pursuit\\TLE";
+                    string[] tleFiles = Directory.GetFiles(hpDirectoryPath, "*.txt");
+                    TLE tleCatalog = new TLE(tleFiles[0]);
+                    urlSearch = URL_Horizons_Search + MakeHorizonsTLEQuery(tleCatalog.GetTLEString(TgtName));
+                }
+                else
+                    urlSearch = URL_Horizons_Search + MakeHorizonsQuery();
                 hzResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
@@ -776,6 +798,43 @@ namespace Hot_Pursuit
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[hFormat] = hFormatTypeText;
             queryString[hCommand] = "\'NAME=" + scrubbedTargetName + "\'"; // ";" means that it is a small body search for name
+            queryString[hMakeEphemeris] = hYes;
+            queryString[hEphemerisType] = hObserverType;
+            queryString[hCenter] = "399";  //Earth
+            queryString[hSiteCoordinate] = center;  //e-long(degrees):lat(degrees):elevation(km)
+            queryString[hStartTime] = startTime; // "2021-01-12";
+            queryString[hStopTime] = endTime; // "2021-01-13";
+            queryString[hStepSize] = "1m"; // shortest time that horizons can do
+            queryString[hAngleFormat] = hAngleFormatDegrees;
+            queryString[hTimeDigits] = "Seconds";
+            queryString[hRangeUnits] = "AU";
+            //queryString[hQuantities ] = "'46'";
+            queryString[hOutUnits] = hUnitTypeKMS;
+            queryString[hExtraPrecisionFormat] = hYes;
+            queryString[hCSVFormat] = hYes;
+            queryString[hObjectData] = hNo;
+
+            string q = queryString.ToString();
+            //fix bug where queryString inserts %2f instead of %2F for the "/" char
+            q = q.Replace("%2f", "%2F");
+            return q; // Returns "key1=value1&key2=value2", all URL-encoded
+        }
+
+        private string MakeHorizonsTLEQuery(string tleString)
+        {
+            //Returns a url string for querying the TNS website
+
+            //figure out site location
+            string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
+            string siteLat = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
+            string siteElev = MPC_Observatory.BestObservatory.MySiteElev.ToString("0.000");
+            string center = siteLong + ":" + siteLat + ":" + siteElev;
+            string startTime = "\'" + EphStart.ToString("yyyy-MM-dd HH:mm") + "\'";
+            string endTime = "\'" + EphEnd.ToString("yyyy-MM-dd HH:mm") + "\'";
+            NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
+            queryString[hzCommand] = "TLE";
+            queryString[hzTLE] = tleString;
+            queryString[hFormat] = hFormatTypeText;
             queryString[hMakeEphemeris] = hYes;
             queryString[hEphemerisType] = hObserverType;
             queryString[hCenter] = "399";  //Earth
