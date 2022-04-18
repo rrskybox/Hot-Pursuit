@@ -67,7 +67,7 @@ namespace Hot_Pursuit
             this.HorizonsRadioButton = new System.Windows.Forms.RadioButton();
             this.MPCRadioButton = new System.Windows.Forms.RadioButton();
             this.TLERadioButton = new System.Windows.Forms.RadioButton();
-            this.TLENameListBox = new System.Windows.Forms.ComboBox();
+            this.SatCatButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIntervalBox)).BeginInit();
             this.SequencerGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.SlewSettlingTimeDelayBox)).BeginInit();
@@ -374,7 +374,7 @@ namespace Hot_Pursuit
             this.HPStatusBox.Multiline = true;
             this.HPStatusBox.Name = "HPStatusBox";
             this.HPStatusBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.HPStatusBox.Size = new System.Drawing.Size(576, 45);
+            this.HPStatusBox.Size = new System.Drawing.Size(576, 51);
             this.HPStatusBox.TabIndex = 18;
             // 
             // DecRateBox
@@ -493,7 +493,7 @@ namespace Hot_Pursuit
             this.ScoutRadioButton.AutoSize = true;
             this.ScoutRadioButton.Checked = true;
             this.ScoutRadioButton.ForeColor = System.Drawing.Color.White;
-            this.ScoutRadioButton.Location = new System.Drawing.Point(17, 112);
+            this.ScoutRadioButton.Location = new System.Drawing.Point(17, 109);
             this.ScoutRadioButton.Name = "ScoutRadioButton";
             this.ScoutRadioButton.Size = new System.Drawing.Size(53, 17);
             this.ScoutRadioButton.TabIndex = 34;
@@ -506,7 +506,7 @@ namespace Hot_Pursuit
             // 
             this.HorizonsRadioButton.AutoSize = true;
             this.HorizonsRadioButton.ForeColor = System.Drawing.Color.White;
-            this.HorizonsRadioButton.Location = new System.Drawing.Point(79, 112);
+            this.HorizonsRadioButton.Location = new System.Drawing.Point(79, 109);
             this.HorizonsRadioButton.Name = "HorizonsRadioButton";
             this.HorizonsRadioButton.Size = new System.Drawing.Size(66, 17);
             this.HorizonsRadioButton.TabIndex = 35;
@@ -518,7 +518,7 @@ namespace Hot_Pursuit
             // 
             this.MPCRadioButton.AutoSize = true;
             this.MPCRadioButton.ForeColor = System.Drawing.Color.White;
-            this.MPCRadioButton.Location = new System.Drawing.Point(151, 112);
+            this.MPCRadioButton.Location = new System.Drawing.Point(151, 109);
             this.MPCRadioButton.Name = "MPCRadioButton";
             this.MPCRadioButton.Size = new System.Drawing.Size(48, 17);
             this.MPCRadioButton.TabIndex = 36;
@@ -532,28 +532,30 @@ namespace Hot_Pursuit
             this.TLERadioButton.ForeColor = System.Drawing.Color.White;
             this.TLERadioButton.Location = new System.Drawing.Point(17, 135);
             this.TLERadioButton.Name = "TLERadioButton";
-            this.TLERadioButton.Size = new System.Drawing.Size(45, 17);
+            this.TLERadioButton.Size = new System.Drawing.Size(41, 17);
             this.TLERadioButton.TabIndex = 37;
-            this.TLERadioButton.Text = "TLE";
+            this.TLERadioButton.Text = "Sat";
             this.TLERadioButton.UseVisualStyleBackColor = true;
             this.TLERadioButton.CheckedChanged += new System.EventHandler(this.TLERadioButton_CheckedChanged);
             // 
-            // TLENameListBox
+            // SatCatButton
             // 
-            this.TLENameListBox.FormattingEnabled = true;
-            this.TLENameListBox.Location = new System.Drawing.Point(68, 131);
-            this.TLENameListBox.Name = "TLENameListBox";
-            this.TLENameListBox.Size = new System.Drawing.Size(131, 21);
-            this.TLENameListBox.TabIndex = 38;
-            this.TLENameListBox.SelectedIndexChanged += new System.EventHandler(this.TLENameListBox_SelectedIndexChanged);
+            this.SatCatButton.ForeColor = System.Drawing.Color.Black;
+            this.SatCatButton.Location = new System.Drawing.Point(147, 129);
+            this.SatCatButton.Name = "SatCatButton";
+            this.SatCatButton.Size = new System.Drawing.Size(52, 23);
+            this.SatCatButton.TabIndex = 36;
+            this.SatCatButton.Text = "SatCat";
+            this.SatCatButton.UseVisualStyleBackColor = true;
+            this.SatCatButton.Click += new System.EventHandler(this.SatCatButton_Click);
             // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkCyan;
-            this.ClientSize = new System.Drawing.Size(588, 215);
-            this.Controls.Add(this.TLENameListBox);
+            this.ClientSize = new System.Drawing.Size(588, 216);
+            this.Controls.Add(this.SatCatButton);
             this.Controls.Add(this.TLERadioButton);
             this.Controls.Add(this.MPCRadioButton);
             this.Controls.Add(this.HorizonsRadioButton);
@@ -625,7 +627,7 @@ namespace Hot_Pursuit
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.NumericUpDown SlewSettlingTimeDelayBox;
         private System.Windows.Forms.RadioButton TLERadioButton;
-        private System.Windows.Forms.ComboBox TLENameListBox;
+        private System.Windows.Forms.Button SatCatButton;
     }
 }
 

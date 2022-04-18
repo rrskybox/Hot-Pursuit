@@ -128,7 +128,7 @@ namespace Hot_Pursuit
         {
             if (!EphemTable.HasData)
             {
-                UpdateStatusLine("Problem with loading target data. The target may no longer be in the CNEOS Listing.");
+                UpdateStatusLine("Problem with loading target data. The target may no longer be carried in its catalog.");
                 CleanupOnFault();
                 return false;
             }
@@ -560,23 +560,35 @@ namespace Hot_Pursuit
         {
             QuerySite = "MPC";
         }
+
         private void TLERadioButton_CheckedChanged(object sender, EventArgs e)
         {
+            int cn;
             QuerySite = "TLE";
-            string hpDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Hot Pursuit\\TLE";
-            string[] tleFiles = Directory.GetFiles(hpDirectoryPath, "*.txt");
-            TLE tleCatalog = new TLE(tleFiles[0]);
+            DialogResult newCat = MessageBox.Show("Do you want an updated satellite catalog?", "Satellite Catalog Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+            if (newCat == DialogResult.Yes)
+                SatCat.RefreshSatelliteCatalog();
 
-            TLENameListBox.Items.Clear();
-            foreach (string ls in tleCatalog.TLECatalog)
-                TLENameListBox.Items.Add(ls);
-            Show(); System.Windows.Forms.Application.DoEvents();
-
+            //Change the refresh rate to seconds
+            SecondsButton.Checked = true;
+            //Uncheck CLS box -- too slow
+            CLSBox.Checked = false;
         }
 
-        private void TLENameListBox_SelectedIndexChanged(object sender, EventArgs e)
+        private void SatCatButton_Click(object sender, EventArgs e)
         {
-            TargetBox.Text = TLENameListBox.SelectedItem.ToString();
+            //Check SatCatBox
+            TLERadioButton.Checked = true;
+            SatCatButton.BackColor = Color.Red;
+            Show(); System.Windows.Forms.Application.DoEvents();
+            FormSatCat obj = new FormSatCat();
+            obj.getSatCatID_CallBack += getData;
+            SatCatButton.BackColor = Color.LightGreen;
+        }
+
+        private void getData(string tgtID)
+        {
+            TargetBox.Text =tgtID;
         }
     }
 }

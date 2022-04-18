@@ -62,7 +62,7 @@ namespace Hot_Pursuit
                     }
                 case EphemSource.Horizons:
                     {
-                        HasData = DownloadHorizonsData(isMinutes, updateRate,false);
+                        HasData = DownloadHorizonsData(isMinutes, updateRate, false);
                         break;
                     }
                 case EphemSource.MPES:
@@ -70,7 +70,7 @@ namespace Hot_Pursuit
                         HasData = DownloadMPESData(isMinutes, updateRate);
                         break;
                     }
-                 case EphemSource.HorizonsTLE:
+                case EphemSource.HorizonsTLE:
                     {
                         HasData = DownloadHorizonsData(isMinutes, updateRate, true);
                         break;
@@ -401,11 +401,11 @@ namespace Hot_Pursuit
         #endregion
 
         #region horizons
-        const string tleName = "YAOGAN-34 02";
-        const string tleLine1 = "1 52084U 22027A   22106.14505350 -.00008930  00000+0 -14988-1 0  9998";
-        const string tleLine2 = "2 52084  63.3984 152.9793 0006802 260.6369 187.0003 13.45177047  4022";
+        //const string tleName = "YAOGAN-34 02";
+        //const string tleLine1 = "1 52084U 22027A   22106.14505350 -.00008930  00000+0 -14988-1 0  9998";
+        //const string tleLine2 = "2 52084  63.3984 152.9793 0006802 260.6369 187.0003 13.45177047  4022";
 
-        const string tleTest = tleName + "\n" + tleLine1 + "\n" + tleLine2;
+        //const string tleTest = tleName + "\n" + tleLine1 + "\n" + tleLine2;
 
         const string URL_Horizons_Search = "https://ssd.jpl.nasa.gov/api/horizons.api?";
         //const string URL_Horizons_Search = "https://cgi.minorplanetcenter.net/cgi-bin";
@@ -607,7 +607,7 @@ namespace Hot_Pursuit
             MPC_Observatory = new Observatory();
 
             //Don't need geocentric ephemeris for Horizons -- using topocentric
-            if (!GeoToMPESSiteCalibration())
+            if (!GeoToHorizonsSiteCalibration())
                 return false;
             //Get Geocentric ephemeris
             if (HorizonsQueryToSpeedVectors(isMinutes, updateInterval, IsTLE))
@@ -624,12 +624,7 @@ namespace Hot_Pursuit
             try
             {
                 if (IsTLE)
-                {
-                    string hpDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Hot Pursuit\\TLE";
-                    string[] tleFiles = Directory.GetFiles(hpDirectoryPath, "*.txt");
-                    TLE tleCatalog = new TLE(tleFiles[0]);
-                    urlSearch = URL_Horizons_Search + MakeHorizonsTLEQuery(tleCatalog.GetTLEString(TgtName));
-                }
+                    urlSearch = URL_Horizons_Search + MakeHorizonsTLEQuery(SatCat.ReadCelesTrakTLE(TgtName));
                 else
                     urlSearch = URL_Horizons_Search + MakeHorizonsQuery();
                 hzResultText = client.DownloadString(urlSearch);
@@ -856,6 +851,7 @@ namespace Hot_Pursuit
             q = q.Replace("%2f", "%2F");
             return q; // Returns "key1=value1&key2=value2", all URL-encoded
         }
+
         #endregion
 
         #region mpes
