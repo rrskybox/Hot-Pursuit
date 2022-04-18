@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 using System.Net;
 using System.Windows.Forms;
-using System.IO;
 
 namespace Hot_Pursuit
 {
@@ -103,9 +100,11 @@ namespace Hot_Pursuit
                 };
                 SatelliteCatalog.Add(satEnt);
             }
+            //Sort Catalog by Object Name alphabetically
+            SatelliteCatalog.Sort((x, y) => x.ObjectName.CompareTo(y.ObjectName));
         }
 
-         public static string ReadCelesTrakTLE(string catID)
+        public static string ReadCelesTrakTLE(string catID)
         {
             //Queries CelesTrak for satellite entry of catID
             //Example: https://celestrak.com/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE
