@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
+using System.IO;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace Hot_Pursuit
 {
@@ -9,17 +12,26 @@ namespace Hot_Pursuit
         private int payCatNode;
         private int rbCatNode;
         private int debCatNode;
+        private int unkCatNode;
 
         public string TargetID { get; set; }
 
-        public FormSatCat()
+        public FormSatCat(bool useSatCatalog)
         {
             InitializeComponent();
             SatTree.Nodes.Clear();
+            if (useSatCatalog)
+                SelectSatTarget();
+            else
+                SelectTLETarget();
+        }
 
+        private void SelectSatTarget()
+        { 
             payCatNode = AddMainNode("Payload");
             rbCatNode = AddMainNode("Booster");
             debCatNode = AddMainNode("Debris");
+            unkCatNode = AddMainNode("Unknown");
 
             SatCat scList = new SatCat();
 
@@ -42,7 +54,41 @@ namespace Hot_Pursuit
                             AddLeafNode(debCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
                             break;
                         }
+                     case SatCat.SatCatEntryType.Unknown:
+                        {
+                            AddLeafNode(unkCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+                            break;
+                        }
                 }
+            }
+            Show(); System.Windows.Forms.Application.DoEvents();
+            return;
+        }
+
+        private void SelectTLETarget()
+        {
+            const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
+
+            string nameLine = null;
+            string firstLine = null;
+            string secondLine = null;
+
+            //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
+            //
+            //REad in list of 3TLE entries
+            //Get User Documents Folder
+            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) +  customTLEfilename;
+            if (!File.Exists(satTLEPath))
+                return;
+            StreamReader satTLEFile = File.OpenText(satTLEPath);
+            //Read in the remaining lines and stuff into staName List
+            while (satTLEFile.Peek() != -1)
+            {
+                //Read sets of three lines, look for tgtName in first line, break out with result
+                nameLine = satTLEFile.ReadLine();
+                firstLine = satTLEFile.ReadLine();
+                secondLine = satTLEFile.ReadLine();
+                AddMainNode(nameLine);
             }
             Show(); System.Windows.Forms.Application.DoEvents();
             return;

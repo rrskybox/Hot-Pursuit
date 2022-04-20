@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <row>
+    <GroupName>Last 30 Days Launches</GroupName>
+    <GroupCode>last-30-days</GroupCode>
+  </row>
+  <row>
+    <GroupName>Space Stations</GroupName>
+    <GroupCode>stations</GroupCode>
+  </row>
+  <row>
+    <GroupName>100 (or so) Brightest</GroupName>
+    <GroupCode>visual</GroupCode>
+  </row>
+  <row>
+    <GroupName>Active Satellites</GroupName>
+    <GroupCode>active</GroupCode>
+  </row>
+  <row>
+    <GroupName>Analyst Satellites</GroupName>
+    <GroupCode>analyst</GroupCode>
+  </row>
+  <row>
+    <GroupName>Russian ASAT Test Debris (COSMOS 1408)</GroupName>
+    <GroupCode>1982-092</GroupCode>
+  </row>
+  <row>
+    <GroupName>Indian ASAT Test Debris (MICROSAT-R)</GroupName>
+    <GroupCode>2019-006</GroupCode>
+  </row>
+  <row>
+    <GroupName>Chinese ASAT Test Debris (FENGYUN 1C)</GroupName>
+    <GroupCode>1999-025</GroupCode>
+  </row>
+  <row>
+    <GroupName>IRIDIUM 33 Debris</GroupName>
+    <GroupCode>iridium-33-debris</GroupCode>
+  </row>
+  <row>
+    <GroupName>COSMOS 2251 Debris</GroupName>
+    <GroupCode>cosmos-2251-debris</GroupCode>
+  </row>
+  <row>
+    <GroupName>Weather</GroupName>
+    <GroupCode>weather</GroupCode>
+  </row>
+  <row>
+    <GroupName>NOAA</GroupName>
+    <GroupCode>noaa</GroupCode>
+  </row>
+  <row>
+    <GroupName>GOES</GroupName>
+    <GroupCode>goes</GroupCode>
+  </row>
+  <row>
+    <GroupName>Earth Resources</GroupName>
+    <GroupCode>resource</GroupCode>
+  </row>
+  <row>
+    <GroupName>Search &amp; Rescue (SARSAT)</GroupName>
+    <GroupCode>sarsat</GroupCode>
+  </row>
+  <row>
+    <GroupName>Disaster Monitoring</GroupName>
+    <GroupCode>dmc</GroupCode>
+  </row>
+  <row>
+    <GroupName>Tracking and Data Relay Satellite System (TDRSS)</GroupName>
+    <GroupCode>tdrss</GroupCode>
+  </row>
+  <row>
+    <GroupName>ARGOS Data Collection System</GroupName>
+    <GroupCode>argos</GroupCode>
+  </row>
+  <row>
+    <GroupName>Planet</GroupName>
+    <GroupCode>planet</GroupCode>
+  </row>
+  <row>
+    <GroupName>Spire</GroupName>
+    <GroupCode>spire</GroupCode>
+  </row>
+  <row>
+    <GroupName>Active Geosynchronous</GroupName>
+    <GroupCode>geo</GroupCode>
+  </row>
+  <row>
+    <GroupName>Intelsat</GroupName>
+    <GroupCode>intelsat</GroupCode>
+  </row>
+  <row>
+    <GroupName>SES</GroupName>
+    <GroupCode>ses</GroupCode>
+  </row>
+  <row>
+    <GroupName>Iridium</GroupName>
+    <GroupCode>iridium</GroupCode>
+  </row>
+  <row>
+    <GroupName>Iridium NEXT </GroupName>
+    <GroupCode>iridium-next</GroupCode>
+  </row>
+  <row>
+    <GroupName>Starlink</GroupName>
+    <GroupCode>starlink</GroupCode>
+  </row>
+  <row>
+    <GroupName>OneWeb</GroupName>
+    <GroupCode>oneweb</GroupCode>
+  </row>
+  <row>
+    <GroupName>Orbcomm</GroupName>
+    <GroupCode>orbcomm</GroupCode>
+  </row>
+  <row>
+    <GroupName>Globalstar</GroupName>
+    <GroupCode>globalstar</GroupCode>
+  </row>
+  <row>
+    <GroupName>Swarm</GroupName>
+    <GroupCode>swarm</GroupCode>
+  </row>
+  <row>
+    <GroupName>Amateur Radio</GroupName>
+    <GroupCode>amateur</GroupCode>
+  </row>
+  <row>
+    <GroupName>Experimental Comm</GroupName>
+    <GroupCode>x-comm</GroupCode>
+  </row>
+  <row>
+    <GroupName>Other Comm</GroupName>
+    <GroupCode>other-comm</GroupCode>
+  </row>
+  <row>
+    <GroupName>SatNOGS</GroupName>
+    <GroupCode>satnogs</GroupCode>
+  </row>
+  <row>
+    <GroupName>Gorizont</GroupName>
+    <GroupCode>gorizont</GroupCode>
+  </row>
+  <row>
+    <GroupName>Raduga</GroupName>
+    <GroupCode>raduga</GroupCode>
+  </row>
+  <row>
+    <GroupName>Molniya</GroupName>
+    <GroupCode>molniya</GroupCode>
+  </row>
+  <row>
+    <GroupName>GNSS</GroupName>
+    <GroupCode>gnss</GroupCode>
+  </row>
+  <row>
+    <GroupName>GPS Operational</GroupName>
+    <GroupCode>gps-ops</GroupCode>
+  </row>
+  <row>
+    <GroupName>GLONASS Operational</GroupName>
+    <GroupCode>glo-ops</GroupCode>
+  </row>
+  <row>
+    <GroupName>Galileo</GroupName>
+    <GroupCode>galileo</GroupCode>
+  </row>
+  <row>
+    <GroupName>Beidou</GroupName>
+    <GroupCode>beidou</GroupCode>
+  </row>
+  <row>
+    <GroupName>Satellite-Based Augmentation System (WAAS/EGNOS/MSAS)</GroupName>
+    <GroupCode>sbas</GroupCode>
+  </row>
+  <row>
+    <GroupName>Navy Navigation Satellite System (NNSS)</GroupName>
+    <GroupCode>nnss</GroupCode>
+  </row>
+  <row>
+    <GroupName>Russian LEO Navigation</GroupName>
+    <GroupCode>musson</GroupCode>
+  </row>
+  <row>
+    <GroupName>Space &amp; Earth Science</GroupName>
+    <GroupCode>science</GroupCode>
+  </row>
+  <row>
+    <GroupName>Geodetic</GroupName>
+    <GroupCode>geodetic</GroupCode>
+  </row>
+  <row>
+    <GroupName>Engineering</GroupName>
+    <GroupCode>engineering</GroupCode>
+  </row>
+  <row>
+    <GroupName>Education</GroupName>
+    <GroupCode>education</GroupCode>
+  </row>
+  <row>
+    <GroupName>Miscellaneous Military</GroupName>
+    <GroupCode>military</GroupCode>
+  </row>
+  <row>
+    <GroupName>Radar Calibration</GroupName>
+    <GroupCode>radar</GroupCode>
+  </row>
+  <row>
+    <GroupName>CubeSats</GroupName>
+    <GroupCode>cubesat</GroupCode>
+  </row>
+  <row>
+    <GroupName>Other Satellites</GroupName>
+    <GroupCode>other</GroupCode>
+  </row>
+</root>

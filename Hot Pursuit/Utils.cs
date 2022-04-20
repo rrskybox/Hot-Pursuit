@@ -1,4 +1,6 @@
-﻿using AstroMath;
+﻿//#define simulator
+
+using AstroMath;
 using System;
 using System.Windows.Forms;
 using TheSky64Lib;
@@ -152,7 +154,11 @@ namespace Hot_Pursuit
             }
             catch
             {
+#if simulator
+                return true;
+#else
                 return false;
+#endif
             }
             return true;
         }

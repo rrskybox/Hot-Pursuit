@@ -17,6 +17,7 @@ namespace Hot_Pursuit
             Scout,
             MPES,
             Horizons,
+            HorizonsSat,
             HorizonsTLE
         }
 
@@ -35,8 +36,8 @@ namespace Hot_Pursuit
         public double Site_Corrected_Range { get; set; }
         public double Site_Corrected_RA { get; set; }
         public double Site_Corrected_Dec { get; set; }
-        public double Topo_RA_Correction_Factor { get; set; }
-        public double Topo_Dec_Correction_Factor { get; set; }
+        public double Topo_RA_Correction_Factor { get; set; } = 1;
+        public double Topo_Dec_Correction_Factor { get; set; } = 1;
 
         public Ephemeris(EphemSource eps, string targetName, bool isMinutes, int updateRate)
         {
@@ -61,7 +62,7 @@ namespace Hot_Pursuit
                     }
                 case EphemSource.Horizons:
                     {
-                        HasData = DownloadHorizonsData(isMinutes, updateRate, false);
+                        HasData = DownloadHorizonsData(isMinutes, updateRate, EphemSource.Horizons);
                         break;
                     }
                 case EphemSource.MPES:
@@ -69,9 +70,14 @@ namespace Hot_Pursuit
                         HasData = DownloadMPESData(isMinutes, updateRate);
                         break;
                     }
+                case EphemSource.HorizonsSat:
+                    {
+                        HasData = DownloadHorizonsData(isMinutes, updateRate, EphemSource.HorizonsSat);
+                        break;
+                    }
                 case EphemSource.HorizonsTLE:
                     {
-                        HasData = DownloadHorizonsData(isMinutes, updateRate, true);
+                        HasData = DownloadHorizonsData(isMinutes, updateRate, EphemSource.HorizonsTLE);
                         break;
                     }
             }
@@ -400,11 +406,6 @@ namespace Hot_Pursuit
         #endregion
 
         #region horizons
-        //const string tleName = "YAOGAN-34 02";
-        //const string tleLine1 = "1 52084U 22027A   22106.14505350 -.00008930  00000+0 -14988-1 0  9998";
-        //const string tleLine2 = "2 52084  63.3984 152.9793 0006802 260.6369 187.0003 13.45177047  4022";
-
-        //const string tleTest = tleName + "\n" + tleLine1 + "\n" + tleLine2;
 
         const string URL_Horizons_Search = "https://ssd.jpl.nasa.gov/api/horizons.api?";
         //const string URL_Horizons_Search = "https://cgi.minorplanetcenter.net/cgi-bin";
@@ -600,32 +601,43 @@ namespace Hot_Pursuit
         };
         #endregion
 
-        public bool DownloadHorizonsData(bool isMinutes, int updateInterval, bool IsTLE)
+        public bool DownloadHorizonsData(bool isMinutes, int updateInterval, Ephemeris.EphemSource tleSource)
         {
-            //Get site location and closest MPC observatory
+            //Get site location (and closest MPC observatory -- although unneeded)
             MPC_Observatory = new Observatory();
 
-            //Don't need geocentric ephemeris for Horizons -- using topocentric
-            if (!GeoToHorizonsSiteCalibration())
-                return false;
-            //Get Geocentric ephemeris
-            if (HorizonsQueryToSpeedVectors(isMinutes, updateInterval, IsTLE))
+             //Get Topocentric ephemeris
+            if (HorizonsQueryToSpeedVectors(isMinutes, updateInterval, tleSource))
                 return true;
             else
                 return false;
         }
 
-        private bool HorizonsQueryToSpeedVectors(bool isMinutes, int updateInterval, bool IsTLE)
+        private bool HorizonsQueryToSpeedVectors(bool isMinutes, int updateInterval, Ephemeris.EphemSource tleSource)
         {
             string hzResultText;
-            string urlSearch;
+            string urlSearch = null;
             WebClient client = new WebClient();
             try
             {
-                if (IsTLE)
-                    urlSearch = URL_Horizons_Search + MakeHorizonsTLEQuery(SatCat.ReadCelesTrakTLE(TgtName));
-                else
-                    urlSearch = URL_Horizons_Search + MakeHorizonsQuery();
+                switch (tleSource)
+                {
+                    case EphemSource.HorizonsSat:
+                        {
+                            urlSearch = URL_Horizons_Search + MakeHorizonsTLEQuery(SatCat.ReadCelesTrakTLE(TgtName));
+                            break;
+                        }
+                    case EphemSource.HorizonsTLE:
+                        {
+                            urlSearch = URL_Horizons_Search + MakeHorizonsTLEQuery(SatCat.ReadCustomTLE(TgtName));
+                            break;
+                        }
+                    case EphemSource.Horizons:
+                        {
+                            urlSearch = URL_Horizons_Search + MakeHorizonsQuery();
+                            break;
+                        }
+                }
                 hzResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
@@ -922,15 +934,10 @@ namespace Hot_Pursuit
 
         public bool DownloadMPESData(bool isMinutes, int updateInterval)
         {
-            //Get site location and closest MPC observatory
+            //Get site location (and closest MPC observatory -- although unneeded)
             MPC_Observatory = new Observatory();
 
-            //Get Geocentric ephemeris
-            if (!GeoToMPESSiteCalibration())
-                return false;
-            //Find geocentric ephemeris at current time (single ephemeris)
-            //Find observatory ephemeris at current time (100 count)
-            //Calculate geocentric to geodetic transformation for RA/Dec and dRA/dDec
+           //Find topocentric ephemeris at current time (100 count)
             if (MPESQueryToSpeedVectors(isMinutes, updateInterval))
                 return true;
             else
@@ -983,7 +990,6 @@ namespace Hot_Pursuit
                 ephmRecord.Add(new XElement(xdDec, mpcDataLine.Substring(coldDec, 9)));
                 ephmList.Add(ephmRecord);
             }
-
             return EphemerisListToSpeedVector(ephmList, isMinutes, updateInterval);
         }
 
@@ -996,13 +1002,6 @@ namespace Hot_Pursuit
                     return i;
             }
             return -1;
-        }
-
-        private bool GeoToMPESSiteCalibration()
-        {
-            Topo_Dec_Correction_Factor = 1.0;
-            Topo_RA_Correction_Factor = 1.0;  //degrees per arcdegree
-            return true;
         }
 
         public static string ScrubSmallBodyNameMPES(string longName)

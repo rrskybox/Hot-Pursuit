@@ -27,7 +27,7 @@
     <ProductName>Hot Pursuit</ProductName>
     <PublisherName>TSXToolKit</PublisherName>
     <SuiteName>TSXToolKit</SuiteName>
-    <ApplicationRevision>62</ApplicationRevision>
+    <ApplicationRevision>65</ApplicationRevision>
     <ApplicationVersion>0.4.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -72,6 +72,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\AstroMath\AstroMath\bin\Release\AstroMath.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>..\..\AstroMath\AstroMath\bin\Release\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -109,6 +112,12 @@
     <Compile Include="FormSatCat.Designer.cs">
       <DependentUpon>FormSatCat.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormGroupTLECatalog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormGroupTLECatalog.Designer.cs">
+      <DependentUpon>FormGroupTLECatalog.cs</DependentUpon>
+    </Compile>
     <Compile Include="Interpolate.cs" />
     <Compile Include="Observatory.cs" />
     <Compile Include="Program.cs" />
@@ -117,6 +126,9 @@
     <Compile Include="SatCat.cs" />
     <Compile Include="TLE.cs" />
     <Compile Include="Utils.cs" />
+    <EmbeddedResource Include="FormGroupTLECatalog.resx">
+      <DependentUpon>FormGroupTLECatalog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormHotPursuit.resx">
       <DependentUpon>FormHotPursuit.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -182,6 +194,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Docs\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="CelesTrakGroup.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

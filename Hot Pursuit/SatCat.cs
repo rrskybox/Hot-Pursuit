@@ -4,6 +4,8 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Windows.Forms;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace Hot_Pursuit
 {
@@ -20,7 +22,8 @@ namespace Hot_Pursuit
         {
             Payload,
             Debris,
-            Booster
+            Booster,
+            Unknown
         }
         public struct SatEntry
         {
@@ -64,6 +67,8 @@ namespace Hot_Pursuit
                 Directory.CreateDirectory(userFolder + catDirectory);
             //Write url query contents to cat file
             string satCatPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + catDirectory + catFileName;
+            if (!File.Exists(satCatPath))
+                return;
             StreamReader satCatFile = File.OpenText(satCatPath);
             //Read and discard the first line
             if (satCatFile.Peek() != -1) satCatFile.ReadLine();
@@ -90,6 +95,11 @@ namespace Hot_Pursuit
                             se = SatCatEntryType.Debris;
                             break;
                         }
+                    case "UNK":
+                        {
+                            se = SatCatEntryType.Unknown;
+                            break;
+                        }
                 }
                 SatEntry satEnt = new SatEntry()
                 {
@@ -113,7 +123,7 @@ namespace Hot_Pursuit
             queryString["FORMAT"] = "TLE";
             string q = queryString.ToString();
             //fix bug where queryString inserts %2f instead of %2F for the "/" char
-            q = q.Replace("%2f", "%2F");
+            q.Replace("%2f", "%2F");
 
             WebClient client = new WebClient();
             string urlSearch, satCatTLE;
@@ -129,6 +139,40 @@ namespace Hot_Pursuit
             };
             return satCatTLE;
         }
+
+        public static string ReadCustomTLE(string tgtName)
+        {
+            const string customTLEfilename = "\\CustomTLE.txt";
+
+            string nameLine = null;
+            string firstLine = null;
+            string secondLine = null;
+
+            //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
+            //
+            //REad in list of 3TLE entries
+            //Get User Documents Folder
+            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + catDirectory + customTLEfilename;
+            StreamReader satTLEFile = File.OpenText(satTLEPath);
+            //Read in the remaining lines and stuff into staName List
+            while (satTLEFile.Peek() != -1)
+            {
+                //Read sets of three lines, look for tgtName in first line, break out with result
+                nameLine = satTLEFile.ReadLine();
+                firstLine = satTLEFile.ReadLine();
+                secondLine = satTLEFile.ReadLine();
+                if (nameLine == tgtName)
+                    break;
+            }
+            if (nameLine == tgtName)
+                return (nameLine + "\n" + firstLine + "\n" + secondLine);            //return concatenated string
+            else
+                return null;
+
+        }
+
+ 
+
     }
 }
 

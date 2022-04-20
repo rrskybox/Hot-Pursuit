@@ -1,0 +1,54 @@
+GroupName,GroupCode
+Last 30 Days' Launches,last-30-days
+Space Stations,stations
+100 (or so) Brightest,visual
+Active Satellites,active
+Analyst Satellites,analyst
+Russian ASAT Test Debris (COSMOS 1408),1982-092
+Indian ASAT Test Debris (MICROSAT-R),2019-006
+Chinese ASAT Test Debris (FENGYUN 1C),1999-025
+IRIDIUM 33 Debris,iridium-33-debris
+COSMOS 2251 Debris,cosmos-2251-debris
+Weather,weather
+NOAA,noaa
+GOES,goes
+Earth Resources,resource
+Search & Rescue (SARSAT),sarsat
+Disaster Monitoring,dmc
+Tracking and Data Relay Satellite System (TDRSS),tdrss
+ARGOS Data Collection System,argos
+Planet,planet
+Spire,spire
+Active Geosynchronous,geo
+Intelsat,intelsat
+SES,ses
+Iridium,iridium
+Iridium NEXT ,iridium-next
+Starlink,starlink
+OneWeb,oneweb
+Orbcomm,orbcomm
+Globalstar,globalstar
+Swarm,swarm
+Amateur Radio,amateur
+Experimental Comm,x-comm
+Other Comm,other-comm
+SatNOGS,satnogs
+Gorizont,gorizont
+Raduga,raduga
+Molniya,molniya
+GNSS,gnss
+GPS Operational,gps-ops
+GLONASS Operational,glo-ops
+Galileo,galileo
+Beidou,beidou
+Satellite-Based Augmentation System (WAAS/EGNOS/MSAS),sbas
+Navy Navigation Satellite System (NNSS),nnss
+Russian LEO Navigation,musson
+Space & Earth Science,science
+Geodetic,geodetic
+Engineering,engineering
+Education,education
+Miscellaneous Military,military
+Radar Calibration,radar
+CubeSats,cubesat
+Other Satellites,other

@@ -9,10 +9,19 @@ using System.Threading;
 using System.Windows.Forms;
 using TheSky64Lib;
 
+
 namespace Hot_Pursuit
 {
     public partial class FormHotPursuit : Form
     {
+        public enum ControlColor
+        {
+            DarkRed,
+            Red,
+            Yellow,
+            Green
+        }
+
         public bool InPursuit = false;
         public bool IsImaging = false;
         public string QuerySite = "Scout";
@@ -54,12 +63,13 @@ namespace Hot_Pursuit
             if (ScoutRadioButton.Checked) QuerySite = "Scout";
             if (HorizonsRadioButton.Checked) QuerySite = "Horizons";
             if (MPCRadioButton.Checked) QuerySite = "MPC";
+            if (SatRadioButton.Checked) QuerySite = "Sat";
+            if (TLERadioButton.Checked) QuerySite = "3TLE";
 
-            StartButton.BackColor = Color.LightGreen;
-            StopButton.BackColor = Color.LightGreen;
-            CloseButton.BackColor = Color.LightGreen;
-
-            ImageButton.BackColor = Color.Yellow;
+            SetBackColor(StartButton, ControlColor.Green);
+            SetBackColor(StopButton, ControlColor.Green);
+            SetBackColor(CloseButton, ControlColor.Green);
+            SetBackColor(ImageButton, ControlColor.Yellow);
 
             HPDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Hot Pursuit";
             if (!Directory.Exists(HPDirectoryPath)) Directory.CreateDirectory(HPDirectoryPath);
@@ -71,6 +81,60 @@ namespace Hot_Pursuit
         }
 
         public bool AbortRequested { get; set; } = false;
+
+        public void SetBackColor(Button button, ControlColor clr)
+        {
+            switch (clr)
+            {
+                case ControlColor.DarkRed:
+                    {
+                        button.BackColor = Color.Salmon;
+                        break;
+                    }
+                case ControlColor.Red:
+                    {
+                        button.BackColor = Color.LightSalmon;
+                        break;
+                    }
+                case ControlColor.Yellow:
+                    {
+                        button.BackColor = Color.LightYellow;
+                        break;
+                    }
+                case ControlColor.Green:
+                    {
+                        button.BackColor = Color.LightGreen;
+                        break;
+                    }
+            }
+        }
+
+        public void SetBackColor(TextBox button, ControlColor clr)
+        {
+            switch (clr)
+            {
+                case ControlColor.DarkRed:
+                    {
+                        button.BackColor = Color.Salmon;
+                        break;
+                    }
+                case ControlColor.Red:
+                    {
+                        button.BackColor = Color.LightSalmon;
+                        break;
+                    }
+                case ControlColor.Yellow:
+                    {
+                        button.BackColor = Color.LightYellow;
+                        break;
+                    }
+                case ControlColor.Green:
+                    {
+                        button.BackColor = Color.LightGreen;
+                        break;
+                    }
+            }
+        }
 
         private void StartButton_Click(object sender, EventArgs e)
         {
@@ -98,28 +162,46 @@ namespace Hot_Pursuit
             {
                 EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
                 while (WalkEphemerisTable(Ephemeris.EphemSource.Scout))
+                {
+                    UpdateStatusLine("Acquiring new ephemeris table");
                     EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                }
             }
-
             if (HorizonsRadioButton.Checked)
             {
                 EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
                 while (WalkEphemerisTable(Ephemeris.EphemSource.Horizons))
+                {
+                    UpdateStatusLine("Acquiring new ephemeris table");
                     EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                }
             }
-
             if (MPCRadioButton.Checked)
             {
                 EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                {
+                    UpdateStatusLine("Acquiring new ephemeris table");
+                    while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
+                        EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                }
             }
-
+            if (SatRadioButton.Checked)
+            {
+                EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsSat))
+                {
+                    UpdateStatusLine("Acquiring new ephemeris table");
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                }
+            }
             if (TLERadioButton.Checked)
             {
                 EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                {
+                    UpdateStatusLine("Acquiring new ephemeris table");
+                    while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsTLE))
+                        EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                }
             }
 
         }
@@ -203,7 +285,7 @@ namespace Hot_Pursuit
                         RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
                         //Update status
                         AssembleStatusUpdate(nextUpdateSV, false);
-                        TargetBox.BackColor = Color.LightSalmon;
+
                     }
                     else  //Set tracking failure, so exit refresh loop
                         break;
@@ -217,39 +299,42 @@ namespace Hot_Pursuit
             return false;
         }
 
-        private bool InitializeTargetTracking(SpeedVector nextUpdateSV)
+        private bool InitializeTargetTracking(SpeedVector currentSpeedVector)
         {
             //CLS to where target should be currently, deal with CLS failure
-            if (!Utils.CLSToTarget(EphemTable.TgtName, nextUpdateSV, CLSBox.Checked))
+            UpdateStatusLine("Slewing to target @ RA/Dec: " +
+                                Utils.HourString(AstroMath.Transform.DegreesToHours(currentSpeedVector.RA_Degrees),true) + "/" +
+                                Utils.DegreeString(currentSpeedVector.Dec_Degrees, true));
+                if (!Utils.CLSToTarget(EphemTable.TgtName, currentSpeedVector, CLSBox.Checked))
             {
                 UpdateStatusLine("Tracking failed: Problem with Slew.");
-                ReportSpeeds(nextUpdateSV);
+                ReportSpeeds(currentSpeedVector);
                 return false;
             }
             //Prompt for imaging
-            ImageButton.BackColor = Color.LightGreen;
+            SetBackColor(ImageButton, ControlColor.Green);
             //Set custom tracking 
-            if (Utils.SetTargetTracking(nextUpdateSV))
-                TargetBox.BackColor = Color.LightSalmon;
+            if (Utils.SetTargetTracking(currentSpeedVector))
+                SetBackColor(TargetBox, ControlColor.Red);
             else
             {
                 UpdateStatusLine("Set non-sidereal tracking failed.");
-                ReportSpeeds(nextUpdateSV);
-                TargetBox.BackColor = Color.LightGreen;
+                ReportSpeeds(currentSpeedVector);
+                SetBackColor(TargetBox, ControlColor.Green);
                 return false;
             }
             //Wait out delay, if any
             if ((int)SlewSettlingTimeDelayBox.Value > 0)
             {
-                TargetBox.BackColor = Color.Yellow;
+                SetBackColor(TargetBox, ControlColor.Yellow);
                 Show();
                 System.Windows.Forms.Application.DoEvents();
                 System.Threading.Thread.Sleep((int)SlewSettlingTimeDelayBox.Value * 1000);
-                TargetBox.BackColor = Color.LightSalmon;
+                SetBackColor(TargetBox, ControlColor.Red);
                 Show();
                 System.Windows.Forms.Application.DoEvents();
             }
-            ReportSpeeds(nextUpdateSV);
+            ReportSpeeds(currentSpeedVector);
             return true;
         }
 
@@ -263,7 +348,7 @@ namespace Hot_Pursuit
         private void ImageButton_Click(object sender, EventArgs e)
         {
             //Sets up and runs a single shot using the exposure and filter set by the form
-            ImageButton.BackColor = Color.LightSalmon;
+            SetBackColor(ImageButton, ControlColor.Red);
             ImageFrames = new List<FitsFile>();  //Clear image stack
             TakeImage();
             return;
@@ -311,7 +396,7 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
-                ImageButton.BackColor = Color.Yellow;
+                SetBackColor(ImageButton, ControlColor.Yellow);
                 IsImaging = false;
                 UpdateStatusLine("Imaging Error: " + ex.Message);
                 RepsBox.Value = 1;
@@ -322,31 +407,6 @@ namespace Hot_Pursuit
             IsImaging = true;
             tsxc = null;
             return true;
-        }
-
-        private void CleanupOnFault()
-        {
-            AbortRequested = false;
-            InPursuit = false;
-            StartButton.BackColor = Color.LightGreen;
-            TargetBox.BackColor = Color.White;
-            CheckImaging();
-            return;
-        }
-
-        private void OneSecondPulse(Button cmd)
-        {
-            cmd.BackColor = Color.LightSalmon;
-            Show();
-            System.Windows.Forms.Application.DoEvents();
-            System.Threading.Thread.Sleep(500);
-            cmd.BackColor = Color.Salmon;
-            Show();
-            System.Windows.Forms.Application.DoEvents();
-            System.Threading.Thread.Sleep(500);
-            Show();
-            System.Windows.Forms.Application.DoEvents();
-            return;
         }
 
         private void CheckImaging()
@@ -367,10 +427,10 @@ namespace Hot_Pursuit
                         bool IsReady = false;
                         if (RecenterBox.Checked)
                         {
-                            SpeedVector nextUpdateSV = EphemTable.GetNearestRateUpdate(DateTime.UtcNow);
-                            IsReady = InitializeTargetTracking(nextUpdateSV);
+                            SpeedVector currentSV = EphemTable.GetNearestRateUpdate(DateTime.UtcNow);
+                            IsReady = InitializeTargetTracking(currentSV);
                         }
-                        ImageButton.BackColor = Color.Salmon;
+                        SetBackColor(ImageButton, ControlColor.Red);
                         if (IsReady)
                             TakeImage();
                         else //Something went bad in the target tracking
@@ -378,7 +438,7 @@ namespace Hot_Pursuit
                     }
                     else //All reps are done
                     {
-                        ImageButton.BackColor = Color.LightGreen;
+                        SetBackColor(ImageButton, ControlColor.Green);
                         tsxc.AutoSavePrefix = "";  //Clear target name prefix
                         IsImaging = false;
                     }
@@ -409,10 +469,36 @@ namespace Hot_Pursuit
                 {
                     tsxc.Abort();
                     tsxc.AutoSavePrefix = "";  //Clear target name prefix
-                    ImageButton.BackColor = Color.Yellow;
+                    SetBackColor(ImageButton, ControlColor.Yellow);
                     IsImaging = false;
                 }
             }
+        }
+
+        private void CleanupOnFault()
+        {
+            AbortRequested = false;
+            InPursuit = false;
+            SetBackColor(StartButton, ControlColor.Green);
+            SetBackColor(TargetBox, ControlColor.Green);
+            CheckImaging();
+            Utils.SetStandardTracking();
+            return;
+        }
+
+        private void OneSecondPulse(Button cmd)
+        {
+            SetBackColor(cmd, ControlColor.DarkRed);
+            Show();
+            System.Windows.Forms.Application.DoEvents();
+            System.Threading.Thread.Sleep(500);
+            SetBackColor(cmd, ControlColor.Red);
+            Show();
+            System.Windows.Forms.Application.DoEvents();
+            System.Threading.Thread.Sleep(500);
+            Show();
+            System.Windows.Forms.Application.DoEvents();
+            return;
         }
 
         private void AssembleStatusUpdate(SpeedVector sv, Boolean fullStatus)
@@ -561,35 +647,43 @@ namespace Hot_Pursuit
             QuerySite = "MPC";
         }
 
-        private void TLERadioButton_CheckedChanged(object sender, EventArgs e)
+        private void SatRadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            int cn;
-            QuerySite = "TLE";
+            QuerySite = "Sat";
+            SatRadioButton.ForeColor = Color.Pink;
             DialogResult newCat = MessageBox.Show("Do you want an updated satellite catalog?", "Satellite Catalog Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
             if (newCat == DialogResult.Yes)
                 SatCat.RefreshSatelliteCatalog();
-
             //Change the refresh rate to seconds
             SecondsButton.Checked = true;
             //Uncheck CLS box -- too slow
             CLSBox.Checked = false;
+            //Check SatCatBox
+            Show(); System.Windows.Forms.Application.DoEvents();
+            FormSatCat obj = new FormSatCat(true);
+            obj.getSatCatID_CallBack += getData;
+            SatRadioButton.ForeColor = Color.White;
         }
 
-        private void SatCatButton_Click(object sender, EventArgs e)
+        private void TLERadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            //Check SatCatBox
-            TLERadioButton.Checked = true;
-            SatCatButton.BackColor = Color.Red;
+            QuerySite = "3TLE";
+            TLERadioButton.ForeColor = Color.Pink;
+            //Change the refresh rate to seconds
+            SecondsButton.Checked = true;
+            //Uncheck CLS box -- too slow
+            CLSBox.Checked = false;
             Show(); System.Windows.Forms.Application.DoEvents();
-            FormSatCat obj = new FormSatCat();
+            FormSatCat obj = new FormSatCat(false);
             obj.getSatCatID_CallBack += getData;
-            SatCatButton.BackColor = Color.LightGreen;
+            TLERadioButton.ForeColor = Color.White;
         }
 
         private void getData(string tgtID)
         {
-            TargetBox.Text =tgtID;
+            TargetBox.Text = tgtID;
         }
+
     }
 }
 
