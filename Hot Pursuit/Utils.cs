@@ -36,6 +36,7 @@ namespace Hot_Pursuit
 
         public static bool CLSToTarget(string tgtName, SpeedVector sv, bool IsPrecision = false)
         {
+            //Performs 
             //first, couple dome to telescope, if there is one
             sky6Dome tsxd = new sky6Dome();
             try
@@ -64,21 +65,19 @@ namespace Hot_Pursuit
                 MessageBox.Show("Slew failure: Target is below the horizon");
                 return false;
             }
-            //Clear any image reduction, otherwise full reduction might cause a problem
-            ccdsoftCamera tsxcam = new ccdsoftCamera()
+            if (IsPrecision)
             {
-                ImageReduction = ccdsoftImageReduction.cdNone,
-                Asynchronous = 1 //make sure nothing else happens while setting this up
-            };
-            //Abort any ongoing imaging
-            tsxcam.Abort();
+                //Clear any image reduction, otherwise full reduction might cause a problem
+                ccdsoftCamera tsxcam = new ccdsoftCamera()
+                {
+                    ImageReduction = ccdsoftImageReduction.cdNone,
+                    Asynchronous = 1 //make sure nothing else happens while setting this up
+                };
+                //Abort any ongoing imaging
+                tsxcam.Abort();
 
+            }
             bool returnStatus = true;
-            // diagnostic
-            string strRA = Utils.HourString(tgtRAH, false);
-            string strDec = Utils.DegreeString(tgtDecD, false);
-            //
-            tsxsc.Find(tgtRAH.ToString() + ", " + tgtDecD.ToString());
             tsxmt.Connect();
             tsxu.Precess2000ToNow(tgtRAH, tgtDecD);
             double jnRAH = tsxu.dOut0;
@@ -123,9 +122,13 @@ namespace Hot_Pursuit
             double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
             double tgtDecD = sv.Dec_Degrees;
             tsxmt.Connect();
+            sky6Utils tsxu = new sky6Utils();
+            tsxu.Precess2000ToNow(tgtRAH, tgtDecD);
+            double jnRAH = tsxu.dOut0;
+            double jnDecD = tsxu.dOut1;
             try
             {
-                tsxmt.SlewToRaDec(tgtRAH, tgtDecD, tgtName);
+                tsxmt.SlewToRaDec(jnRAH, jnDecD, tgtName);
             }
             catch (Exception ex)
             {

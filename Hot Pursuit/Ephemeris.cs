@@ -51,7 +51,7 @@ namespace Hot_Pursuit
             else
             {
                 EphStep = TimeSpan.FromSeconds(updateRate);
-                EphEnd = EphStart + TimeSpan.FromSeconds(EphStep.TotalSeconds * 100);
+                EphEnd = EphStart + TimeSpan.FromSeconds(EphStep.TotalSeconds * 600);  //10 minutes for seconds data
             }
             switch (eps)
             {
@@ -154,8 +154,9 @@ namespace Hot_Pursuit
             {
                 //must add interpolated ephemeras
                 //Horizons delivers a full day worth of data at 1 minute intervals
-                // only do the first 100 readings
-                for (int bIdx = 0; (bIdx < BasicRateTable.Count - 1 && bIdx < 100); bIdx++)
+                // only do the first 10 minutes
+                DateTime maxTime = BasicRateTable[0].Time_UTC + TimeSpan.FromMinutes(10);
+                for (int bIdx = 0; (bIdx < BasicRateTable.Count - 1 && BasicRateTable[bIdx].Time_UTC < maxTime); bIdx++)
                 {
                     UpdateRateTable.Add(BasicRateTable[bIdx]);
                     Interpolate intp = new Interpolate(BasicRateTable[bIdx], BasicRateTable[bIdx + 1], updateInterval);
@@ -717,14 +718,7 @@ namespace Hot_Pursuit
             return scrub;
         }
 
-        private bool GeoToHorizonsSiteCalibration()
-        {
-            Topo_Dec_Correction_Factor = 1.0;
-            Topo_RA_Correction_Factor = 1.0;  //degrees per arcdegree
-            return true;
-        }
-
-        #region Horizons Query Strings
+         #region Horizons Query Strings
 
         const string hFormatTypeText = "text";
         const string hFormatTypeJSON = "json";
@@ -837,13 +831,14 @@ namespace Hot_Pursuit
             string center = siteLong + ":" + siteLat + ":" + siteElev;
             string startTime = "\'" + EphStart.ToString("yyyy-MM-dd HH:mm") + "\'";
             string endTime = "\'" + EphEnd.ToString("yyyy-MM-dd HH:mm") + "\'";
+            string stdSite = MPC_Observatory.BestObservatory.MPC_Code;
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[hzCommand] = "TLE";
             queryString[hzTLE] = tleString;
             queryString[hFormat] = hFormatTypeText;
             queryString[hMakeEphemeris] = hYes;
             queryString[hEphemerisType] = hObserverType;
-            queryString[hCenter] = "399";  //Earth
+            queryString[hCenter] = stdSite;  
             queryString[hSiteCoordinate] = center;  //e-long(degrees):lat(degrees):elevation(km)
             queryString[hStartTime] = startTime; // "2021-01-12";
             queryString[hStopTime] = endTime; // "2021-01-13";

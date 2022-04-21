@@ -34,16 +34,13 @@ namespace Hot_Pursuit
             this.RefreshIntervalBox = new System.Windows.Forms.NumericUpDown();
             this.TargetBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.NextRefreshBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.OnTopBox = new System.Windows.Forms.CheckBox();
             this.SequencerGroupBox = new System.Windows.Forms.GroupBox();
-            this.label7 = new System.Windows.Forms.Label();
             this.RecenterBox = new System.Windows.Forms.CheckBox();
             this.LiveStackBox = new System.Windows.Forms.CheckBox();
-            this.SlewSettlingTimeDelayBox = new System.Windows.Forms.NumericUpDown();
             this.RepsBox = new System.Windows.Forms.NumericUpDown();
             this.label9 = new System.Windows.Forms.Label();
             this.FiltersListBox = new System.Windows.Forms.ComboBox();
@@ -58,7 +55,6 @@ namespace Hot_Pursuit
             this.RangeBox = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.CLSBox = new System.Windows.Forms.CheckBox();
-            this.label10 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.StartButton = new System.Windows.Forms.Button();
             this.SecondsButton = new System.Windows.Forms.RadioButton();
@@ -68,9 +64,10 @@ namespace Hot_Pursuit
             this.MPCRadioButton = new System.Windows.Forms.RadioButton();
             this.SatRadioButton = new System.Windows.Forms.RadioButton();
             this.TLERadioButton = new System.Windows.Forms.RadioButton();
+            this.CatalogTreeView = new System.Windows.Forms.TreeView();
+            this.ChooseButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIntervalBox)).BeginInit();
             this.SequencerGroupBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.SlewSettlingTimeDelayBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -79,7 +76,7 @@ namespace Hot_Pursuit
             // CloseButton
             // 
             this.CloseButton.ForeColor = System.Drawing.Color.Black;
-            this.CloseButton.Location = new System.Drawing.Point(129, 112);
+            this.CloseButton.Location = new System.Drawing.Point(129, 83);
             this.CloseButton.Name = "CloseButton";
             this.CloseButton.Size = new System.Drawing.Size(50, 23);
             this.CloseButton.TabIndex = 1;
@@ -90,7 +87,7 @@ namespace Hot_Pursuit
             // StopButton
             // 
             this.StopButton.ForeColor = System.Drawing.Color.Black;
-            this.StopButton.Location = new System.Drawing.Point(71, 112);
+            this.StopButton.Location = new System.Drawing.Point(71, 83);
             this.StopButton.Name = "StopButton";
             this.StopButton.Size = new System.Drawing.Size(52, 23);
             this.StopButton.TabIndex = 2;
@@ -140,14 +137,6 @@ namespace Hot_Pursuit
             this.label1.TabIndex = 6;
             this.label1.Text = "Target";
             // 
-            // NextRefreshBox
-            // 
-            this.NextRefreshBox.Location = new System.Drawing.Point(117, 48);
-            this.NextRefreshBox.Name = "NextRefreshBox";
-            this.NextRefreshBox.Size = new System.Drawing.Size(63, 20);
-            this.NextRefreshBox.TabIndex = 7;
-            this.NextRefreshBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -183,7 +172,7 @@ namespace Hot_Pursuit
             this.OnTopBox.AutoSize = true;
             this.OnTopBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.OnTopBox.ForeColor = System.Drawing.Color.White;
-            this.OnTopBox.Location = new System.Drawing.Point(117, 80);
+            this.OnTopBox.Location = new System.Drawing.Point(117, 51);
             this.OnTopBox.Name = "OnTopBox";
             this.OnTopBox.Size = new System.Drawing.Size(62, 17);
             this.OnTopBox.TabIndex = 16;
@@ -194,10 +183,8 @@ namespace Hot_Pursuit
             // SequencerGroupBox
             // 
             this.SequencerGroupBox.BackColor = System.Drawing.Color.LightSeaGreen;
-            this.SequencerGroupBox.Controls.Add(this.label7);
             this.SequencerGroupBox.Controls.Add(this.RecenterBox);
             this.SequencerGroupBox.Controls.Add(this.LiveStackBox);
-            this.SequencerGroupBox.Controls.Add(this.SlewSettlingTimeDelayBox);
             this.SequencerGroupBox.Controls.Add(this.RepsBox);
             this.SequencerGroupBox.Controls.Add(this.label9);
             this.SequencerGroupBox.Controls.Add(this.FiltersListBox);
@@ -209,20 +196,10 @@ namespace Hot_Pursuit
             this.SequencerGroupBox.ForeColor = System.Drawing.Color.MintCream;
             this.SequencerGroupBox.Location = new System.Drawing.Point(400, 7);
             this.SequencerGroupBox.Name = "SequencerGroupBox";
-            this.SequencerGroupBox.Size = new System.Drawing.Size(182, 145);
+            this.SequencerGroupBox.Size = new System.Drawing.Size(182, 119);
             this.SequencerGroupBox.TabIndex = 17;
             this.SequencerGroupBox.TabStop = false;
             this.SequencerGroupBox.Text = "QAD Imaging";
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.ForeColor = System.Drawing.Color.White;
-            this.label7.Location = new System.Drawing.Point(110, 90);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(60, 13);
-            this.label7.TabIndex = 29;
-            this.label7.Text = "Settle (sec)";
             // 
             // RecenterBox
             // 
@@ -231,7 +208,7 @@ namespace Hot_Pursuit
             this.RecenterBox.Checked = true;
             this.RecenterBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.RecenterBox.ForeColor = System.Drawing.Color.White;
-            this.RecenterBox.Location = new System.Drawing.Point(106, 72);
+            this.RecenterBox.Location = new System.Drawing.Point(106, 66);
             this.RecenterBox.Name = "RecenterBox";
             this.RecenterBox.Size = new System.Drawing.Size(70, 17);
             this.RecenterBox.TabIndex = 27;
@@ -243,26 +220,12 @@ namespace Hot_Pursuit
             this.LiveStackBox.AutoSize = true;
             this.LiveStackBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.LiveStackBox.ForeColor = System.Drawing.Color.White;
-            this.LiveStackBox.Location = new System.Drawing.Point(6, 89);
+            this.LiveStackBox.Location = new System.Drawing.Point(6, 92);
             this.LiveStackBox.Name = "LiveStackBox";
             this.LiveStackBox.Size = new System.Drawing.Size(77, 17);
             this.LiveStackBox.TabIndex = 26;
             this.LiveStackBox.Text = "Live Stack";
             this.LiveStackBox.UseVisualStyleBackColor = true;
-            // 
-            // SlewSettlingTimeDelayBox
-            // 
-            this.SlewSettlingTimeDelayBox.Location = new System.Drawing.Point(120, 108);
-            this.SlewSettlingTimeDelayBox.Maximum = new decimal(new int[] {
-            3600,
-            0,
-            0,
-            0});
-            this.SlewSettlingTimeDelayBox.Name = "SlewSettlingTimeDelayBox";
-            this.SlewSettlingTimeDelayBox.Size = new System.Drawing.Size(41, 20);
-            this.SlewSettlingTimeDelayBox.TabIndex = 28;
-            this.SlewSettlingTimeDelayBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-            this.SlewSettlingTimeDelayBox.ValueChanged += new System.EventHandler(this.StartDelayBox_ValueChanged);
             // 
             // RepsBox
             // 
@@ -307,9 +270,9 @@ namespace Hot_Pursuit
             this.FullReductionCheckBox.ForeColor = System.Drawing.Color.White;
             this.FullReductionCheckBox.Location = new System.Drawing.Point(6, 66);
             this.FullReductionCheckBox.Name = "FullReductionCheckBox";
-            this.FullReductionCheckBox.Size = new System.Drawing.Size(64, 17);
+            this.FullReductionCheckBox.Size = new System.Drawing.Size(76, 17);
             this.FullReductionCheckBox.TabIndex = 18;
-            this.FullReductionCheckBox.Text = "Reduce";
+            this.FullReductionCheckBox.Text = "Reduce    ";
             this.FullReductionCheckBox.UseVisualStyleBackColor = true;
             this.FullReductionCheckBox.CheckedChanged += new System.EventHandler(this.FullReductionCheckBox_CheckedChanged);
             // 
@@ -359,7 +322,7 @@ namespace Hot_Pursuit
             // ImageButton
             // 
             this.ImageButton.ForeColor = System.Drawing.Color.Black;
-            this.ImageButton.Location = new System.Drawing.Point(35, 112);
+            this.ImageButton.Location = new System.Drawing.Point(118, 87);
             this.ImageButton.Name = "ImageButton";
             this.ImageButton.Size = new System.Drawing.Size(55, 23);
             this.ImageButton.TabIndex = 18;
@@ -370,11 +333,11 @@ namespace Hot_Pursuit
             // HPStatusBox
             // 
             this.HPStatusBox.AllowDrop = true;
-            this.HPStatusBox.Location = new System.Drawing.Point(6, 158);
+            this.HPStatusBox.Location = new System.Drawing.Point(6, 132);
             this.HPStatusBox.Multiline = true;
             this.HPStatusBox.Name = "HPStatusBox";
             this.HPStatusBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.HPStatusBox.Size = new System.Drawing.Size(576, 226);
+            this.HPStatusBox.Size = new System.Drawing.Size(576, 50);
             this.HPStatusBox.TabIndex = 18;
             // 
             // DecRateBox
@@ -416,7 +379,7 @@ namespace Hot_Pursuit
             this.CLSBox.AutoSize = true;
             this.CLSBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.CLSBox.ForeColor = System.Drawing.Color.White;
-            this.CLSBox.Location = new System.Drawing.Point(8, 80);
+            this.CLSBox.Location = new System.Drawing.Point(8, 51);
             this.CLSBox.Name = "CLSBox";
             this.CLSBox.Size = new System.Drawing.Size(46, 17);
             this.CLSBox.TabIndex = 30;
@@ -424,33 +387,21 @@ namespace Hot_Pursuit
             this.CLSBox.UseVisualStyleBackColor = true;
             this.CLSBox.CheckedChanged += new System.EventHandler(this.CLSBox_CheckedChanged);
             // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.ForeColor = System.Drawing.Color.White;
-            this.label10.Location = new System.Drawing.Point(6, 52);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(105, 13);
-            this.label10.TabIndex = 32;
-            this.label10.Text = "Next Refresh  (Secs)";
-            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.StartButton);
             this.groupBox1.Controls.Add(this.SecondsButton);
             this.groupBox1.Controls.Add(this.MinutesButton);
-            this.groupBox1.Controls.Add(this.label10);
             this.groupBox1.Controls.Add(this.RefreshIntervalBox);
             this.groupBox1.Controls.Add(this.CLSBox);
             this.groupBox1.Controls.Add(this.OnTopBox);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.StopButton);
             this.groupBox1.Controls.Add(this.CloseButton);
-            this.groupBox1.Controls.Add(this.NextRefreshBox);
             this.groupBox1.ForeColor = System.Drawing.Color.White;
             this.groupBox1.Location = new System.Drawing.Point(205, 7);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(188, 145);
+            this.groupBox1.Size = new System.Drawing.Size(188, 119);
             this.groupBox1.TabIndex = 33;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Tracking";
@@ -458,7 +409,7 @@ namespace Hot_Pursuit
             // StartButton
             // 
             this.StartButton.ForeColor = System.Drawing.Color.Black;
-            this.StartButton.Location = new System.Drawing.Point(13, 112);
+            this.StartButton.Location = new System.Drawing.Point(13, 83);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(52, 23);
             this.StartButton.TabIndex = 35;
@@ -530,7 +481,7 @@ namespace Hot_Pursuit
             // 
             this.SatRadioButton.AutoSize = true;
             this.SatRadioButton.ForeColor = System.Drawing.Color.White;
-            this.SatRadioButton.Location = new System.Drawing.Point(17, 132);
+            this.SatRadioButton.Location = new System.Drawing.Point(590, 138);
             this.SatRadioButton.Name = "SatRadioButton";
             this.SatRadioButton.Size = new System.Drawing.Size(101, 17);
             this.SatRadioButton.TabIndex = 37;
@@ -542,7 +493,7 @@ namespace Hot_Pursuit
             // 
             this.TLERadioButton.AutoSize = true;
             this.TLERadioButton.ForeColor = System.Drawing.Color.White;
-            this.TLERadioButton.Location = new System.Drawing.Point(122, 132);
+            this.TLERadioButton.Location = new System.Drawing.Point(590, 158);
             this.TLERadioButton.Name = "TLERadioButton";
             this.TLERadioButton.Size = new System.Drawing.Size(83, 17);
             this.TLERadioButton.TabIndex = 38;
@@ -550,12 +501,32 @@ namespace Hot_Pursuit
             this.TLERadioButton.UseVisualStyleBackColor = true;
             this.TLERadioButton.CheckedChanged += new System.EventHandler(this.TLERadioButton_CheckedChanged);
             // 
+            // CatalogTreeView
+            // 
+            this.CatalogTreeView.Location = new System.Drawing.Point(590, 7);
+            this.CatalogTreeView.Name = "CatalogTreeView";
+            this.CatalogTreeView.Size = new System.Drawing.Size(184, 119);
+            this.CatalogTreeView.TabIndex = 39;
+            // 
+            // ChooseButton
+            // 
+            this.ChooseButton.ForeColor = System.Drawing.Color.Black;
+            this.ChooseButton.Location = new System.Drawing.Point(707, 144);
+            this.ChooseButton.Name = "ChooseButton";
+            this.ChooseButton.Size = new System.Drawing.Size(61, 23);
+            this.ChooseButton.TabIndex = 40;
+            this.ChooseButton.Text = "Choose";
+            this.ChooseButton.UseVisualStyleBackColor = true;
+            this.ChooseButton.Click += new System.EventHandler(this.ChooseButton_Click);
+            // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkCyan;
-            this.ClientSize = new System.Drawing.Size(588, 396);
+            this.ClientSize = new System.Drawing.Size(782, 188);
+            this.Controls.Add(this.ChooseButton);
+            this.Controls.Add(this.CatalogTreeView);
             this.Controls.Add(this.TLERadioButton);
             this.Controls.Add(this.SatRadioButton);
             this.Controls.Add(this.MPCRadioButton);
@@ -579,7 +550,6 @@ namespace Hot_Pursuit
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIntervalBox)).EndInit();
             this.SequencerGroupBox.ResumeLayout(false);
             this.SequencerGroupBox.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.SlewSettlingTimeDelayBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).EndInit();
             this.groupBox1.ResumeLayout(false);
@@ -595,7 +565,6 @@ namespace Hot_Pursuit
         private System.Windows.Forms.NumericUpDown RefreshIntervalBox;
         private System.Windows.Forms.TextBox TargetBox;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox NextRefreshBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
@@ -616,7 +585,6 @@ namespace Hot_Pursuit
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.CheckBox CLSBox;
         private System.Windows.Forms.CheckBox LiveStackBox;
-        private System.Windows.Forms.Label label10;
         private System.Windows.Forms.CheckBox RecenterBox;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton SecondsButton;
@@ -625,10 +593,10 @@ namespace Hot_Pursuit
         private System.Windows.Forms.RadioButton ScoutRadioButton;
         private System.Windows.Forms.RadioButton HorizonsRadioButton;
         private System.Windows.Forms.RadioButton MPCRadioButton;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.NumericUpDown SlewSettlingTimeDelayBox;
         private System.Windows.Forms.RadioButton SatRadioButton;
         private System.Windows.Forms.RadioButton TLERadioButton;
+        private System.Windows.Forms.TreeView CatalogTreeView;
+        private System.Windows.Forms.Button ChooseButton;
     }
 }
 

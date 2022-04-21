@@ -2,12 +2,16 @@
 using AstroMath;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using System.Reflection;
+using System.Xml.Linq;
 using TheSky64Lib;
+using System.Net;
 
 
 namespace Hot_Pursuit
@@ -26,6 +30,7 @@ namespace Hot_Pursuit
         public bool IsImaging = false;
         public string QuerySite = "Scout";
 
+
         public Ephemeris EphemTable;
 
         public string HPDirectoryPath;
@@ -40,6 +45,8 @@ namespace Hot_Pursuit
 
         public Thread StackThread = null;
         public Point StackFormLocation = new Point(0, 0);
+
+        #region Form
 
         public FormHotPursuit()
         {
@@ -59,7 +66,6 @@ namespace Hot_Pursuit
             FullReductionCheckBox.Checked = Properties.Settings.Default.FullReduction;
             OnTopBox.Checked = Properties.Settings.Default.IsOnTop;
             CLSBox.Checked = Properties.Settings.Default.UseCLS;
-            SlewSettlingTimeDelayBox.Value = (decimal)Properties.Settings.Default.StartDelay;
             if (ScoutRadioButton.Checked) QuerySite = "Scout";
             if (HorizonsRadioButton.Checked) QuerySite = "Horizons";
             if (MPCRadioButton.Checked) QuerySite = "MPC";
@@ -232,8 +238,16 @@ namespace Hot_Pursuit
                             " Variance: " + Utils.HourString(EphemTable.MPC_Observatory.BestObservatory.VarianceRA, true) +
                             "(Lat) / " + Utils.DegreeString(EphemTable.MPC_Observatory.BestObservatory.VarianceDec, true) +
                             " (Lon)");
-            //Fire off first tracking instruction
+            //Point telescope a current position of target
+            SpeedVector initialUpdateSV = EphemTable.GetNearestRateUpdate(DateTime.UtcNow);
+            if (!PreliminatrySlew(initialUpdateSV))
+            {
+                CleanupOnFault();
+                return false;
+            }
+            //Refresh current spped vector, just in case the slew took some time
             SpeedVector nextUpdateSV = EphemTable.GetNearestRateUpdate(DateTime.UtcNow);
+            //Fire off first tracking instruction
             if (!InitializeTargetTracking(nextUpdateSV))
             {
                 CleanupOnFault();
@@ -256,8 +270,6 @@ namespace Hot_Pursuit
                 while (DateTime.UtcNow < refreshTime)
                 {
                     //If still within the refresh interval,
-                    //Update the refresh display
-                    NextRefreshBox.Text = (DateTime.UtcNow - refreshTime).Duration().TotalSeconds.ToString("0");
                     //Perform a one second wait and pulse the Start Command button
                     OneSecondPulse(StartButton);
                     //Check to see if imaging is happening and, if so, handle it
@@ -299,13 +311,29 @@ namespace Hot_Pursuit
             return false;
         }
 
+        private bool PreliminatrySlew(SpeedVector currentSpeedVector)
+        {
+            //Makes initial slew to target, which might take a bit of time, so subsequent slews are quick
+            UpdateStatusLine("Initial slew to target @ RA/Dec: " +
+                    Utils.HourString(AstroMath.Transform.DegreesToHours(currentSpeedVector.RA_Degrees), true) + "/" +
+                    Utils.DegreeString(currentSpeedVector.Dec_Degrees, true));
+            if (!Utils.SlewToTarget(EphemTable.TgtName, currentSpeedVector))
+            {
+                UpdateStatusLine("Tracking failed: Problem with Slew.");
+                ReportSpeeds(currentSpeedVector);
+                return false;
+            }
+            else
+                return true;
+        }
+
         private bool InitializeTargetTracking(SpeedVector currentSpeedVector)
         {
-            //CLS to where target should be currently, deal with CLS failure
+            //CLS or slew to where target should be currently, deal with CLS failure
             UpdateStatusLine("Slewing to target @ RA/Dec: " +
-                                Utils.HourString(AstroMath.Transform.DegreesToHours(currentSpeedVector.RA_Degrees),true) + "/" +
+                                Utils.HourString(AstroMath.Transform.DegreesToHours(currentSpeedVector.RA_Degrees), true) + "/" +
                                 Utils.DegreeString(currentSpeedVector.Dec_Degrees, true));
-                if (!Utils.CLSToTarget(EphemTable.TgtName, currentSpeedVector, CLSBox.Checked))
+            if (!Utils.CLSToTarget(EphemTable.TgtName, currentSpeedVector, CLSBox.Checked))
             {
                 UpdateStatusLine("Tracking failed: Problem with Slew.");
                 ReportSpeeds(currentSpeedVector);
@@ -322,17 +350,6 @@ namespace Hot_Pursuit
                 ReportSpeeds(currentSpeedVector);
                 SetBackColor(TargetBox, ControlColor.Green);
                 return false;
-            }
-            //Wait out delay, if any
-            if ((int)SlewSettlingTimeDelayBox.Value > 0)
-            {
-                SetBackColor(TargetBox, ControlColor.Yellow);
-                Show();
-                System.Windows.Forms.Application.DoEvents();
-                System.Threading.Thread.Sleep((int)SlewSettlingTimeDelayBox.Value * 1000);
-                SetBackColor(TargetBox, ControlColor.Red);
-                Show();
-                System.Windows.Forms.Application.DoEvents();
             }
             ReportSpeeds(currentSpeedVector);
             return true;
@@ -543,7 +560,6 @@ namespace Hot_Pursuit
             RARateBox.Text = "";
             DecRateBox.Text = "";
             //CorrectionBox.Text = "";
-            NextRefreshBox.Text = "";
             RangeBox.Text = "";
         }
 
@@ -612,13 +628,6 @@ namespace Hot_Pursuit
             return;
         }
 
-        private void StartDelayBox_ValueChanged(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.StartDelay = (int)SlewSettlingTimeDelayBox.Value;
-            Properties.Settings.Default.Save();
-            return;
-        }
-
         private void TargetBox_DoubleClick(object sender, EventArgs e)
         {
             if (!InPursuit)
@@ -659,9 +668,9 @@ namespace Hot_Pursuit
             //Uncheck CLS box -- too slow
             CLSBox.Checked = false;
             //Check SatCatBox
+            SelectSatTarget();
+            CatType = CatalogType.Done;
             Show(); System.Windows.Forms.Application.DoEvents();
-            FormSatCat obj = new FormSatCat(true);
-            obj.getSatCatID_CallBack += getData;
             SatRadioButton.ForeColor = Color.White;
         }
 
@@ -669,21 +678,253 @@ namespace Hot_Pursuit
         {
             QuerySite = "3TLE";
             TLERadioButton.ForeColor = Color.Pink;
+            DialogResult newCat = MessageBox.Show("Do you want an updated custom satellite group?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+            if (newCat == DialogResult.Yes)
+            {
+                CatType = CatalogType.Group;
+                ReadInCelesTrakGroup();
+            }
+
             //Change the refresh rate to seconds
             SecondsButton.Checked = true;
-            //Uncheck CLS box -- too slow
+            //Uncheck CLS box -- CLS too slow for chasing satellites
             CLSBox.Checked = false;
             Show(); System.Windows.Forms.Application.DoEvents();
-            FormSatCat obj = new FormSatCat(false);
-            obj.getSatCatID_CallBack += getData;
             TLERadioButton.ForeColor = Color.White;
         }
 
-        private void getData(string tgtID)
+        #endregion
+
+        #region treeview
+
+        public enum CatalogType
         {
-            TargetBox.Text = tgtID;
+            Full,
+            Group,
+            Custom,
+            Done
         }
 
+        const string celesTrakSatQueryURL = "https://celestrak.com/NORAD/elements/gp.php?";
+
+        public CatalogType CatType;
+        public string GroupName;
+
+        private void ChooseButton_Click(object sender, EventArgs e)
+        {
+            TreeNode tn = CatalogTreeView.SelectedNode;
+            if (tn == null)
+                return;
+            string catalogPick = tn.Name;
+            switch (CatType)
+            {
+                case CatalogType.Full:
+                    {
+                        CatType = CatalogType.Done;
+                        break;
+                    }
+                case
+                    CatalogType.Group:
+                    {
+                        string tleSet = QueryCelesTrakGroupTLE(catalogPick);
+                        if (!WriteCelesTraKGroupTLEs(tleSet))
+                        {
+                            UpdateStatusLine("Satellite Group download failed");
+                            CatType = CatalogType.Done;
+                        }
+                        else
+                            CatType = CatalogType.Custom;
+
+                        break;
+                    }
+                case
+                    CatalogType.Custom:
+                    {
+                        SelectTLETarget();
+                        CatType = CatalogType.Done;
+                        break;
+                    }
+                case
+                    CatalogType.Done:
+                    {
+                        TargetBox.Text = catalogPick;
+                        break;
+                    }
+            }
+        }
+
+        #region treeview
+
+        private int AddMainNode(string section)
+        {
+            TreeNode cNode = CatalogTreeView.Nodes.Add(section, section);
+            int indx = CatalogTreeView.Nodes.IndexOf(cNode);
+            return indx;
+        }
+
+        private void AddLeafNode(int mainIdx, string objName, string objIntID, string objNoradID)
+        {
+            int oIdx = CatalogTreeView.Nodes[mainIdx].Nodes.IndexOfKey(objName);
+            if (oIdx == -1)
+            {
+                TreeNode cNode = CatalogTreeView.Nodes[mainIdx].Nodes.Add(objName, objName);
+                oIdx = CatalogTreeView.Nodes[mainIdx].Nodes.IndexOf(cNode);
+            }
+            CatalogTreeView.Nodes[mainIdx].Nodes[oIdx].Nodes.Add(objNoradID, objIntID);
+            return;
+        }
+
+        #endregion
+
+        #region GroupTreeView
+
+        private void ReadInCelesTrakGroup()
+        {
+            //Queries CelesTrak for new group list of TLE's
+            Assembly dgassembly = Assembly.GetExecutingAssembly();
+            Stream dgstream = dgassembly.GetManifestResourceStream("Hot_Pursuit.CelesTrakGroup.xml");
+            XElement cGroupList = XElement.Load(dgstream);
+            CatalogTreeView.Nodes.Clear();
+            foreach (XElement xg in cGroupList.Elements("row"))
+                AddMainNode(xg.Element("GroupName").Value);
+            Show(); System.Windows.Forms.Application.DoEvents();
+            return;
+        }
+
+        public string QueryCelesTrakGroupTLE(string groupPick)
+        {
+            //Queries CelesTrak for satellite entry of catID
+            //Example: https://celestrak.com/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE
+            NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
+            queryString["GROUP"] = groupPick;
+            queryString["FORMAT"] = "TLE";
+            string q = queryString.ToString();
+            //fix bug where queryString inserts %2f instead of %2F for the "/" char
+            q.Replace("%2f", "%2F");
+
+            WebClient client = new WebClient();
+            string urlSearch, groupTLE;
+            try
+            {
+                urlSearch = celesTrakSatQueryURL + queryString;
+                groupTLE = client.DownloadString(urlSearch);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Catalog Download Error: " + ex.Message);
+                return null;
+            };
+            return groupTLE;
+        }
+
+        private bool WriteCelesTraKGroupTLEs(string tles)
+        {
+            const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
+
+            //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
+            //
+            //REad in list of 3TLE entries
+            //Get User Documents Folder
+            string customTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + customTLEfilename;
+            try
+            {
+                File.Delete(customTLEPath);
+                File.WriteAllText(customTLEPath, tles);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        #endregion
+
+        private int payCatNode;
+        private int rbCatNode;
+        private int debCatNode;
+        private int unkCatNode;
+
+        public string TargetID { get; set; }
+
+        private void SelectSatTarget()
+        {
+            CatalogTreeView.Nodes.Clear();
+
+            payCatNode = AddMainNode("Payload");
+            rbCatNode = AddMainNode("Booster");
+            debCatNode = AddMainNode("Debris");
+            unkCatNode = AddMainNode("Unknown");
+
+
+            SatCat scList = new SatCat();
+
+            foreach (SatCat.SatEntry sc in scList.SatelliteCatalog)
+            {
+                switch (sc.ObjectType)
+                {
+                    case SatCat.SatCatEntryType.Payload:
+                        {
+                            AddLeafNode(payCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+                            break;
+                        }
+                    case SatCat.SatCatEntryType.Booster:
+                        {
+                            AddLeafNode(rbCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+                            break;
+                        }
+                    case SatCat.SatCatEntryType.Debris:
+                        {
+                            AddLeafNode(debCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+                            break;
+                        }
+                    case SatCat.SatCatEntryType.Unknown:
+                        {
+                            AddLeafNode(unkCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+                            break;
+                        }
+                }
+            }
+            Show(); System.Windows.Forms.Application.DoEvents();
+            return;
+        }
+
+        private void SelectTLETarget()
+        {
+            const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
+
+            string nameLine = null;
+            string firstLine = null;
+            string secondLine = null;
+
+            //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
+            //
+            //REad in list of 3TLE entries
+            //Get User Documents Folder
+            CatalogTreeView.Nodes.Clear();
+            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + customTLEfilename;
+            if (!File.Exists(satTLEPath))
+                return;
+            StreamReader satTLEFile = File.OpenText(satTLEPath);
+            //Read in the remaining lines and stuff into staName List
+            while (satTLEFile.Peek() != -1)
+            {
+                //Read sets of three lines, look for tgtName in first line, break out with result
+                nameLine = satTLEFile.ReadLine();
+                firstLine = satTLEFile.ReadLine();
+                secondLine = satTLEFile.ReadLine();
+                AddMainNode(nameLine);
+            }
+            Show(); System.Windows.Forms.Application.DoEvents();
+            return;
+        }
+
+
     }
+    #endregion
+
+
+
 }
+
 
