@@ -12,6 +12,11 @@ namespace Hot_Pursuit
         public const double Astronomical_Unit = 149597870.700;  //km
         public const double Earth_Radius = 6371.0; //km
 
+        public const int ionTrackingOn = 1;
+        public const int ionTrackingOff = 0;
+        public const int ignoreRates = 1;
+        public const int useRates = 1;  //Don't use rates
+
         public static double PARateToRA(double paD, double rate)
         {
             //Calculates dRA/dt for PA in Degrees and rate in arcsec/min (but really doesn't matter
@@ -140,28 +145,32 @@ namespace Hot_Pursuit
 
         public static bool SetTargetTracking(SpeedVector sv)
         {
-            const int ionTrackingOn = 1;
-            const int ionTrackingOff = 0;
-            const int ignoreRates = 1;
-            const int useRates = 0;
 
             double tgtRateRA = sv.Rate_RA_ArcsecPerMinute;
             double tgtRateDec = sv.Rate_Dec_ArcsecPerMinute;
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            try
+            if (SafetyCheck.IsAboveHorizon())
             {
-                //TSX expects tracking rates in arcsec/sec: convert it from arcsec/min
-                tsxmt.SetTracking(ionTrackingOn, useRates, tgtRateRA / 60.0, tgtRateDec / 60.0);
-            }
-            catch
-            {
+                try
+                {
+                    //TSX expects tracking rates in arcsec/sec: convert it from arcsec/min
+                    tsxmt.SetTracking(ionTrackingOn, useRates, tgtRateRA / 60.0, tgtRateDec / 60.0);
+                }
+                catch
+                {
 #if simulator
                 return true;
 #else
-                return false;
+                    return false;
 #endif
+                }
+            }
+            else
+            {
+                Utils.StopTracking();
+                return false;
             }
             return true;
         }
@@ -182,10 +191,6 @@ namespace Hot_Pursuit
 
         public static bool SetStandardTracking()
         {
-            const int ionTrackingOn = 1;
-            const int ionTrackingOff = 0;
-            const int ignoreRates = 1;
-            const int useRates = 1;  //Don't use rates
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
@@ -238,13 +243,28 @@ namespace Hot_Pursuit
             return (dRA, dDec);
         }
 
-        public static (double, double) GetCurrentTelePosition()
+        public static (double, double) GetCurrentRADecPosition()
         {
             sky6RASCOMTele tsxm = new sky6RASCOMTele();
             tsxm.GetRaDec();
             sky6Utils tsxu = new sky6Utils();
             tsxu.PrecessNowTo2000(tsxm.dRa, tsxm.dDec);
             return (tsxu.dOut0, tsxu.dOut1);
+        }
+
+        public static (double, double) GetCurrentAzAltPosition()
+        {
+            sky6RASCOMTele tsxm = new sky6RASCOMTele();
+            sky6Utils tsxu = new sky6Utils();
+            tsxm.GetAzAlt();
+            return (tsxu.dOut0, tsxu.dOut1);
+        }
+
+        public static void StopTracking()
+        {
+            sky6RASCOMTele tsxm = new sky6RASCOMTele();
+            tsxm.SetTracking(ionTrackingOff, ignoreRates, 0, 0);
+            return;
         }
 
     }
