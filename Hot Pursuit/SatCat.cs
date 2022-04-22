@@ -4,8 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Windows.Forms;
-using System.Reflection;
-using System.Xml.Linq;
+using System.Linq;
 
 namespace Hot_Pursuit
 {
@@ -111,7 +110,8 @@ namespace Hot_Pursuit
                 SatelliteCatalog.Add(satEnt);
             }
             //Sort Catalog by Object Name alphabetically
-            SatelliteCatalog.Sort((x, y) => x.ObjectName.CompareTo(y.ObjectName));
+            //SatelliteCatalog.Sort((x, y) => x.ObjectName.CompareTo(y.ObjectName));
+            SatelliteCatalog = (from ce in SatelliteCatalog orderby ce.ObjectName select ce).ToList<SatEntry>();
         }
 
         public static string ReadCelesTrakTLE(string catID)
@@ -172,6 +172,7 @@ namespace Hot_Pursuit
                 return null;
 
         }
+
 
  
 

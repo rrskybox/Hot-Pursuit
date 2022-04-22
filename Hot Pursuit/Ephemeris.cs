@@ -1072,7 +1072,8 @@ namespace Hot_Pursuit
 
             string scrubbedTgtName = ScrubSmallBodyNameMPES(TgtName);
             //figure out site location
-            string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
+            //string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
+            string siteLong = MPC_Observatory.BestObservatory.MySiteLong.ToString("0.000");  //in degrees E converted to the 0-360 form that MPC likes it
             string siteLat = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
             string siteElev = MPC_Observatory.BestObservatory.MySiteElev.ToString("0.000");
             string center = siteLong + ":" + siteLat + ":" + siteElev;

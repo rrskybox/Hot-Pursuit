@@ -34,8 +34,10 @@ namespace Hot_Pursuit
                 if (parsedline != null)
                     obsList.Add(parsedline);
             }
-            //convert MPC longitude from +/- to 360 (format of MPC site)
-            double topolng360 = 360 - BestObservatory.MySiteLong;
+            //convert MPC longitude from +/-180 West to 0<l<360 East (format of MPC site)
+            double topolng360 = (360-BestObservatory.MySiteLong);
+            if (topolng360 < 0)
+                topolng360 += 360;
             double leastRMS = 360;
             //Find the closest observatory to input lst and lng by simple RMS
             foreach (Location ob in obsList)

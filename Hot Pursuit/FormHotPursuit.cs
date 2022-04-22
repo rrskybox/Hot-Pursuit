@@ -6,12 +6,13 @@ using System.Collections.Specialized;
 using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
+using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using System.Reflection;
 using System.Xml.Linq;
+using System.Linq;
 using TheSky64Lib;
-using System.Net;
 
 
 namespace Hot_Pursuit
@@ -401,7 +402,7 @@ namespace Hot_Pursuit
             catch (Exception ex)
             {
                 MessageBox.Show("Camera connect failure: " + ex.Message);
-                LogEntry("Camera connect failure: " + ex.Message);
+                UpdateStatusLine("Camera connect failure: " + ex.Message);
                 IsImaging = true;
                 tsxc = null;
                 RepsBox.Value = 1;
@@ -644,36 +645,45 @@ namespace Hot_Pursuit
         private void ScoutRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "Scout";
+            TargetBox.Text = "";
         }
 
         private void HorizonsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "Horizons";
+            TargetBox.Text = "";
         }
 
         private void MPCRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "MPC";
+            TargetBox.Text = "";
         }
 
         private void SatRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             if (SatRadioButton.Checked)
             {
+                TargetBox.Text = "";
                 QuerySite = "Sat";
-                SatRadioButton.ForeColor = Color.Pink;
-                DialogResult newCat = MessageBox.Show("Do you want an updated satellite catalog?", "Satellite Catalog Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-                if (newCat == DialogResult.Yes)
-                    SatCat.RefreshSatelliteCatalog();
-                //Change the refresh rate to seconds
-                SecondsButton.Checked = true;
-                //Uncheck CLS box -- too slow
-                CLSBox.Checked = false;
+                SecondsButton.Checked = true;   //Change the refresh rate to seconds
+                CLSBox.Checked = false;   //Uncheck CLS box -- too slow
                 //Check SatCatBox
-                TreeViewSatList();
-                CatType = CatalogType.Done;
+                DialogResult newCat = MessageBox.Show("Do you want an updated CelesTrak satellite catalog?", "Satellite Catalog Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                if (newCat == DialogResult.Yes)
+                {
+                    UpdateStatusLine("Updating CelesTrak Full Catalog");
+                    SatRadioButton.ForeColor = Color.Pink;
+                    Show(); System.Windows.Forms.Application.DoEvents();
+                    SatCat.RefreshSatelliteCatalog();
+                    SatRadioButton.ForeColor = Color.White;
+                }
+                SatRadioButton.ForeColor = Color.Pink;
                 Show(); System.Windows.Forms.Application.DoEvents();
+                TreeViewSatList();
                 SatRadioButton.ForeColor = Color.White;
+                CatType = CatalogType.FullSatList;
+                Show(); System.Windows.Forms.Application.DoEvents();
             }
         }
 
@@ -681,25 +691,30 @@ namespace Hot_Pursuit
         {
             if (TLERadioButton.Checked)
             {
+                TargetBox.Text = "";
                 QuerySite = "3TLE";
-                TLERadioButton.ForeColor = Color.Pink;
-                DialogResult newCat = MessageBox.Show("Do you want to change or update the satellite group TLE's?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                SecondsButton.Checked = true;   //Change the refresh rate to seconds
+                CLSBox.Checked = false;   //Uncheck CLS box -- too slow
+                DialogResult newCat = MessageBox.Show("Do you want to change or update a CelesTraak satellite group?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
                 if (newCat == DialogResult.Yes)
                 {
+                    UpdateStatusLine("Posting Listing of CelesTrak Satellite Groups");
+                    TLERadioButton.ForeColor = Color.Pink;
+                    Show(); System.Windows.Forms.Application.DoEvents();
                     DisplayCelesTrakGroups();
-                    CatType = CatalogType.Group;
+                    TLERadioButton.ForeColor = Color.White;
+                    CatType = CatalogType.GroupList;
                     return;
                 }
                 else
                 {
-                    CatType = CatalogType.Custom;
-                    TreeViewTLEList();
-                    //Change the refresh rate to seconds
-                    SecondsButton.Checked = true;
-                    //Uncheck CLS box -- CLS too slow for chasing satellites
-                    CLSBox.Checked = false;
+                    UpdateStatusLine("Updating CelesTrak Group Catalog (TLE)");
+                    TLERadioButton.ForeColor = Color.Pink;
                     Show(); System.Windows.Forms.Application.DoEvents();
+                    TreeViewTLEList();
                     TLERadioButton.ForeColor = Color.White;
+                    CatType = CatalogType.GroupSatList;
+                    Show(); System.Windows.Forms.Application.DoEvents();
                 }
             }
         }
@@ -711,10 +726,10 @@ namespace Hot_Pursuit
 
         public enum CatalogType
         {
-            Full,
-            Group,
-            Custom,
-            Done
+            FullSatList,
+            GroupList,
+            GroupSatList,
+            None
         }
 
         const string celesTrakSatQueryURL = "https://celestrak.com/NORAD/elements/gp.php?";
@@ -724,40 +739,43 @@ namespace Hot_Pursuit
 
         private void ChooseButton_Click(object sender, EventArgs e)
         {
+            if (!(SatRadioButton.Checked || TLERadioButton.Checked))
+                return;
             TreeNode tn = CatalogTreeView.SelectedNode;
             if (tn == null)
                 return;
             string catalogPick = tn.Name;
             switch (CatType)
             {
-                case CatalogType.Full:
+                case CatalogType.FullSatList:
                     {
-                        CatType = CatalogType.Done;
+                        UpdateStatusLine("Loading new target from Celestrak Full Satellite Catalog");
+                        TargetBox.Text = catalogPick;
                         break;
                     }
-                case CatalogType.Group:
+                case CatalogType.GroupList:
                     {
                         string tleSet = QueryCelesTrakGroupTLE(catalogPick);
                         if (!WriteCelesTraKGroupTLEs(tleSet))
                         {
                             UpdateStatusLine("Satellite Group download failed");
-                            CatType = CatalogType.Done;
                         }
                         else
                         {
-                            CatType = CatalogType.Custom;
                             TreeViewTLEList();
+                            CatType = CatalogType.GroupSatList;
                         }
                         break;
                     }
-                case CatalogType.Custom:
+                case CatalogType.GroupSatList:
                     {
+                        UpdateStatusLine("Loading new target from Celestrak Group Satellite Catalog");
                         TargetBox.Text = catalogPick;
-                        CatType = CatalogType.Done;
                         break;
                     }
-                case CatalogType.Done:
+                case CatalogType.None:
                     {
+                        UpdateStatusLine("Loading new target from a mystery");
                         TargetBox.Text = catalogPick;
                         break;
                     }
@@ -796,7 +814,10 @@ namespace Hot_Pursuit
             Stream dgstream = dgassembly.GetManifestResourceStream("Hot_Pursuit.CelesTrakGroup.xml");
             XElement cGroupList = XElement.Load(dgstream);
             CatalogTreeView.Nodes.Clear();
-            foreach (XElement xg in cGroupList.Elements("row"))
+            XElement[] orderedList = (from xtab in cGroupList.Elements("row")
+                                      orderby xtab.Element("GroupName").Value
+                                      select xtab).ToArray();
+            foreach (XElement xg in orderedList)
                 AddMainNode(xg.Element("GroupCode").Value, xg.Element("GroupName").Value);
             Show(); System.Windows.Forms.Application.DoEvents();
             return;
@@ -866,6 +887,7 @@ namespace Hot_Pursuit
             rbCatNode = AddMainNode("Booster", "Booster");
             debCatNode = AddMainNode("Debris", "Debris");
             unkCatNode = AddMainNode("Unknown", "Unknown");
+            Show(); System.Windows.Forms.Application.DoEvents();
 
             SatCat scList = new SatCat();
 
@@ -908,6 +930,8 @@ namespace Hot_Pursuit
             //REad in list of 3TLE entries
             //Get User Documents Folder
             CatalogTreeView.Nodes.Clear();
+            Show(); System.Windows.Forms.Application.DoEvents();
+
             string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + customTLEfilename;
             if (!File.Exists(satTLEPath))
                 return;
@@ -925,9 +949,8 @@ namespace Hot_Pursuit
                 };
                 tleList.Add(tle);
             }
-            //Sort alphabetically
-            tleList.Sort((x, y) => x.NameLine.CompareTo(y.NameLine));
-            foreach (TLEData t in tleList)
+            //Sort alphabetically and load into treeview
+            foreach (TLEData t in from tleRecord in tleList orderby tleRecord.NameLine select tleRecord)
                 AddMainNode(t.FirstLine.Substring(2, 5), t.NameLine);
             Show(); System.Windows.Forms.Application.DoEvents();
             return;
