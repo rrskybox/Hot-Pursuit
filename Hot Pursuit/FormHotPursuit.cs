@@ -658,40 +658,52 @@ namespace Hot_Pursuit
 
         private void SatRadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            QuerySite = "Sat";
-            SatRadioButton.ForeColor = Color.Pink;
-            DialogResult newCat = MessageBox.Show("Do you want an updated satellite catalog?", "Satellite Catalog Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-            if (newCat == DialogResult.Yes)
-                SatCat.RefreshSatelliteCatalog();
-            //Change the refresh rate to seconds
-            SecondsButton.Checked = true;
-            //Uncheck CLS box -- too slow
-            CLSBox.Checked = false;
-            //Check SatCatBox
-            SelectSatTarget();
-            CatType = CatalogType.Done;
-            Show(); System.Windows.Forms.Application.DoEvents();
-            SatRadioButton.ForeColor = Color.White;
+            if (SatRadioButton.Checked)
+            {
+                QuerySite = "Sat";
+                SatRadioButton.ForeColor = Color.Pink;
+                DialogResult newCat = MessageBox.Show("Do you want an updated satellite catalog?", "Satellite Catalog Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                if (newCat == DialogResult.Yes)
+                    SatCat.RefreshSatelliteCatalog();
+                //Change the refresh rate to seconds
+                SecondsButton.Checked = true;
+                //Uncheck CLS box -- too slow
+                CLSBox.Checked = false;
+                //Check SatCatBox
+                TreeViewSatList();
+                CatType = CatalogType.Done;
+                Show(); System.Windows.Forms.Application.DoEvents();
+                SatRadioButton.ForeColor = Color.White;
+            }
         }
 
         private void TLERadioButton_CheckedChanged(object sender, EventArgs e)
         {
-            QuerySite = "3TLE";
-            TLERadioButton.ForeColor = Color.Pink;
-            DialogResult newCat = MessageBox.Show("Do you want an updated custom satellite group?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-            if (newCat == DialogResult.Yes)
+            if (TLERadioButton.Checked)
             {
-                CatType = CatalogType.Group;
-                ReadInCelesTrakGroup();
+                QuerySite = "3TLE";
+                TLERadioButton.ForeColor = Color.Pink;
+                DialogResult newCat = MessageBox.Show("Do you want to change or update the satellite group TLE's?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                if (newCat == DialogResult.Yes)
+                {
+                    DisplayCelesTrakGroups();
+                    CatType = CatalogType.Group;
+                    return;
+                }
+                else
+                {
+                    CatType = CatalogType.Custom;
+                    TreeViewTLEList();
+                    //Change the refresh rate to seconds
+                    SecondsButton.Checked = true;
+                    //Uncheck CLS box -- CLS too slow for chasing satellites
+                    CLSBox.Checked = false;
+                    Show(); System.Windows.Forms.Application.DoEvents();
+                    TLERadioButton.ForeColor = Color.White;
+                }
             }
-
-            //Change the refresh rate to seconds
-            SecondsButton.Checked = true;
-            //Uncheck CLS box -- CLS too slow for chasing satellites
-            CLSBox.Checked = false;
-            Show(); System.Windows.Forms.Application.DoEvents();
-            TLERadioButton.ForeColor = Color.White;
         }
+
 
         #endregion
 
@@ -723,8 +735,7 @@ namespace Hot_Pursuit
                         CatType = CatalogType.Done;
                         break;
                     }
-                case
-                    CatalogType.Group:
+                case CatalogType.Group:
                     {
                         string tleSet = QueryCelesTrakGroupTLE(catalogPick);
                         if (!WriteCelesTraKGroupTLEs(tleSet))
@@ -733,19 +744,19 @@ namespace Hot_Pursuit
                             CatType = CatalogType.Done;
                         }
                         else
+                        {
                             CatType = CatalogType.Custom;
-
+                            TreeViewTLEList();
+                        }
                         break;
                     }
-                case
-                    CatalogType.Custom:
+                case CatalogType.Custom:
                     {
-                        SelectTLETarget();
+                        TargetBox.Text = catalogPick;
                         CatType = CatalogType.Done;
                         break;
                     }
-                case
-                    CatalogType.Done:
+                case CatalogType.Done:
                     {
                         TargetBox.Text = catalogPick;
                         break;
@@ -755,9 +766,9 @@ namespace Hot_Pursuit
 
         #region treeview
 
-        private int AddMainNode(string section)
+        private int AddMainNode(string id, string section)
         {
-            TreeNode cNode = CatalogTreeView.Nodes.Add(section, section);
+            TreeNode cNode = CatalogTreeView.Nodes.Add(id, section);
             int indx = CatalogTreeView.Nodes.IndexOf(cNode);
             return indx;
         }
@@ -778,7 +789,7 @@ namespace Hot_Pursuit
 
         #region GroupTreeView
 
-        private void ReadInCelesTrakGroup()
+        private void DisplayCelesTrakGroups()
         {
             //Queries CelesTrak for new group list of TLE's
             Assembly dgassembly = Assembly.GetExecutingAssembly();
@@ -786,7 +797,7 @@ namespace Hot_Pursuit
             XElement cGroupList = XElement.Load(dgstream);
             CatalogTreeView.Nodes.Clear();
             foreach (XElement xg in cGroupList.Elements("row"))
-                AddMainNode(xg.Element("GroupName").Value);
+                AddMainNode(xg.Element("GroupCode").Value, xg.Element("GroupName").Value);
             Show(); System.Windows.Forms.Application.DoEvents();
             return;
         }
@@ -847,15 +858,14 @@ namespace Hot_Pursuit
 
         public string TargetID { get; set; }
 
-        private void SelectSatTarget()
+        private void TreeViewSatList()
         {
             CatalogTreeView.Nodes.Clear();
 
-            payCatNode = AddMainNode("Payload");
-            rbCatNode = AddMainNode("Booster");
-            debCatNode = AddMainNode("Debris");
-            unkCatNode = AddMainNode("Unknown");
-
+            payCatNode = AddMainNode("Payload", "Payload");
+            rbCatNode = AddMainNode("Booster", "Booster");
+            debCatNode = AddMainNode("Debris", "Debris");
+            unkCatNode = AddMainNode("Unknown", "Unknown");
 
             SatCat scList = new SatCat();
 
@@ -889,13 +899,9 @@ namespace Hot_Pursuit
             return;
         }
 
-        private void SelectTLETarget()
+        private void TreeViewTLEList()
         {
             const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
-
-            string nameLine = null;
-            string firstLine = null;
-            string secondLine = null;
 
             //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
             //
@@ -906,23 +912,38 @@ namespace Hot_Pursuit
             if (!File.Exists(satTLEPath))
                 return;
             StreamReader satTLEFile = File.OpenText(satTLEPath);
+            List<TLEData> tleList = new List<TLEData>();
             //Read in the remaining lines and stuff into staName List
             while (satTLEFile.Peek() != -1)
             {
                 //Read sets of three lines, look for tgtName in first line, break out with result
-                nameLine = satTLEFile.ReadLine();
-                firstLine = satTLEFile.ReadLine();
-                secondLine = satTLEFile.ReadLine();
-                AddMainNode(nameLine);
+                TLEData tle = new TLEData()
+                {
+                    NameLine = satTLEFile.ReadLine(),
+                    FirstLine = satTLEFile.ReadLine(),
+                    SecondLine = satTLEFile.ReadLine()
+                };
+                tleList.Add(tle);
             }
+            //Sort alphabetically
+            tleList.Sort((x, y) => x.NameLine.CompareTo(y.NameLine));
+            foreach (TLEData t in tleList)
+                AddMainNode(t.FirstLine.Substring(2, 5), t.NameLine);
             Show(); System.Windows.Forms.Application.DoEvents();
             return;
         }
 
 
     }
-    #endregion
 
+    public struct TLEData
+    {
+        public string NameLine;
+        public string FirstLine;
+        public string SecondLine;
+    }
+
+    #endregion
 
 
 }

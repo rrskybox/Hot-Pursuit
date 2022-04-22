@@ -406,6 +406,7 @@ namespace Hot_Pursuit
 
         #endregion
 
+
         #region horizons
 
         const string URL_Horizons_Search = "https://ssd.jpl.nasa.gov/api/horizons.api?";
@@ -607,7 +608,7 @@ namespace Hot_Pursuit
             //Get site location (and closest MPC observatory -- although unneeded)
             MPC_Observatory = new Observatory();
 
-             //Get Topocentric ephemeris
+            //Get Topocentric ephemeris
             if (HorizonsQueryToSpeedVectors(isMinutes, updateInterval, tleSource))
                 return true;
             else
@@ -718,7 +719,7 @@ namespace Hot_Pursuit
             return scrub;
         }
 
-         #region Horizons Query Strings
+        #region Horizons Query Strings
 
         const string hFormatTypeText = "text";
         const string hFormatTypeJSON = "json";
@@ -789,19 +790,26 @@ namespace Hot_Pursuit
 
             //figure out site location
             string scrubbedTargetName = ScrubSmallBodyNameHorizons(TgtName);
-            string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
+            //string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
+            string siteLong = MPC_Observatory.BestObservatory.MySiteLong.ToString("0.000");  //in degrees E
             string siteLat = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
             string siteElev = MPC_Observatory.BestObservatory.MySiteElev.ToString("0.000");
-            string center = siteLong + ":" + siteLat + ":" + siteElev;
+            //string siteCoords = '\'' + ((int)Math.Round(Convert.ToDouble(siteLong))).ToString() + "," +
+            //                           ((int)Math.Round(Convert.ToDouble(siteLat))).ToString() + "," +
+            //                           ((int)Math.Round(Convert.ToDouble(siteElev))).ToString() + '\'';
+            string siteCoords = '\'' + siteLong + "," +siteLat + "," +siteElev + '\'';
             string startTime = "\'" + EphStart.ToString("yyyy-MM-dd HH:mm") + "\'";
             string endTime = "\'" + EphEnd.ToString("yyyy-MM-dd HH:mm") + "\'";
+            string siteName = MPC_Observatory.BestObservatory.MPC_Code;
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[hFormat] = hFormatTypeText;
             queryString[hCommand] = "\'NAME=" + scrubbedTargetName + "\'"; // ";" means that it is a small body search for name
             queryString[hMakeEphemeris] = hYes;
-            queryString[hEphemerisType] = hObserverType;
-            queryString[hCenter] = "399";  //Earth
-            queryString[hSiteCoordinate] = center;  //e-long(degrees):lat(degrees):elevation(km)
+            queryString[hEphemerisType] = "OBSERVER";
+            queryString[hCenter] = "coord@399";  //if using site coordinates
+            //queryString[hCenter] = siteName; //Closest observatory
+            queryString[hCoordinateType] = "GEODETIC";
+            queryString[hSiteCoordinate] = siteCoords;  //e-long(degrees),lat(degrees),elevation(km)
             queryString[hStartTime] = startTime; // "2021-01-12";
             queryString[hStopTime] = endTime; // "2021-01-13";
             queryString[hStepSize] = "1m"; // shortest time that horizons can do
@@ -825,21 +833,27 @@ namespace Hot_Pursuit
             //Returns a url string for querying the TNS website
 
             //figure out site location
-            string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
+            //string siteLong = (360 - MPC_Observatory.BestObservatory.MySiteLong).ToString("0.000");  //converted to the 0-360 form that MPC likes it
+            string siteLong = MPC_Observatory.BestObservatory.MySiteLong.ToString("0.000");  //in degrees E
             string siteLat = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");
             string siteElev = MPC_Observatory.BestObservatory.MySiteElev.ToString("0.000");
-            string center = siteLong + ":" + siteLat + ":" + siteElev;
+            //string siteCoords = '\'' + ((int)Math.Round(Convert.ToDouble(siteLong))).ToString() + "," +
+            //                           ((int)Math.Round(Convert.ToDouble(siteLat))).ToString() + "," +
+            //                           ((int)Math.Round(Convert.ToDouble(siteElev))).ToString() + '\'';
+            string siteCoords = '\'' + siteLong + "," + siteLat + "," + siteElev + '\'';
             string startTime = "\'" + EphStart.ToString("yyyy-MM-dd HH:mm") + "\'";
             string endTime = "\'" + EphEnd.ToString("yyyy-MM-dd HH:mm") + "\'";
-            string stdSite = MPC_Observatory.BestObservatory.MPC_Code;
+            string siteName = MPC_Observatory.BestObservatory.MPC_Code;
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[hzCommand] = "TLE";
             queryString[hzTLE] = tleString;
             queryString[hFormat] = hFormatTypeText;
             queryString[hMakeEphemeris] = hYes;
             queryString[hEphemerisType] = hObserverType;
-            queryString[hCenter] = stdSite;  
-            queryString[hSiteCoordinate] = center;  //e-long(degrees):lat(degrees):elevation(km)
+            queryString[hCenter] = "coord@399"; //if using coordinates
+            //queryString[hCenter] = siteName;
+            queryString[hCoordinateType] = "GEODETIC";
+            queryString[hSiteCoordinate] = siteCoords;  //e-long(degrees),lat(degrees),elevation(km)
             queryString[hStartTime] = startTime; // "2021-01-12";
             queryString[hStopTime] = endTime; // "2021-01-13";
             queryString[hStepSize] = "1m"; // shortest time that horizons can do
@@ -859,6 +873,7 @@ namespace Hot_Pursuit
         }
 
         #endregion
+
 
         #region mpes
 
@@ -932,7 +947,7 @@ namespace Hot_Pursuit
             //Get site location (and closest MPC observatory -- although unneeded)
             MPC_Observatory = new Observatory();
 
-           //Find topocentric ephemeris at current time (100 count)
+            //Find topocentric ephemeris at current time (100 count)
             if (MPESQueryToSpeedVectors(isMinutes, updateInterval))
                 return true;
             else
@@ -1097,6 +1112,7 @@ namespace Hot_Pursuit
         }
 
         #endregion
+
 
     }
 

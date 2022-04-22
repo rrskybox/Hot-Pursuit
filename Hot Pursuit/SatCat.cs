@@ -142,17 +142,18 @@ namespace Hot_Pursuit
 
         public static string ReadCustomTLE(string tgtName)
         {
-            const string customTLEfilename = "\\CustomTLE.txt";
+            const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
 
             string nameLine = null;
             string firstLine = null;
             string secondLine = null;
+            string catID = null;
 
             //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
             //
             //REad in list of 3TLE entries
             //Get User Documents Folder
-            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + catDirectory + customTLEfilename;
+            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + customTLEfilename;
             StreamReader satTLEFile = File.OpenText(satTLEPath);
             //Read in the remaining lines and stuff into staName List
             while (satTLEFile.Peek() != -1)
@@ -161,10 +162,11 @@ namespace Hot_Pursuit
                 nameLine = satTLEFile.ReadLine();
                 firstLine = satTLEFile.ReadLine();
                 secondLine = satTLEFile.ReadLine();
-                if (nameLine == tgtName)
+                catID = firstLine.Substring(2, 5);
+                if (tgtName == catID)
                     break;
             }
-            if (nameLine == tgtName)
+            if (tgtName == catID)
                 return (nameLine + "\n" + firstLine + "\n" + secondLine);            //return concatenated string
             else
                 return null;

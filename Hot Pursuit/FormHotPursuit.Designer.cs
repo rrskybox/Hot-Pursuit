@@ -337,7 +337,7 @@ namespace Hot_Pursuit
             this.HPStatusBox.Multiline = true;
             this.HPStatusBox.Name = "HPStatusBox";
             this.HPStatusBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.HPStatusBox.Size = new System.Drawing.Size(576, 50);
+            this.HPStatusBox.Size = new System.Drawing.Size(576, 46);
             this.HPStatusBox.TabIndex = 18;
             // 
             // DecRateBox
@@ -481,7 +481,7 @@ namespace Hot_Pursuit
             // 
             this.SatRadioButton.AutoSize = true;
             this.SatRadioButton.ForeColor = System.Drawing.Color.White;
-            this.SatRadioButton.Location = new System.Drawing.Point(590, 138);
+            this.SatRadioButton.Location = new System.Drawing.Point(598, 138);
             this.SatRadioButton.Name = "SatRadioButton";
             this.SatRadioButton.Size = new System.Drawing.Size(101, 17);
             this.SatRadioButton.TabIndex = 37;
@@ -493,7 +493,7 @@ namespace Hot_Pursuit
             // 
             this.TLERadioButton.AutoSize = true;
             this.TLERadioButton.ForeColor = System.Drawing.Color.White;
-            this.TLERadioButton.Location = new System.Drawing.Point(590, 158);
+            this.TLERadioButton.Location = new System.Drawing.Point(598, 158);
             this.TLERadioButton.Name = "TLERadioButton";
             this.TLERadioButton.Size = new System.Drawing.Size(83, 17);
             this.TLERadioButton.TabIndex = 38;
@@ -524,7 +524,7 @@ namespace Hot_Pursuit
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkCyan;
-            this.ClientSize = new System.Drawing.Size(782, 188);
+            this.ClientSize = new System.Drawing.Size(782, 184);
             this.Controls.Add(this.ChooseButton);
             this.Controls.Add(this.CatalogTreeView);
             this.Controls.Add(this.TLERadioButton);
