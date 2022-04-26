@@ -15,7 +15,7 @@ namespace Hot_Pursuit
         public const int ionTrackingOn = 1;
         public const int ionTrackingOff = 0;
         public const int ignoreRates = 1;
-        public const int useRates = 1;  //Don't use rates
+        public const int useRates = 0;  //Don't use rates
 
         public static double PARateToRA(double paD, double rate)
         {
@@ -24,6 +24,7 @@ namespace Hot_Pursuit
             double raRate = rate * Math.Sin(paR);
             return raRate;
         }
+
         public static double PARateToDec(double paD, double rate)
         {
             //Calculates dDec/dt for PA in Degrees and rate in arcsec/min (but really doesn't matter
@@ -31,6 +32,7 @@ namespace Hot_Pursuit
             double decRate = rate * Math.Cos(paR);
             return AstroMath.Transform.RadiansToDegrees(decRate);
         }
+
         public static string GetTargetName()
         {
             sky6ObjectInformation tsxoi = new sky6ObjectInformation();
@@ -60,14 +62,9 @@ namespace Hot_Pursuit
             sky6StarChart tsxsc = new sky6StarChart();
             sky6Utils tsxu = new sky6Utils();
             //Check to see if target is above horizon
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
-            double tgtDecD = sv.Dec_Degrees;
-            tsxu.ConvertRADecToAzAlt(tgtRAH, tgtDecD);
-            double tgtAzmD = tsxu.dOut0;
-            double tgtAltD = tsxu.dOut1;
-            if (tgtAltD <= 0)
+            if (!SafetyCheck.IsTargetAboveHorizon(sv.RA_Degrees, sv.Dec_Degrees))
             {
-                MessageBox.Show("Slew failure: Target is below the horizon");
+                MessageBox.Show("Slew failure: Target is below the horizon at " + Transform.DegreesToHours(sv.RA_Degrees).ToString() + "/" + sv.Dec_Degrees.ToString());
                 return false;
             }
             if (IsPrecision)
@@ -80,25 +77,18 @@ namespace Hot_Pursuit
                 };
                 //Abort any ongoing imaging
                 tsxcam.Abort();
-
             }
             bool returnStatus = true;
             tsxmt.Connect();
-            tsxu.Precess2000ToNow(tgtRAH, tgtDecD);
-            double jnRAH = tsxu.dOut0;
-            double jnDecD = tsxu.dOut1;
-            //tsxmt.Asynchronous = 0;
-            try
+            if (!SlewToTarget(tgtName, sv))
             {
-                tsxmt.SlewToRaDec(jnRAH, jnDecD, tgtName);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Slew Failure: " + ex.Message);
+                MessageBox.Show("Slew Failure on centering slew ");
                 returnStatus = false;
             }
             if (IsPrecision && returnStatus)
             {
+                //Set up Find for CLS use
+                tsxsc.Find(Transform.DegreesToHours(sv.RA_Degrees) + ", " + sv.Dec_Degrees);
                 //***  precision slew
                 try
                 {
@@ -108,50 +98,53 @@ namespace Hot_Pursuit
                 {
                     returnStatus = false;
                 }
-            }
-            try
-            {
-                tsxsc.Find(tgtName);
-            }
-            catch (Exception ex)
-            {
-                returnStatus = true;
+
+                try
+                {
+                    tsxsc.Find(tgtName);
+                }
+                catch (Exception ex)
+                {
+                    returnStatus = true;
+                }
             }
             return returnStatus;
         }
 
         public static bool SlewToTarget(string tgtName, SpeedVector sv)
         {
-
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
-            double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
-            double tgtDecD = sv.Dec_Degrees;
-            tsxmt.Connect();
-            sky6Utils tsxu = new sky6Utils();
-            tsxu.Precess2000ToNow(tgtRAH, tgtDecD);
-            double jnRAH = tsxu.dOut0;
-            double jnDecD = tsxu.dOut1;
-            try
+            if (SafetyCheck.IsTargetAboveHorizon(sv.RA_Degrees, sv.Dec_Degrees))
             {
-                tsxmt.SlewToRaDec(jnRAH, jnDecD, tgtName);
+                double tgtRAH = Transform.DegreesToHours(sv.RA_Degrees);
+                double tgtDecD = sv.Dec_Degrees;
+                tsxmt.Connect();
+                sky6Utils tsxu = new sky6Utils();
+                tsxu.Precess2000ToNow(tgtRAH, tgtDecD);
+                double jnRAH = tsxu.dOut0;
+                double jnDecD = tsxu.dOut1;
+                try
+                {
+                    tsxmt.SlewToRaDec(jnRAH, jnDecD, tgtName);
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
+                return true;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Slew Failed: " + ex.Message);
+            else
                 return false;
-            }
-            return true;
         }
 
         public static bool SetTargetTracking(SpeedVector sv)
         {
-
             double tgtRateRA = sv.Rate_RA_ArcsecPerMinute;
             double tgtRateDec = sv.Rate_Dec_ArcsecPerMinute;
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
-            if (SafetyCheck.IsAboveHorizon())
+            if (SafetyCheck.IsMountAboveHorizon())
             {
                 try
                 {
@@ -189,14 +182,14 @@ namespace Hot_Pursuit
             return (dRA, dDec);
         }
 
-        public static bool SetStandardTracking()
+        public static bool SetSiderealTracking()
         {
 
             sky6RASCOMTele tsxmt = new sky6RASCOMTele();
             tsxmt.Connect();
             try
             {
-                tsxmt.SetTracking(ionTrackingOn, useRates, 0, 0);
+                tsxmt.SetTracking(ionTrackingOn, ignoreRates, 0, 0);
             }
             catch
             {
@@ -257,7 +250,7 @@ namespace Hot_Pursuit
             sky6RASCOMTele tsxm = new sky6RASCOMTele();
             sky6Utils tsxu = new sky6Utils();
             tsxm.GetAzAlt();
-            return (tsxu.dOut0, tsxu.dOut1);
+            return (tsxm.dAz, tsxm.dAlt);
         }
 
         public static void StopTracking()

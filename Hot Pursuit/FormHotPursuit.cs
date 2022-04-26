@@ -203,6 +203,12 @@ namespace Hot_Pursuit
             }
             if (TLERadioButton.Checked)
             {
+                //Make sure target name has 6 digits digits
+                if (tName.Length < 6)
+                {
+                    tName = tName.PadLeft(5, '0');
+                    TargetBox.Text = tName;
+                }
                 EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
                 {
                     UpdateStatusLine("Acquiring new ephemeris table");
@@ -298,10 +304,12 @@ namespace Hot_Pursuit
                         RangeBox.Text = nextUpdateSV.Range_AU.ToString("0.00");
                         //Update status
                         AssembleStatusUpdate(nextUpdateSV, false);
-
                     }
                     else  //Set tracking failure, so exit refresh loop
+                    {
+                        UpdateStatusLine("Tracking stopped -- possibly at a limit");
                         break;
+                    }
                 }
                 else  //no ephemeris entry -- get new table
                 {
@@ -320,7 +328,7 @@ namespace Hot_Pursuit
                     Utils.DegreeString(currentSpeedVector.Dec_Degrees, true));
             if (!Utils.SlewToTarget(EphemTable.TgtName, currentSpeedVector))
             {
-                UpdateStatusLine("Tracking failed: Problem with Slew.");
+                UpdateStatusLine("Slew failed: Target possibly at a limit, or dome confict.");
                 ReportSpeeds(currentSpeedVector);
                 return false;
             }
@@ -336,7 +344,7 @@ namespace Hot_Pursuit
                                 Utils.DegreeString(currentSpeedVector.Dec_Degrees, true));
             if (!Utils.CLSToTarget(EphemTable.TgtName, currentSpeedVector, CLSBox.Checked))
             {
-                UpdateStatusLine("Tracking failed: Problem with Slew.");
+                UpdateStatusLine("Slew failed: Target possibly beyond a limit.");
                 ReportSpeeds(currentSpeedVector);
                 return false;
             }
@@ -347,7 +355,7 @@ namespace Hot_Pursuit
                 SetBackColor(TargetBox, ControlColor.Red);
             else
             {
-                UpdateStatusLine("Set non-sidereal tracking failed.");
+                UpdateStatusLine("Failed to initiate non-sidereal tracking.");
                 ReportSpeeds(currentSpeedVector);
                 SetBackColor(TargetBox, ControlColor.Green);
                 return false;
@@ -401,7 +409,6 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Camera connect failure: " + ex.Message);
                 UpdateStatusLine("Camera connect failure: " + ex.Message);
                 IsImaging = true;
                 tsxc = null;
@@ -500,7 +507,7 @@ namespace Hot_Pursuit
             SetBackColor(StartButton, ControlColor.Green);
             SetBackColor(TargetBox, ControlColor.Green);
             CheckImaging();
-            Utils.SetStandardTracking();
+            Utils.SetSiderealTracking();
             return;
         }
 
