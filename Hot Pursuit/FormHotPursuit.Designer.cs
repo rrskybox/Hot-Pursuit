@@ -30,7 +30,6 @@ namespace Hot_Pursuit
         private void InitializeComponent()
         {
             this.CloseButton = new System.Windows.Forms.Button();
-            this.StopButton = new System.Windows.Forms.Button();
             this.RefreshIntervalBox = new System.Windows.Forms.NumericUpDown();
             this.TargetBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -56,7 +55,8 @@ namespace Hot_Pursuit
             this.label8 = new System.Windows.Forms.Label();
             this.CLSBox = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.StartButton = new System.Windows.Forms.Button();
+            this.TrailButton = new System.Windows.Forms.Button();
+            this.StartStopButton = new System.Windows.Forms.Button();
             this.SecondsButton = new System.Windows.Forms.RadioButton();
             this.MinutesButton = new System.Windows.Forms.RadioButton();
             this.ScoutRadioButton = new System.Windows.Forms.RadioButton();
@@ -83,17 +83,6 @@ namespace Hot_Pursuit
             this.CloseButton.Text = "Close";
             this.CloseButton.UseVisualStyleBackColor = true;
             this.CloseButton.Click += new System.EventHandler(this.CloseButton_Click);
-            // 
-            // StopButton
-            // 
-            this.StopButton.ForeColor = System.Drawing.Color.Black;
-            this.StopButton.Location = new System.Drawing.Point(71, 83);
-            this.StopButton.Name = "StopButton";
-            this.StopButton.Size = new System.Drawing.Size(52, 23);
-            this.StopButton.TabIndex = 2;
-            this.StopButton.Text = "Stop";
-            this.StopButton.UseVisualStyleBackColor = true;
-            this.StopButton.Click += new System.EventHandler(this.StopButton_Click);
             // 
             // RefreshIntervalBox
             // 
@@ -389,14 +378,14 @@ namespace Hot_Pursuit
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.StartButton);
+            this.groupBox1.Controls.Add(this.TrailButton);
+            this.groupBox1.Controls.Add(this.StartStopButton);
             this.groupBox1.Controls.Add(this.SecondsButton);
             this.groupBox1.Controls.Add(this.MinutesButton);
             this.groupBox1.Controls.Add(this.RefreshIntervalBox);
             this.groupBox1.Controls.Add(this.CLSBox);
             this.groupBox1.Controls.Add(this.OnTopBox);
             this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Controls.Add(this.StopButton);
             this.groupBox1.Controls.Add(this.CloseButton);
             this.groupBox1.ForeColor = System.Drawing.Color.White;
             this.groupBox1.Location = new System.Drawing.Point(205, 7);
@@ -406,16 +395,27 @@ namespace Hot_Pursuit
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Tracking";
             // 
-            // StartButton
+            // TrailButton
             // 
-            this.StartButton.ForeColor = System.Drawing.Color.Black;
-            this.StartButton.Location = new System.Drawing.Point(13, 83);
-            this.StartButton.Name = "StartButton";
-            this.StartButton.Size = new System.Drawing.Size(52, 23);
-            this.StartButton.TabIndex = 35;
-            this.StartButton.Text = "Start";
-            this.StartButton.UseVisualStyleBackColor = true;
-            this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
+            this.TrailButton.ForeColor = System.Drawing.Color.Black;
+            this.TrailButton.Location = new System.Drawing.Point(71, 83);
+            this.TrailButton.Name = "TrailButton";
+            this.TrailButton.Size = new System.Drawing.Size(52, 23);
+            this.TrailButton.TabIndex = 36;
+            this.TrailButton.Text = "Trail";
+            this.TrailButton.UseVisualStyleBackColor = true;
+            this.TrailButton.Click += new System.EventHandler(this.TrailButton_Click);
+            // 
+            // StartStopButton
+            // 
+            this.StartStopButton.ForeColor = System.Drawing.Color.Black;
+            this.StartStopButton.Location = new System.Drawing.Point(13, 83);
+            this.StartStopButton.Name = "StartStopButton";
+            this.StartStopButton.Size = new System.Drawing.Size(52, 23);
+            this.StartStopButton.TabIndex = 35;
+            this.StartStopButton.Text = "Track";
+            this.StartStopButton.UseVisualStyleBackColor = true;
+            this.StartStopButton.Click += new System.EventHandler(this.StartStopButton_Click);
             // 
             // SecondsButton
             // 
@@ -483,9 +483,9 @@ namespace Hot_Pursuit
             this.SatRadioButton.ForeColor = System.Drawing.Color.White;
             this.SatRadioButton.Location = new System.Drawing.Point(598, 138);
             this.SatRadioButton.Name = "SatRadioButton";
-            this.SatRadioButton.Size = new System.Drawing.Size(101, 17);
+            this.SatRadioButton.Size = new System.Drawing.Size(94, 17);
             this.SatRadioButton.TabIndex = 37;
-            this.SatRadioButton.Text = "Satellite Catalog";
+            this.SatRadioButton.Text = "Norad Satellite";
             this.SatRadioButton.UseVisualStyleBackColor = true;
             this.SatRadioButton.CheckedChanged += new System.EventHandler(this.SatRadioButton_CheckedChanged);
             // 
@@ -495,9 +495,9 @@ namespace Hot_Pursuit
             this.TLERadioButton.ForeColor = System.Drawing.Color.White;
             this.TLERadioButton.Location = new System.Drawing.Point(598, 158);
             this.TLERadioButton.Name = "TLERadioButton";
-            this.TLERadioButton.Size = new System.Drawing.Size(83, 17);
+            this.TLERadioButton.Size = new System.Drawing.Size(102, 17);
             this.TLERadioButton.TabIndex = 38;
-            this.TLERadioButton.Text = "Custom TLE";
+            this.TLERadioButton.Text = "TheSky Satellite";
             this.TLERadioButton.UseVisualStyleBackColor = true;
             this.TLERadioButton.CheckedChanged += new System.EventHandler(this.TLERadioButton_CheckedChanged);
             // 
@@ -561,7 +561,6 @@ namespace Hot_Pursuit
 
         #endregion
         private System.Windows.Forms.Button CloseButton;
-        private System.Windows.Forms.Button StopButton;
         private System.Windows.Forms.NumericUpDown RefreshIntervalBox;
         private System.Windows.Forms.TextBox TargetBox;
         private System.Windows.Forms.Label label1;
@@ -589,7 +588,7 @@ namespace Hot_Pursuit
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton SecondsButton;
         private System.Windows.Forms.RadioButton MinutesButton;
-        private System.Windows.Forms.Button StartButton;
+        private System.Windows.Forms.Button StartStopButton;
         private System.Windows.Forms.RadioButton ScoutRadioButton;
         private System.Windows.Forms.RadioButton HorizonsRadioButton;
         private System.Windows.Forms.RadioButton MPCRadioButton;
@@ -597,6 +596,7 @@ namespace Hot_Pursuit
         private System.Windows.Forms.RadioButton TLERadioButton;
         private System.Windows.Forms.TreeView CatalogTreeView;
         private System.Windows.Forms.Button ChooseButton;
+        private System.Windows.Forms.Button TrailButton;
     }
 }
 

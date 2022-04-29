@@ -12,11 +12,10 @@ namespace Hot_Pursuit
         public const double Astronomical_Unit = 149597870.700;  //km
         public const double Earth_Radius = 6371.0; //km
 
-        public const int ionTrackingOn = 1;
-        public const int ionTrackingOff = 0;
-        public const int ignoreRates = 1;
-        public const int useRates = 0;  //Don't use rates
-
+        public const int ionTrackingOn = 1; //Turn on tracking
+        public const int ionTrackingOff = 0; //Turn off tracking
+        public const int ignoreRates = 1; //Don't use custom rates
+        public const int useRates = 0;  //Use custom rates
         public static double PARateToRA(double paD, double rate)
         {
             //Calculates dRA/dt for PA in Degrees and rate in arcsec/min (but really doesn't matter

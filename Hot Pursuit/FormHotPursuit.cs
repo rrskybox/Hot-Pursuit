@@ -1,4 +1,5 @@
-﻿using AstroImage;
+﻿
+using AstroImage;
 using AstroMath;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,15 @@ using TheSky64Lib;
 
 namespace Hot_Pursuit
 {
+
     public partial class FormHotPursuit : Form
     {
+
+        //64 Bit
+        const string TLEPath = "\\Software Bisque\\TheSky Professional Edition 64\\Satellites\\~SatellitesFromWeb.txt";
+        // 32 Bit
+        // const string TLEPath = "Software Bisque\\TheSkyX Professional Edition\\Satellites\\~SatellitesFromWeb.txt";
+
         public enum ControlColor
         {
             DarkRed,
@@ -52,6 +60,10 @@ namespace Hot_Pursuit
         public FormHotPursuit()
         {
             InitializeComponent();
+            //Set path for TheSky Version
+            Properties.Settings.Default.TLECatalogPath = TLEPath;
+            Properties.Settings.Default.Save();
+            
             string version;
             try
             { version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(); }
@@ -71,12 +83,12 @@ namespace Hot_Pursuit
             if (HorizonsRadioButton.Checked) QuerySite = "Horizons";
             if (MPCRadioButton.Checked) QuerySite = "MPC";
             if (SatRadioButton.Checked) QuerySite = "Sat";
-            if (TLERadioButton.Checked) QuerySite = "3TLE";
+            if (TLERadioButton.Checked) QuerySite = "TLE";
 
-            SetBackColor(StartButton, ControlColor.Green);
-            SetBackColor(StopButton, ControlColor.Green);
+            SetBackColor(StartStopButton, ControlColor.Green);
             SetBackColor(CloseButton, ControlColor.Green);
             SetBackColor(ImageButton, ControlColor.Yellow);
+            SetBackColor(TrailButton, ControlColor.Yellow);
 
             HPDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Hot Pursuit";
             if (!Directory.Exists(HPDirectoryPath)) Directory.CreateDirectory(HPDirectoryPath);
@@ -105,7 +117,7 @@ namespace Hot_Pursuit
                     }
                 case ControlColor.Yellow:
                     {
-                        button.BackColor = Color.LightYellow;
+                        button.BackColor = Color.Yellow;
                         break;
                     }
                 case ControlColor.Green:
@@ -143,80 +155,94 @@ namespace Hot_Pursuit
             }
         }
 
-        private void StartButton_Click(object sender, EventArgs e)
+        private void StartStopButton_Click(object sender, EventArgs e)
         {
             if (InPursuit)
+            {
+                if (InPursuit)
+                    AbortRequested = true;
                 return;
-            //Retrieve current target name from TSX and set in ss
-            string tName;
-            if (TargetBox.Text == "")
-                tName = Utils.GetTargetName();
+            }
             else
-                tName = TargetBox.Text;
-            TargetBox.Text = tName;
-            UpdateStatusLine("Querying " + QuerySite + " for " + tName);
-            if (QuerySite == "Scout")
-                UpdateStatusLine("Scout takes time; Be patient...");
-            Show();
-            System.Windows.Forms.Application.DoEvents();
-            if (tName == "")
-                return;
-
-            InPursuit = true;
-            ClearFields();
-
-            if (ScoutRadioButton.Checked)
             {
-                EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                while (WalkEphemerisTable(Ephemeris.EphemSource.Scout))
+                //Retrieve current target name from TSX and set in ss
+                string tName;
+                if (TargetBox.Text == "")
+                    tName = Utils.GetTargetName();
+                else
+                    tName = TargetBox.Text;
+                TargetBox.Text = tName;
+                if (TargetBox.Text == "")
                 {
-                    UpdateStatusLine("Acquiring new ephemeris table");
+                    UpdateStatusLine("No target found");
+                    return;
+                }
+                UpdateStatusLine("Querying " + QuerySite + " catalog for " + tName);
+                if (QuerySite == "Scout")
+                    UpdateStatusLine("Scout takes time; Be patient...");
+                Show();
+                System.Windows.Forms.Application.DoEvents();
+                if (tName == "")
+                    return;
+
+                InPursuit = true;
+                StartStopButton.Text = "Stop";
+
+                ClearFields();
+
+                if (ScoutRadioButton.Checked)
+                {
                     EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    while (WalkEphemerisTable(Ephemeris.EphemSource.Scout))
+                    {
+                        UpdateStatusLine("Acquiring new ephemeris table");
+                        EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    }
                 }
-            }
-            if (HorizonsRadioButton.Checked)
-            {
-                EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                while (WalkEphemerisTable(Ephemeris.EphemSource.Horizons))
+                if (HorizonsRadioButton.Checked)
                 {
-                    UpdateStatusLine("Acquiring new ephemeris table");
                     EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    while (WalkEphemerisTable(Ephemeris.EphemSource.Horizons))
+                    {
+                        UpdateStatusLine("Acquiring new ephemeris table");
+                        EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    }
                 }
-            }
-            if (MPCRadioButton.Checked)
-            {
-                EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                if (MPCRadioButton.Checked)
                 {
-                    UpdateStatusLine("Acquiring new ephemeris table");
-                    while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
-                        EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    {
+                        UpdateStatusLine("Acquiring new ephemeris table");
+                        while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
+                            EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    }
                 }
-            }
-            if (SatRadioButton.Checked)
-            {
-                EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsSat))
+                if (SatRadioButton.Checked)
                 {
-                    UpdateStatusLine("Acquiring new ephemeris table");
                     EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsSat))
+                    {
+                        UpdateStatusLine("Acquiring new ephemeris table");
+                        EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    }
                 }
-            }
-            if (TLERadioButton.Checked)
-            {
-                //Make sure target name has 6 digits digits
-                if (tName.Length < 6)
+                if (TLERadioButton.Checked)
                 {
-                    tName = tName.PadLeft(5, '0');
-                    TargetBox.Text = tName;
+                    //Make sure target name has 6 digits digits
+                    if (tName.Length < 6)
+                    {
+                        tName = tName.PadLeft(5, '0');
+                        TargetBox.Text = tName;
+                    }
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    {
+                        UpdateStatusLine("Acquiring new ephemeris table");
+                        while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsTLE))
+                            EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                    }
                 }
-                EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                {
-                    UpdateStatusLine("Acquiring new ephemeris table");
-                    while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsTLE))
-                        EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                }
-            }
 
+            }
         }
 
         private bool WalkEphemerisTable(Ephemeris.EphemSource dSource)
@@ -278,7 +304,7 @@ namespace Hot_Pursuit
                 {
                     //If still within the refresh interval,
                     //Perform a one second wait and pulse the Start Command button
-                    OneSecondPulse(StartButton);
+                    OneSecondPulse(StartStopButton);
                     //Check to see if imaging is happening and, if so, handle it
                     CheckImaging();
                     //Quick check to see if an abort was set while sitting out for a sec and checking imaging
@@ -361,6 +387,7 @@ namespace Hot_Pursuit
                 return false;
             }
             ReportSpeeds(currentSpeedVector);
+            SetBackColor(TrailButton, ControlColor.Green);
             return true;
         }
 
@@ -504,9 +531,12 @@ namespace Hot_Pursuit
         {
             AbortRequested = false;
             InPursuit = false;
-            SetBackColor(StartButton, ControlColor.Green);
+            StartStopButton.Text = "Start";
+            SetBackColor(StartStopButton, ControlColor.Green);
             SetBackColor(TargetBox, ControlColor.Green);
             CheckImaging();
+            AutoGuide.TrailAbort();
+            SetBackColor(TrailButton, ControlColor.Yellow);
             Utils.SetSiderealTracking();
             return;
         }
@@ -569,6 +599,20 @@ namespace Hot_Pursuit
             DecRateBox.Text = "";
             //CorrectionBox.Text = "";
             RangeBox.Text = "";
+        }
+
+        private void TrailButton_Click(object sender, EventArgs e)
+        {
+            const int trailExposure = 1;
+            UpdateStatusLine("Attempting to trail target");
+            if (AutoGuide.TrailBrightestSource(trailExposure))
+            {
+                UpdateStatusLine("Successful guide lock on target");
+                SetBackColor(ImageButton, ControlColor.Red);
+            }
+            else
+                UpdateStatusLine("Failed to guide lock on target");
+            return;
         }
 
         private void CloseButton_Click(object sender, EventArgs e)
@@ -699,21 +743,21 @@ namespace Hot_Pursuit
             if (TLERadioButton.Checked)
             {
                 TargetBox.Text = "";
-                QuerySite = "3TLE";
+                QuerySite = "TLE";
                 SecondsButton.Checked = true;   //Change the refresh rate to seconds
                 CLSBox.Checked = false;   //Uncheck CLS box -- too slow
-                DialogResult newCat = MessageBox.Show("Do you want to change or update a CelesTraak satellite group?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-                if (newCat == DialogResult.Yes)
-                {
-                    UpdateStatusLine("Posting Listing of CelesTrak Satellite Groups");
-                    TLERadioButton.ForeColor = Color.Pink;
-                    Show(); System.Windows.Forms.Application.DoEvents();
-                    DisplayCelesTrakGroups();
-                    TLERadioButton.ForeColor = Color.White;
-                    CatType = CatalogType.GroupList;
-                    return;
-                }
-                else
+                //DialogResult newCat = MessageBox.Show("Do you want to change or update a CelesTraak satellite group?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                //if (newCat == DialogResult.Yes)
+                //{
+                //    UpdateStatusLine("Posting Listing of CelesTrak Satellite Groups");
+                //    TLERadioButton.ForeColor = Color.Pink;
+                //    Show(); System.Windows.Forms.Application.DoEvents();
+                //    DisplayCelesTrakGroups();
+                //    TLERadioButton.ForeColor = Color.White;
+                //    CatType = CatalogType.GroupList;
+                //    return;
+                //}
+                //else
                 {
                     UpdateStatusLine("Updating CelesTrak Group Catalog (TLE)");
                     TLERadioButton.ForeColor = Color.Pink;
@@ -762,12 +806,12 @@ namespace Hot_Pursuit
                     }
                 case CatalogType.GroupList:
                     {
-                        string tleSet = QueryCelesTrakGroupTLE(catalogPick);
-                        if (!WriteCelesTraKGroupTLEs(tleSet))
-                        {
-                            UpdateStatusLine("Satellite Group download failed");
-                        }
-                        else
+                        //string tleSet = QueryCelesTrakGroupTLE(catalogPick);
+                        //if (!WriteCelesTraKGroupTLEs(tleSet))
+                        //{
+                        //    UpdateStatusLine("Satellite Group download failed");
+                        //}
+                        //else
                         {
                             TreeViewTLEList();
                             CatType = CatalogType.GroupSatList;
@@ -830,52 +874,51 @@ namespace Hot_Pursuit
             return;
         }
 
-        public string QueryCelesTrakGroupTLE(string groupPick)
-        {
-            //Queries CelesTrak for satellite entry of catID
-            //Example: https://celestrak.com/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE
-            NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
-            queryString["GROUP"] = groupPick;
-            queryString["FORMAT"] = "TLE";
-            string q = queryString.ToString();
-            //fix bug where queryString inserts %2f instead of %2F for the "/" char
-            q.Replace("%2f", "%2F");
+        //public string QueryCelesTrakGroupTLE(string groupPick)
+        //{
+        //    //Queries CelesTrak for satellite entry of catID
+        //    //Example: https://celestrak.com/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE
+        //    NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
+        //    queryString["GROUP"] = groupPick;
+        //    queryString["FORMAT"] = "TLE";
+        //    string q = queryString.ToString();
+        //    //fix bug where queryString inserts %2f instead of %2F for the "/" char
+        //    q.Replace("%2f", "%2F");
 
-            WebClient client = new WebClient();
-            string urlSearch, groupTLE;
-            try
-            {
-                urlSearch = celesTrakSatQueryURL + queryString;
-                groupTLE = client.DownloadString(urlSearch);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Catalog Download Error: " + ex.Message);
-                return null;
-            };
-            return groupTLE;
-        }
+        //    WebClient client = new WebClient();
+        //    string urlSearch, groupTLE;
+        //    try
+        //    {
+        //        urlSearch = celesTrakSatQueryURL + queryString;
+        //        groupTLE = client.DownloadString(urlSearch);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show("Catalog Download Error: " + ex.Message);
+        //        return null;
+        //    };
+        //    return groupTLE;
+        //}
 
-        private bool WriteCelesTraKGroupTLEs(string tles)
-        {
-            const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
+        //private bool WriteCelesTraKGroupTLEs(string tles)
+        //{
 
-            //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
-            //
-            //REad in list of 3TLE entries
-            //Get User Documents Folder
-            string customTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + customTLEfilename;
-            try
-            {
-                File.Delete(customTLEPath);
-                File.WriteAllText(customTLEPath, tles);
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
-            return true;
-        }
+        //    //Reads custom .txt file of TLE entries for satellite entry with tgtName as first line
+        //    //
+        //    //REad in list of TLE entries
+        //    //Get User Documents Folder
+        //    string customTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Properties.Settings.Default.TLECatalogPath ;
+        //    try
+        //    {
+        //        File.Delete(customTLEPath);
+        //        File.WriteAllText(customTLEPath, tles);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return false;
+        //    }
+        //    return true;
+        //}
 
         #endregion
 
@@ -930,16 +973,15 @@ namespace Hot_Pursuit
 
         private void TreeViewTLEList()
         {
-            const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
 
-            //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
+            //Reads custom .txt file of TLE entries for satellite entry with tgtName as first line
             //
-            //REad in list of 3TLE entries
+            //REad in list of TLE entries
             //Get User Documents Folder
             CatalogTreeView.Nodes.Clear();
             Show(); System.Windows.Forms.Application.DoEvents();
 
-            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + customTLEfilename;
+            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Properties.Settings.Default.TLECatalogPath;
             if (!File.Exists(satTLEPath))
                 return;
             StreamReader satTLEFile = File.OpenText(satTLEPath);
@@ -962,7 +1004,6 @@ namespace Hot_Pursuit
             Show(); System.Windows.Forms.Application.DoEvents();
             return;
         }
-
 
     }
 

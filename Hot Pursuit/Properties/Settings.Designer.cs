@@ -82,5 +82,17 @@ namespace Hot_Pursuit.Properties {
                 this["StartDelay"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TLECatalogPath {
+            get {
+                return ((string)(this["TLECatalogPath"]));
+            }
+            set {
+                this["TLECatalogPath"] = value;
+            }
+        }
     }
 }

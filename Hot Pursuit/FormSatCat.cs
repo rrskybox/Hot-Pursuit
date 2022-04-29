@@ -65,17 +65,16 @@ namespace Hot_Pursuit
 
         private void SelectTLETarget()
         {
-            const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
 
             string nameLine = null;
             string firstLine = null;
             string secondLine = null;
 
-            //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
+            //Reads custom .txt file of TLE entries for satellite entry with tgtName as first line
             //
-            //REad in list of 3TLE entries
+            //REad in list of TLE entries
             //Get User Documents Folder
-            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) +  customTLEfilename;
+            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Properties.Settings.Default.TLECatalogPath;
             if (!File.Exists(satTLEPath))
                 return;
             StreamReader satTLEFile = File.OpenText(satTLEPath);

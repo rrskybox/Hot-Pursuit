@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Windows.Forms;
 using System.Linq;
+using System.Web;
 
 namespace Hot_Pursuit
 {
@@ -118,7 +119,7 @@ namespace Hot_Pursuit
         {
             //Queries CelesTrak for satellite entry of catID
             //Example: https://celestrak.com/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE
-            NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
+            NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
             queryString["CATNR"] = catID;
             queryString["FORMAT"] = "TLE";
             string q = queryString.ToString();
@@ -142,18 +143,17 @@ namespace Hot_Pursuit
 
         public static string ReadCustomTLE(string tgtName)
         {
-            const string customTLEfilename = "\\Hot Pursuit\\TLE\\CustomTLE.txt";
 
             string nameLine = null;
             string firstLine = null;
             string secondLine = null;
             string catID = null;
 
-            //Reads custom .txt file of 3TLE entries for satellite entry with tgtName as first line
+            //Reads custom .txt file of TLE entries for satellite entry with tgtName as first line
             //
-            //REad in list of 3TLE entries
+            //REad in list of TLE entries
             //Get User Documents Folder
-            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + customTLEfilename;
+            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Properties.Settings.Default.TLECatalogPath ;
             StreamReader satTLEFile = File.OpenText(satTLEPath);
             //Read in the remaining lines and stuff into staName List
             while (satTLEFile.Peek() != -1)
