@@ -62,10 +62,6 @@ namespace Hot_Pursuit
             this.ScoutRadioButton = new System.Windows.Forms.RadioButton();
             this.HorizonsRadioButton = new System.Windows.Forms.RadioButton();
             this.MPCRadioButton = new System.Windows.Forms.RadioButton();
-            this.SatRadioButton = new System.Windows.Forms.RadioButton();
-            this.TLERadioButton = new System.Windows.Forms.RadioButton();
-            this.CatalogTreeView = new System.Windows.Forms.TreeView();
-            this.ChooseButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIntervalBox)).BeginInit();
             this.SequencerGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).BeginInit();
@@ -477,58 +473,12 @@ namespace Hot_Pursuit
             this.MPCRadioButton.UseVisualStyleBackColor = true;
             this.MPCRadioButton.CheckedChanged += new System.EventHandler(this.MPCRadioButton_CheckedChanged);
             // 
-            // SatRadioButton
-            // 
-            this.SatRadioButton.AutoSize = true;
-            this.SatRadioButton.ForeColor = System.Drawing.Color.White;
-            this.SatRadioButton.Location = new System.Drawing.Point(598, 138);
-            this.SatRadioButton.Name = "SatRadioButton";
-            this.SatRadioButton.Size = new System.Drawing.Size(94, 17);
-            this.SatRadioButton.TabIndex = 37;
-            this.SatRadioButton.Text = "Norad Satellite";
-            this.SatRadioButton.UseVisualStyleBackColor = true;
-            this.SatRadioButton.CheckedChanged += new System.EventHandler(this.SatRadioButton_CheckedChanged);
-            // 
-            // TLERadioButton
-            // 
-            this.TLERadioButton.AutoSize = true;
-            this.TLERadioButton.ForeColor = System.Drawing.Color.White;
-            this.TLERadioButton.Location = new System.Drawing.Point(598, 158);
-            this.TLERadioButton.Name = "TLERadioButton";
-            this.TLERadioButton.Size = new System.Drawing.Size(102, 17);
-            this.TLERadioButton.TabIndex = 38;
-            this.TLERadioButton.Text = "TheSky Satellite";
-            this.TLERadioButton.UseVisualStyleBackColor = true;
-            this.TLERadioButton.CheckedChanged += new System.EventHandler(this.TLERadioButton_CheckedChanged);
-            // 
-            // CatalogTreeView
-            // 
-            this.CatalogTreeView.Location = new System.Drawing.Point(590, 7);
-            this.CatalogTreeView.Name = "CatalogTreeView";
-            this.CatalogTreeView.Size = new System.Drawing.Size(184, 119);
-            this.CatalogTreeView.TabIndex = 39;
-            // 
-            // ChooseButton
-            // 
-            this.ChooseButton.ForeColor = System.Drawing.Color.Black;
-            this.ChooseButton.Location = new System.Drawing.Point(707, 144);
-            this.ChooseButton.Name = "ChooseButton";
-            this.ChooseButton.Size = new System.Drawing.Size(61, 23);
-            this.ChooseButton.TabIndex = 40;
-            this.ChooseButton.Text = "Choose";
-            this.ChooseButton.UseVisualStyleBackColor = true;
-            this.ChooseButton.Click += new System.EventHandler(this.ChooseButton_Click);
-            // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkCyan;
-            this.ClientSize = new System.Drawing.Size(782, 184);
-            this.Controls.Add(this.ChooseButton);
-            this.Controls.Add(this.CatalogTreeView);
-            this.Controls.Add(this.TLERadioButton);
-            this.Controls.Add(this.SatRadioButton);
+            this.ClientSize = new System.Drawing.Size(589, 184);
             this.Controls.Add(this.MPCRadioButton);
             this.Controls.Add(this.HorizonsRadioButton);
             this.Controls.Add(this.ScoutRadioButton);
@@ -592,10 +542,6 @@ namespace Hot_Pursuit
         private System.Windows.Forms.RadioButton ScoutRadioButton;
         private System.Windows.Forms.RadioButton HorizonsRadioButton;
         private System.Windows.Forms.RadioButton MPCRadioButton;
-        private System.Windows.Forms.RadioButton SatRadioButton;
-        private System.Windows.Forms.RadioButton TLERadioButton;
-        private System.Windows.Forms.TreeView CatalogTreeView;
-        private System.Windows.Forms.Button ChooseButton;
         private System.Windows.Forms.Button TrailButton;
     }
 }

@@ -15,7 +15,6 @@ using System.Xml.Linq;
 using System.Linq;
 using TheSky64Lib;
 
-
 namespace Hot_Pursuit
 {
 
@@ -63,7 +62,7 @@ namespace Hot_Pursuit
             //Set path for TheSky Version
             Properties.Settings.Default.TLECatalogPath = TLEPath;
             Properties.Settings.Default.Save();
-            
+
             string version;
             try
             { version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(); }
@@ -82,8 +81,6 @@ namespace Hot_Pursuit
             if (ScoutRadioButton.Checked) QuerySite = "Scout";
             if (HorizonsRadioButton.Checked) QuerySite = "Horizons";
             if (MPCRadioButton.Checked) QuerySite = "MPC";
-            if (SatRadioButton.Checked) QuerySite = "Sat";
-            if (TLERadioButton.Checked) QuerySite = "TLE";
 
             SetBackColor(StartStopButton, ControlColor.Green);
             SetBackColor(CloseButton, ControlColor.Green);
@@ -217,30 +214,30 @@ namespace Hot_Pursuit
                             EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
                     }
                 }
-                if (SatRadioButton.Checked)
-                {
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsSat))
-                    {
-                        UpdateStatusLine("Acquiring new ephemeris table");
-                        EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    }
-                }
-                if (TLERadioButton.Checked)
-                {
-                    //Make sure target name has 6 digits digits
-                    if (tName.Length < 6)
-                    {
-                        tName = tName.PadLeft(5, '0');
-                        TargetBox.Text = tName;
-                    }
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    {
-                        UpdateStatusLine("Acquiring new ephemeris table");
-                        while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsTLE))
-                            EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    }
-                }
+                //if (SatRadioButton.Checked)
+                //{
+                //    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                //    while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsSat))
+                //    {
+                //        UpdateStatusLine("Acquiring new ephemeris table");
+                //        EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                //    }
+                //}
+                //if (TLERadioButton.Checked)
+                //{
+                //    //Make sure target name has 6 digits digits
+                //    if (tName.Length < 6)
+                //    {
+                //        tName = tName.PadLeft(5, '0');
+                //        TargetBox.Text = tName;
+                //    }
+                //    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                //    {
+                //        UpdateStatusLine("Acquiring new ephemeris table");
+                //        while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsTLE))
+                //            EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                //    }
+                //}
 
             }
         }
@@ -711,312 +708,315 @@ namespace Hot_Pursuit
             TargetBox.Text = "";
         }
 
-        private void SatRadioButton_CheckedChanged(object sender, EventArgs e)
-        {
-            if (SatRadioButton.Checked)
-            {
-                TargetBox.Text = "";
-                QuerySite = "Sat";
-                SecondsButton.Checked = true;   //Change the refresh rate to seconds
-                CLSBox.Checked = false;   //Uncheck CLS box -- too slow
-                //Check SatCatBox
-                DialogResult newCat = MessageBox.Show("Do you want an updated CelesTrak satellite catalog?", "Satellite Catalog Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-                if (newCat == DialogResult.Yes)
-                {
-                    UpdateStatusLine("Updating CelesTrak Full Catalog");
-                    SatRadioButton.ForeColor = Color.Pink;
-                    Show(); System.Windows.Forms.Application.DoEvents();
-                    SatCat.RefreshSatelliteCatalog();
-                    SatRadioButton.ForeColor = Color.White;
-                }
-                SatRadioButton.ForeColor = Color.Pink;
-                Show(); System.Windows.Forms.Application.DoEvents();
-                TreeViewSatList();
-                SatRadioButton.ForeColor = Color.White;
-                CatType = CatalogType.FullSatList;
-                Show(); System.Windows.Forms.Application.DoEvents();
-            }
-        }
-
-        private void TLERadioButton_CheckedChanged(object sender, EventArgs e)
-        {
-            if (TLERadioButton.Checked)
-            {
-                TargetBox.Text = "";
-                QuerySite = "TLE";
-                SecondsButton.Checked = true;   //Change the refresh rate to seconds
-                CLSBox.Checked = false;   //Uncheck CLS box -- too slow
-                //DialogResult newCat = MessageBox.Show("Do you want to change or update a CelesTraak satellite group?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-                //if (newCat == DialogResult.Yes)
-                //{
-                //    UpdateStatusLine("Posting Listing of CelesTrak Satellite Groups");
-                //    TLERadioButton.ForeColor = Color.Pink;
-                //    Show(); System.Windows.Forms.Application.DoEvents();
-                //    DisplayCelesTrakGroups();
-                //    TLERadioButton.ForeColor = Color.White;
-                //    CatType = CatalogType.GroupList;
-                //    return;
-                //}
-                //else
-                {
-                    UpdateStatusLine("Updating CelesTrak Group Catalog (TLE)");
-                    TLERadioButton.ForeColor = Color.Pink;
-                    Show(); System.Windows.Forms.Application.DoEvents();
-                    TreeViewTLEList();
-                    TLERadioButton.ForeColor = Color.White;
-                    CatType = CatalogType.GroupSatList;
-                    Show(); System.Windows.Forms.Application.DoEvents();
-                }
-            }
-        }
-
-
-        #endregion
-
-        #region treeview
-
-        public enum CatalogType
-        {
-            FullSatList,
-            GroupList,
-            GroupSatList,
-            None
-        }
-
-        const string celesTrakSatQueryURL = "https://celestrak.com/NORAD/elements/gp.php?";
-
-        public CatalogType CatType;
-        public string GroupName;
-
-        private void ChooseButton_Click(object sender, EventArgs e)
-        {
-            if (!(SatRadioButton.Checked || TLERadioButton.Checked))
-                return;
-            TreeNode tn = CatalogTreeView.SelectedNode;
-            if (tn == null)
-                return;
-            string catalogPick = tn.Name;
-            switch (CatType)
-            {
-                case CatalogType.FullSatList:
-                    {
-                        UpdateStatusLine("Loading new target from Celestrak Full Satellite Catalog");
-                        TargetBox.Text = catalogPick;
-                        break;
-                    }
-                case CatalogType.GroupList:
-                    {
-                        //string tleSet = QueryCelesTrakGroupTLE(catalogPick);
-                        //if (!WriteCelesTraKGroupTLEs(tleSet))
-                        //{
-                        //    UpdateStatusLine("Satellite Group download failed");
-                        //}
-                        //else
-                        {
-                            TreeViewTLEList();
-                            CatType = CatalogType.GroupSatList;
-                        }
-                        break;
-                    }
-                case CatalogType.GroupSatList:
-                    {
-                        UpdateStatusLine("Loading new target from Celestrak Group Satellite Catalog");
-                        TargetBox.Text = catalogPick;
-                        break;
-                    }
-                case CatalogType.None:
-                    {
-                        UpdateStatusLine("Loading new target from a mystery");
-                        TargetBox.Text = catalogPick;
-                        break;
-                    }
-            }
-        }
-
-        #region treeview
-
-        private int AddMainNode(string id, string section)
-        {
-            TreeNode cNode = CatalogTreeView.Nodes.Add(id, section);
-            int indx = CatalogTreeView.Nodes.IndexOf(cNode);
-            return indx;
-        }
-
-        private void AddLeafNode(int mainIdx, string objName, string objIntID, string objNoradID)
-        {
-            int oIdx = CatalogTreeView.Nodes[mainIdx].Nodes.IndexOfKey(objName);
-            if (oIdx == -1)
-            {
-                TreeNode cNode = CatalogTreeView.Nodes[mainIdx].Nodes.Add(objName, objName);
-                oIdx = CatalogTreeView.Nodes[mainIdx].Nodes.IndexOf(cNode);
-            }
-            CatalogTreeView.Nodes[mainIdx].Nodes[oIdx].Nodes.Add(objNoradID, objIntID);
-            return;
-        }
-
-        #endregion
-
-        #region GroupTreeView
-
-        private void DisplayCelesTrakGroups()
-        {
-            //Queries CelesTrak for new group list of TLE's
-            Assembly dgassembly = Assembly.GetExecutingAssembly();
-            Stream dgstream = dgassembly.GetManifestResourceStream("Hot_Pursuit.CelesTrakGroup.xml");
-            XElement cGroupList = XElement.Load(dgstream);
-            CatalogTreeView.Nodes.Clear();
-            XElement[] orderedList = (from xtab in cGroupList.Elements("row")
-                                      orderby xtab.Element("GroupName").Value
-                                      select xtab).ToArray();
-            foreach (XElement xg in orderedList)
-                AddMainNode(xg.Element("GroupCode").Value, xg.Element("GroupName").Value);
-            Show(); System.Windows.Forms.Application.DoEvents();
-            return;
-        }
-
-        //public string QueryCelesTrakGroupTLE(string groupPick)
+        //private void SatRadioButton_CheckedChanged(object sender, EventArgs e)
         //{
-        //    //Queries CelesTrak for satellite entry of catID
-        //    //Example: https://celestrak.com/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE
-        //    NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
-        //    queryString["GROUP"] = groupPick;
-        //    queryString["FORMAT"] = "TLE";
-        //    string q = queryString.ToString();
-        //    //fix bug where queryString inserts %2f instead of %2F for the "/" char
-        //    q.Replace("%2f", "%2F");
-
-        //    WebClient client = new WebClient();
-        //    string urlSearch, groupTLE;
-        //    try
+        //    if (SatRadioButton.Checked)
         //    {
-        //        urlSearch = celesTrakSatQueryURL + queryString;
-        //        groupTLE = client.DownloadString(urlSearch);
+        //        TargetBox.Text = "";
+        //        QuerySite = "Sat";
+        //        SecondsButton.Checked = true;   //Change the refresh rate to seconds
+        //        CLSBox.Checked = false;   //Uncheck CLS box -- too slow
+        //        //Check SatCatBox
+        //        DialogResult newCat = MessageBox.Show("Do you want an updated CelesTrak satellite catalog?", "Satellite Catalog Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+        //        if (newCat == DialogResult.Yes)
+        //        {
+        //            UpdateStatusLine("Updating CelesTrak Full Catalog");
+        //            SatRadioButton.ForeColor = Color.Pink;
+        //            Show(); System.Windows.Forms.Application.DoEvents();
+        //            SatCat.RefreshSatelliteCatalog();
+        //            SatRadioButton.ForeColor = Color.White;
+        //        }
+        //        SatRadioButton.ForeColor = Color.Pink;
+        //        Show(); System.Windows.Forms.Application.DoEvents();
+        //        TreeViewSatList();
+        //        SatRadioButton.ForeColor = Color.White;
+        //        CatType = CatalogType.FullSatList;
+        //        Show(); System.Windows.Forms.Application.DoEvents();
         //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show("Catalog Download Error: " + ex.Message);
-        //        return null;
-        //    };
-        //    return groupTLE;
         //}
 
-        //private bool WriteCelesTraKGroupTLEs(string tles)
+        //private void TLERadioButton_CheckedChanged(object sender, EventArgs e)
         //{
-
-        //    //Reads custom .txt file of TLE entries for satellite entry with tgtName as first line
-        //    //
-        //    //REad in list of TLE entries
-        //    //Get User Documents Folder
-        //    string customTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Properties.Settings.Default.TLECatalogPath ;
-        //    try
+        //    if (TLERadioButton.Checked)
         //    {
-        //        File.Delete(customTLEPath);
-        //        File.WriteAllText(customTLEPath, tles);
+        //        TargetBox.Text = "";
+        //        QuerySite = "TLE";
+        //        SecondsButton.Checked = true;   //Change the refresh rate to seconds
+        //        CLSBox.Checked = false;   //Uncheck CLS box -- too slow
+        //        //DialogResult newCat = MessageBox.Show("Do you want to change or update a CelesTraak satellite group?", "Satellite Group Check", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+        //        //if (newCat == DialogResult.Yes)
+        //        //{
+        //        //    UpdateStatusLine("Posting Listing of CelesTrak Satellite Groups");
+        //        //    TLERadioButton.ForeColor = Color.Pink;
+        //        //    Show(); System.Windows.Forms.Application.DoEvents();
+        //        //    DisplayCelesTrakGroups();
+        //        //    TLERadioButton.ForeColor = Color.White;
+        //        //    CatType = CatalogType.GroupList;
+        //        //    return;
+        //        //}
+        //        //else
+        //        {
+        //            UpdateStatusLine("Updating CelesTrak Group Catalog (TLE)");
+        //            TLERadioButton.ForeColor = Color.Pink;
+        //            Show(); System.Windows.Forms.Application.DoEvents();
+        //            TreeViewTLEList();
+        //            TLERadioButton.ForeColor = Color.White;
+        //            CatType = CatalogType.GroupSatList;
+        //            Show(); System.Windows.Forms.Application.DoEvents();
+        //        }
         //    }
-        //    catch (Exception ex)
-        //    {
-        //        return false;
-        //    }
-        //    return true;
         //}
+
 
         #endregion
 
-        private int payCatNode;
-        private int rbCatNode;
-        private int debCatNode;
-        private int unkCatNode;
-
-        public string TargetID { get; set; }
-
-        private void TreeViewSatList()
-        {
-            CatalogTreeView.Nodes.Clear();
-
-            payCatNode = AddMainNode("Payload", "Payload");
-            rbCatNode = AddMainNode("Booster", "Booster");
-            debCatNode = AddMainNode("Debris", "Debris");
-            unkCatNode = AddMainNode("Unknown", "Unknown");
-            Show(); System.Windows.Forms.Application.DoEvents();
-
-            SatCat scList = new SatCat();
-
-            foreach (SatCat.SatEntry sc in scList.SatelliteCatalog)
-            {
-                switch (sc.ObjectType)
-                {
-                    case SatCat.SatCatEntryType.Payload:
-                        {
-                            AddLeafNode(payCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
-                            break;
-                        }
-                    case SatCat.SatCatEntryType.Booster:
-                        {
-                            AddLeafNode(rbCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
-                            break;
-                        }
-                    case SatCat.SatCatEntryType.Debris:
-                        {
-                            AddLeafNode(debCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
-                            break;
-                        }
-                    case SatCat.SatCatEntryType.Unknown:
-                        {
-                            AddLeafNode(unkCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
-                            break;
-                        }
-                }
-            }
-            Show(); System.Windows.Forms.Application.DoEvents();
-            return;
-        }
-
-        private void TreeViewTLEList()
-        {
-
-            //Reads custom .txt file of TLE entries for satellite entry with tgtName as first line
-            //
-            //REad in list of TLE entries
-            //Get User Documents Folder
-            CatalogTreeView.Nodes.Clear();
-            Show(); System.Windows.Forms.Application.DoEvents();
-
-            string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Properties.Settings.Default.TLECatalogPath;
-            if (!File.Exists(satTLEPath))
-                return;
-            StreamReader satTLEFile = File.OpenText(satTLEPath);
-            List<TLEData> tleList = new List<TLEData>();
-            //Read in the remaining lines and stuff into staName List
-            while (satTLEFile.Peek() != -1)
-            {
-                //Read sets of three lines, look for tgtName in first line, break out with result
-                TLEData tle = new TLEData()
-                {
-                    NameLine = satTLEFile.ReadLine(),
-                    FirstLine = satTLEFile.ReadLine(),
-                    SecondLine = satTLEFile.ReadLine()
-                };
-                tleList.Add(tle);
-            }
-            //Sort alphabetically and load into treeview
-            foreach (TLEData t in from tleRecord in tleList orderby tleRecord.NameLine select tleRecord)
-                AddMainNode(t.FirstLine.Substring(2, 5), t.NameLine);
-            Show(); System.Windows.Forms.Application.DoEvents();
-            return;
-        }
-
     }
-
-    public struct TLEData
-    {
-        public string NameLine;
-        public string FirstLine;
-        public string SecondLine;
-    }
-
-    #endregion
-
-
 }
+
+    //    #region treeview
+
+//    public enum CatalogType
+//    {
+//        FullSatList,
+//        GroupList,
+//        GroupSatList,
+//        None
+//    }
+
+//    //const string celesTrakSatQueryURL = "https://celestrak.com/NORAD/elements/gp.php?";
+
+//    //public CatalogType CatType;
+//    //public string GroupName;
+
+//    //private void ChooseButton_Click(object sender, EventArgs e)
+//    //{
+//    //    if (!(SatRadioButton.Checked || TLERadioButton.Checked))
+//    //        return;
+//    //    TreeNode tn = CatalogTreeView.SelectedNode;
+//    //    if (tn == null)
+//    //        return;
+//    //    string catalogPick = tn.Name;
+//    //    switch (CatType)
+//    //    {
+//    //        case CatalogType.FullSatList:
+//    //            {
+//    //                UpdateStatusLine("Loading new target from Celestrak Full Satellite Catalog");
+//    //                TargetBox.Text = catalogPick;
+//    //                break;
+//    //            }
+//    //        case CatalogType.GroupList:
+//    //            {
+//    //                //string tleSet = QueryCelesTrakGroupTLE(catalogPick);
+//    //                //if (!WriteCelesTraKGroupTLEs(tleSet))
+//    //                //{
+//    //                //    UpdateStatusLine("Satellite Group download failed");
+//    //                //}
+//    //                //else
+//    //                {
+//    //                    TreeViewTLEList();
+//    //                    CatType = CatalogType.GroupSatList;
+//    //                }
+//    //                break;
+//    //            }
+//    //        case CatalogType.GroupSatList:
+//    //            {
+//    //                UpdateStatusLine("Loading new target from Celestrak Group Satellite Catalog");
+//    //                TargetBox.Text = catalogPick;
+//    //                break;
+//    //            }
+//    //        case CatalogType.None:
+//    //            {
+//    //                UpdateStatusLine("Loading new target from a mystery");
+//    //                TargetBox.Text = catalogPick;
+//    //                break;
+//    //            }
+//    //    }
+//    //}
+
+//    #region treeview
+
+//    //private int AddMainNode(string id, string section)
+//    //{
+//    //    TreeNode cNode = CatalogTreeView.Nodes.Add(id, section);
+//    //    int indx = CatalogTreeView.Nodes.IndexOf(cNode);
+//    //    return indx;
+//    //}
+
+//    //private void AddLeafNode(int mainIdx, string objName, string objIntID, string objNoradID)
+//    //{
+//    //    int oIdx = CatalogTreeView.Nodes[mainIdx].Nodes.IndexOfKey(objName);
+//    //    if (oIdx == -1)
+//    //    {
+//    //        TreeNode cNode = CatalogTreeView.Nodes[mainIdx].Nodes.Add(objName, objName);
+//    //        oIdx = CatalogTreeView.Nodes[mainIdx].Nodes.IndexOf(cNode);
+//    //    }
+//    //    CatalogTreeView.Nodes[mainIdx].Nodes[oIdx].Nodes.Add(objNoradID, objIntID);
+//    //    return;
+//    //}
+
+//    #endregion
+
+//    #region GroupTreeView
+
+//    //private void DisplayCelesTrakGroups()
+//    //{
+//    //    //Queries CelesTrak for new group list of TLE's
+//    //    Assembly dgassembly = Assembly.GetExecutingAssembly();
+//    //    Stream dgstream = dgassembly.GetManifestResourceStream("Hot_Pursuit.CelesTrakGroup.xml");
+//    //    XElement cGroupList = XElement.Load(dgstream);
+//    //    CatalogTreeView.Nodes.Clear();
+//    //    XElement[] orderedList = (from xtab in cGroupList.Elements("row")
+//    //                              orderby xtab.Element("GroupName").Value
+//    //                              select xtab).ToArray();
+//    //    foreach (XElement xg in orderedList)
+//    //        AddMainNode(xg.Element("GroupCode").Value, xg.Element("GroupName").Value);
+//    //    Show(); System.Windows.Forms.Application.DoEvents();
+//    //    return;
+//    //}
+
+//    ////public string QueryCelesTrakGroupTLE(string groupPick)
+//    //{
+//    //    //Queries CelesTrak for satellite entry of catID
+//    //    //Example: https://celestrak.com/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE
+//    //    NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
+//    //    queryString["GROUP"] = groupPick;
+//    //    queryString["FORMAT"] = "TLE";
+//    //    string q = queryString.ToString();
+//    //    //fix bug where queryString inserts %2f instead of %2F for the "/" char
+//    //    q.Replace("%2f", "%2F");
+
+//    //    WebClient client = new WebClient();
+//    //    string urlSearch, groupTLE;
+//    //    try
+//    //    {
+//    //        urlSearch = celesTrakSatQueryURL + queryString;
+//    //        groupTLE = client.DownloadString(urlSearch);
+//    //    }
+//    //    catch (Exception ex)
+//    //    {
+//    //        MessageBox.Show("Catalog Download Error: " + ex.Message);
+//    //        return null;
+//    //    };
+//    //    return groupTLE;
+//    //}
+
+//    //private bool WriteCelesTraKGroupTLEs(string tles)
+//    //{
+
+//    //    //Reads custom .txt file of TLE entries for satellite entry with tgtName as first line
+//    //    //
+//    //    //REad in list of TLE entries
+//    //    //Get User Documents Folder
+//    //    string customTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Properties.Settings.Default.TLECatalogPath ;
+//    //    try
+//    //    {
+//    //        File.Delete(customTLEPath);
+//    //        File.WriteAllText(customTLEPath, tles);
+//    //    }
+//    //    catch (Exception ex)
+//    //    {
+//    //        return false;
+//    //    }
+//    //    return true;
+//    //}
+
+//    #endregion
+
+//    private int payCatNode;
+//    private int rbCatNode;
+//    private int debCatNode;
+//    private int unkCatNode;
+
+//    public string TargetID { get; set; }
+
+//    //private void TreeViewSatList()
+//    //{
+//    //    CatalogTreeView.Nodes.Clear();
+
+//    //    payCatNode = AddMainNode("Payload", "Payload");
+//    //    rbCatNode = AddMainNode("Booster", "Booster");
+//    //    debCatNode = AddMainNode("Debris", "Debris");
+//    //    unkCatNode = AddMainNode("Unknown", "Unknown");
+//    //    Show(); System.Windows.Forms.Application.DoEvents();
+
+//    //    SatCat scList = new SatCat();
+
+//    //    foreach (SatCat.SatEntry sc in scList.SatelliteCatalog)
+//    //    {
+//    //        switch (sc.ObjectType)
+//    //        {
+//    //            case SatCat.SatCatEntryType.Payload:
+//    //                {
+//    //                    AddLeafNode(payCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+//    //                    break;
+//    //                }
+//    //            case SatCat.SatCatEntryType.Booster:
+//    //                {
+//    //                    AddLeafNode(rbCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+//    //                    break;
+//    //                }
+//    //            case SatCat.SatCatEntryType.Debris:
+//    //                {
+//    //                    AddLeafNode(debCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+//    //                    break;
+//    //                }
+//    //            case SatCat.SatCatEntryType.Unknown:
+//    //                {
+//    //                    AddLeafNode(unkCatNode, sc.ObjectName, sc.ObjectInternationalID, sc.ObjectNoradID);
+//    //                    break;
+//    //                }
+//    //        }
+//    //    }
+//    //    Show(); System.Windows.Forms.Application.DoEvents();
+//    //    return;
+//    //}
+
+//    //private void TreeViewTLEList()
+//    //{
+
+//    //    //Reads custom .txt file of TLE entries for satellite entry with tgtName as first line
+//    //    //
+//    //    //REad in list of TLE entries
+//    //    //Get User Documents Folder
+//    //    CatalogTreeView.Nodes.Clear();
+//    //    Show(); System.Windows.Forms.Application.DoEvents();
+
+//    //    string satTLEPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Properties.Settings.Default.TLECatalogPath;
+//    //    if (!File.Exists(satTLEPath))
+//    //        return;
+//    //    StreamReader satTLEFile = File.OpenText(satTLEPath);
+//    //    List<TLEData> tleList = new List<TLEData>();
+//    //    //Read in the remaining lines and stuff into staName List
+//    //    while (satTLEFile.Peek() != -1)
+//    //    {
+//    //        //Read sets of three lines, look for tgtName in first line, break out with result
+//    //        TLEData tle = new TLEData()
+//    //        {
+//    //            NameLine = satTLEFile.ReadLine(),
+//    //            FirstLine = satTLEFile.ReadLine(),
+//    //            SecondLine = satTLEFile.ReadLine()
+//    //        };
+//    //        tleList.Add(tle);
+//    //    }
+//    //    //Sort alphabetically and load into treeview
+//    //    foreach (TLEData t in from tleRecord in tleList orderby tleRecord.NameLine select tleRecord)
+//    //        AddMainNode(t.FirstLine.Substring(2, 5), t.NameLine);
+//    //    Show(); System.Windows.Forms.Application.DoEvents();
+//    //    return;
+//    //}
+
+//}
+
+//public struct TLEData
+//{
+//    public string NameLine;
+//    public string FirstLine;
+//    public string SecondLine;
+//}
+
+//#endregion
+
+
+
 
 
