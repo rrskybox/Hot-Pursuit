@@ -62,11 +62,17 @@ namespace Hot_Pursuit
             this.ScoutRadioButton = new System.Windows.Forms.RadioButton();
             this.HorizonsRadioButton = new System.Windows.Forms.RadioButton();
             this.MPCRadioButton = new System.Windows.Forms.RadioButton();
+            this.PlotGroupBox = new System.Windows.Forms.GroupBox();
+            this.PlotDaysBox = new System.Windows.Forms.NumericUpDown();
+            this.label10 = new System.Windows.Forms.Label();
+            this.GenerateSDBButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIntervalBox)).BeginInit();
             this.SequencerGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).BeginInit();
             this.groupBox1.SuspendLayout();
+            this.PlotGroupBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PlotDaysBox)).BeginInit();
             this.SuspendLayout();
             // 
             // CloseButton
@@ -179,7 +185,7 @@ namespace Hot_Pursuit
             this.SequencerGroupBox.Controls.Add(this.ExposureBox);
             this.SequencerGroupBox.Controls.Add(this.ImageButton);
             this.SequencerGroupBox.ForeColor = System.Drawing.Color.MintCream;
-            this.SequencerGroupBox.Location = new System.Drawing.Point(400, 7);
+            this.SequencerGroupBox.Location = new System.Drawing.Point(571, 7);
             this.SequencerGroupBox.Name = "SequencerGroupBox";
             this.SequencerGroupBox.Size = new System.Drawing.Size(182, 119);
             this.SequencerGroupBox.TabIndex = 17;
@@ -322,7 +328,7 @@ namespace Hot_Pursuit
             this.HPStatusBox.Multiline = true;
             this.HPStatusBox.Name = "HPStatusBox";
             this.HPStatusBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.HPStatusBox.Size = new System.Drawing.Size(576, 46);
+            this.HPStatusBox.Size = new System.Drawing.Size(747, 46);
             this.HPStatusBox.TabIndex = 18;
             // 
             // DecRateBox
@@ -384,12 +390,12 @@ namespace Hot_Pursuit
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.CloseButton);
             this.groupBox1.ForeColor = System.Drawing.Color.White;
-            this.groupBox1.Location = new System.Drawing.Point(205, 7);
+            this.groupBox1.Location = new System.Drawing.Point(376, 7);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(188, 119);
             this.groupBox1.TabIndex = 33;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Tracking";
+            this.groupBox1.Text = "Track";
             // 
             // TrailButton
             // 
@@ -473,12 +479,69 @@ namespace Hot_Pursuit
             this.MPCRadioButton.UseVisualStyleBackColor = true;
             this.MPCRadioButton.CheckedChanged += new System.EventHandler(this.MPCRadioButton_CheckedChanged);
             // 
+            // PlotGroupBox
+            // 
+            this.PlotGroupBox.Controls.Add(this.PlotDaysBox);
+            this.PlotGroupBox.Controls.Add(this.label10);
+            this.PlotGroupBox.Controls.Add(this.GenerateSDBButton);
+            this.PlotGroupBox.ForeColor = System.Drawing.Color.MintCream;
+            this.PlotGroupBox.Location = new System.Drawing.Point(208, 7);
+            this.PlotGroupBox.Name = "PlotGroupBox";
+            this.PlotGroupBox.Size = new System.Drawing.Size(154, 118);
+            this.PlotGroupBox.TabIndex = 37;
+            this.PlotGroupBox.TabStop = false;
+            this.PlotGroupBox.Text = "Plot";
+            // 
+            // PlotDaysBox
+            // 
+            this.PlotDaysBox.Location = new System.Drawing.Point(49, 30);
+            this.PlotDaysBox.Maximum = new decimal(new int[] {
+            6000,
+            0,
+            0,
+            0});
+            this.PlotDaysBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.PlotDaysBox.Name = "PlotDaysBox";
+            this.PlotDaysBox.Size = new System.Drawing.Size(41, 20);
+            this.PlotDaysBox.TabIndex = 37;
+            this.PlotDaysBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.PlotDaysBox.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.ForeColor = System.Drawing.Color.White;
+            this.label10.Location = new System.Drawing.Point(12, 32);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(31, 13);
+            this.label10.TabIndex = 38;
+            this.label10.Text = "Days";
+            // 
+            // GenerateSDBButton
+            // 
+            this.GenerateSDBButton.ForeColor = System.Drawing.Color.Black;
+            this.GenerateSDBButton.Location = new System.Drawing.Point(29, 83);
+            this.GenerateSDBButton.Name = "GenerateSDBButton";
+            this.GenerateSDBButton.Size = new System.Drawing.Size(94, 23);
+            this.GenerateSDBButton.TabIndex = 36;
+            this.GenerateSDBButton.Text = "Generate SDB";
+            this.GenerateSDBButton.UseVisualStyleBackColor = true;
+            this.GenerateSDBButton.Click += new System.EventHandler(this.GenerateSDBButton_Click);
+            // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkCyan;
-            this.ClientSize = new System.Drawing.Size(589, 184);
+            this.ClientSize = new System.Drawing.Size(765, 184);
             this.Controls.Add(this.MPCRadioButton);
             this.Controls.Add(this.HorizonsRadioButton);
             this.Controls.Add(this.ScoutRadioButton);
@@ -493,6 +556,7 @@ namespace Hot_Pursuit
             this.Controls.Add(this.label1);
             this.Controls.Add(this.TargetBox);
             this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.PlotGroupBox);
             this.ForeColor = System.Drawing.Color.Teal;
             this.MaximizeBox = false;
             this.Name = "FormHotPursuit";
@@ -504,6 +568,9 @@ namespace Hot_Pursuit
             ((System.ComponentModel.ISupportInitialize)(this.ExposureBox)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.PlotGroupBox.ResumeLayout(false);
+            this.PlotGroupBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PlotDaysBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -543,6 +610,10 @@ namespace Hot_Pursuit
         private System.Windows.Forms.RadioButton HorizonsRadioButton;
         private System.Windows.Forms.RadioButton MPCRadioButton;
         private System.Windows.Forms.Button TrailButton;
+        private System.Windows.Forms.GroupBox PlotGroupBox;
+        private System.Windows.Forms.Button GenerateSDBButton;
+        private System.Windows.Forms.NumericUpDown PlotDaysBox;
+        private System.Windows.Forms.Label label10;
     }
 }
 

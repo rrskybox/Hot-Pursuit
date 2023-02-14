@@ -3,16 +3,11 @@ using AstroImage;
 using AstroMath;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Deployment.Application;
 using System.Drawing;
 using System.IO;
-using System.Net;
-using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using System.Xml.Linq;
-using System.Linq;
 using TheSky64Lib;
 
 namespace Hot_Pursuit
@@ -37,7 +32,6 @@ namespace Hot_Pursuit
         public bool InPursuit = false;
         public bool IsImaging = false;
         public string QuerySite = "Scout";
-
 
         public Ephemeris EphemTable;
 
@@ -86,6 +80,7 @@ namespace Hot_Pursuit
             SetBackColor(CloseButton, ControlColor.Green);
             SetBackColor(ImageButton, ControlColor.Yellow);
             SetBackColor(TrailButton, ControlColor.Yellow);
+            Utility.ButtonGreen(GenerateSDBButton);
 
             HPDirectoryPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\Hot Pursuit";
             if (!Directory.Exists(HPDirectoryPath)) Directory.CreateDirectory(HPDirectoryPath);
@@ -239,6 +234,61 @@ namespace Hot_Pursuit
                 //    }
                 //}
 
+            }
+        }
+
+        private void GenerateSDBButton_Click(object sender, EventArgs e)
+        {
+            Utility.ButtonRed(GenerateSDBButton);
+            if (InPursuit)
+            {
+                if (InPursuit)
+                    AbortRequested = true;
+                Utility.ButtonGreen(GenerateSDBButton);
+                return;
+            }
+            else
+            {
+                //Retrieve current target name from TSX and set in ss
+                string tName;
+                if (TargetBox.Text == "")
+                    tName = Utils.GetTargetName();
+                else
+                    tName = TargetBox.Text;
+                TargetBox.Text = tName;
+                if (TargetBox.Text == "")
+                {
+                    UpdateStatusLine("No target found");
+                    Utility.ButtonGreen(GenerateSDBButton);
+                    return;
+                }
+                UpdateStatusLine("Querying " + QuerySite + " catalog for " + tName);
+                if (QuerySite == "Scout")
+                    UpdateStatusLine("Scout takes time; Be patient...");
+                Show();
+                System.Windows.Forms.Application.DoEvents();
+                if (tName == "")
+                {
+                    Utility.ButtonGreen(GenerateSDBButton);
+                    return;
+                }
+                                int minutes = (int)PlotDaysBox.Value * 60 * 24;
+                if (ScoutRadioButton.Checked)
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
+                if (HorizonsRadioButton.Checked)
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
+                if (MPCRadioButton.Checked)
+                    EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
+                //Transform Ephemeris Table to Target Data
+                if (EphemTable.HasData)
+                {
+                    List<SDBDesigner.TargetData> tdList = EphemTable.SpeedVectorToTargetData();
+                    SDBDesigner sdb = new SDBDesigner();
+                    Utils.FindAndCenterChart(tName);
+                    sdb.SDBToClipboard(tdList);
+                }
+                Utility.ButtonGreen(GenerateSDBButton);
+                return;
             }
         }
 
@@ -693,19 +743,19 @@ namespace Hot_Pursuit
         private void ScoutRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "Scout";
-            TargetBox.Text = "";
+            //TargetBox.Text = "";
         }
 
         private void HorizonsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "Horizons";
-            TargetBox.Text = "";
+            //TargetBox.Text = "";
         }
 
         private void MPCRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "MPC";
-            TargetBox.Text = "";
+            //TargetBox.Text = "";
         }
 
         //private void SatRadioButton_CheckedChanged(object sender, EventArgs e)
@@ -770,10 +820,10 @@ namespace Hot_Pursuit
 
         #endregion
 
-    }
+     }
 }
 
-    //    #region treeview
+//    #region treeview
 
 //    public enum CatalogType
 //    {

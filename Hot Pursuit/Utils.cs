@@ -259,5 +259,26 @@ namespace Hot_Pursuit
             return;
         }
 
+        public static void FindAndCenterChart(string targetName)
+        {
+            sky6StarChart tsxc = new sky6StarChart();
+            sky6ObjectInformation tsxo = new sky6ObjectInformation();
+            try { tsxc.Find(targetName); }
+            catch
+            {
+                MessageBox.Show("TSX does not catalog the target");
+                return;
+            };
+            tsxo.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_RA_2000);
+            double ra = tsxo.ObjInfoPropOut;
+            tsxo.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_DEC_2000);
+            double dec = tsxo.ObjInfoPropOut;
+            tsxc.RightAscension = ra;
+            tsxc.Declination = dec;
+            //Set star chart field of view to 5 minutes
+            tsxc.FieldOfView = 5;
+            return;
+        }
+
     }
 }

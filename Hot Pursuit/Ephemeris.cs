@@ -84,6 +84,51 @@ namespace Hot_Pursuit
             return;
         }
 
+        public Ephemeris(EphemSource eps, string targetName, bool isMinutes, int updateRate, int minutes)
+        {
+            TgtName = targetName;
+            EphStart = DateTime.UtcNow;
+            if (isMinutes)
+            {
+                EphStep = TimeSpan.FromMinutes(updateRate);
+                EphEnd = EphStart + TimeSpan.FromMinutes(minutes);
+            }
+            else
+            {
+                EphStep = TimeSpan.FromSeconds(updateRate);
+                EphEnd = EphStart + TimeSpan.FromSeconds(EphStep.TotalSeconds * 600);  //10 minutes for seconds data
+            }
+            switch (eps)
+            {
+                case EphemSource.Scout:
+                    {
+                        HasData = DownloadScoutData(isMinutes, updateRate);
+                        break;
+                    }
+                case EphemSource.Horizons:
+                    {
+                        HasData = DownloadHorizonsData(isMinutes, updateRate, EphemSource.Horizons);
+                        break;
+                    }
+                case EphemSource.MPES:
+                    {
+                        HasData = DownloadMPESData(isMinutes, updateRate);
+                        break;
+                    }
+                case EphemSource.HorizonsSat:
+                    {
+                        HasData = DownloadHorizonsData(isMinutes, updateRate, EphemSource.HorizonsSat);
+                        break;
+                    }
+                case EphemSource.HorizonsTLE:
+                    {
+                        HasData = DownloadHorizonsData(isMinutes, updateRate, EphemSource.HorizonsTLE);
+                        break;
+                    }
+            }
+            return;
+        }
+
         #region EphemXFields
 
         const string xUTDate = "UTDate";
@@ -167,6 +212,22 @@ namespace Hot_Pursuit
             }
             UpdateRateTable.Sort((x, y) => x.Time_UTC.CompareTo(y.Time_UTC));
             return true;
+        }
+
+        public List<SDBDesigner.TargetData> SpeedVectorToTargetData()
+        {
+            //Returns TargetData formated list of speedvector data
+            //  Convert RA degrees to RA hours
+            List<SDBDesigner.TargetData> tdList = new List<SDBDesigner.TargetData>();
+            foreach (SpeedVector sv in UpdateRateTable)
+                tdList.Add(new SDBDesigner.TargetData
+                {
+                    TargetName = sv.Time_UTC.ToString(),
+                    TargetRA = Utility.DegreesToHours(sv.RA_Degrees),
+                    TargetDec = sv.Dec_Degrees,
+                    TargetMag = 0
+                });
+            return tdList;
         }
 
         public SpeedVector? GetNearestRateUpdate(DateTime nearTime)
@@ -396,7 +457,7 @@ namespace Hot_Pursuit
             {
                 queryString["eph-step"] = EphStep.Minutes.ToString("0") + "m";
                 //Compute new eph-stop based on limiting data point to 100
-                DateTime EphEnd = EphStart + TimeSpan.FromMinutes(EphStep.Minutes * 99);
+                EphEnd = EphStart + TimeSpan.FromMinutes(EphStep.Minutes * 99);
             }
             queryString["eph-stop"] = EphEnd.ToString("yyyy-MM-ddTHH:mm:ss");
             queryString["obs-code"] = mpc_observatory_code;
@@ -712,7 +773,10 @@ namespace Hot_Pursuit
                 if (splits.Count() < 2)
                     scrub = longName;  //single name format, e.g. "JWST", and so leave off the small body search designator
                 else if (splits[1].All(Char.IsLetter)) //Comet -- 2021 A7 or Asteroid 7 Isis
-                    scrub = splits[1] + ";"; //Asteroid format ( e.g. 7 Isis) so return just the name and small body search designator (";")
+                    if (splits[0].Length == 4) //Comet 2021 xx
+                        scrub = splits[0] + " " + splits[1] + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
+                    else
+                        scrub = splits[1] + ";"; //Asteroid format ( e.g. 7 Isis) so return just the name and small body search designator (";")
                 else
                     scrub = splits[0] + " " + splits[1] + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
             }
@@ -797,7 +861,7 @@ namespace Hot_Pursuit
             //string siteCoords = '\'' + ((int)Math.Round(Convert.ToDouble(siteLong))).ToString() + "," +
             //                           ((int)Math.Round(Convert.ToDouble(siteLat))).ToString() + "," +
             //                           ((int)Math.Round(Convert.ToDouble(siteElev))).ToString() + '\'';
-            string siteCoords = '\'' + siteLong + "," +siteLat + "," +siteElev + '\'';
+            string siteCoords = '\'' + siteLong + "," + siteLat + "," + siteElev + '\'';
             string startTime = "\'" + EphStart.ToString("yyyy-MM-dd HH:mm") + "\'";
             string endTime = "\'" + EphEnd.ToString("yyyy-MM-dd HH:mm") + "\'";
             string siteName = MPC_Observatory.BestObservatory.MPC_Code;
@@ -812,7 +876,7 @@ namespace Hot_Pursuit
             queryString[hSiteCoordinate] = siteCoords;  //e-long(degrees),lat(degrees),elevation(km)
             queryString[hStartTime] = startTime; // "2021-01-12";
             queryString[hStopTime] = endTime; // "2021-01-13";
-            queryString[hStepSize] = "1m"; // shortest time that horizons can do
+            queryString[hStepSize] = (10).ToString("0")+"m";
             queryString[hAngleFormat] = hAngleFormatDegrees;
             queryString[hTimeDigits] = "Seconds";
             queryString[hRangeUnits] = "AU";

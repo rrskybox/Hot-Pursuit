@@ -22,7 +22,7 @@ namespace Hot_Pursuit
             double pixSize = 1;
             if (iStack.FitsStack.FocalLength != 0)
                 pixSize = (206.265 / iStack.FitsStack.FocalLength) * iStack.FitsStack.XpixSz;
-            target = iStack.FitsStack.RADECtoImageXY(iStack.FitsStack.RA, iStack.FitsStack.Dec);
+            target = iStack.FitsStack.RADECtoImageXY(iStack.FitsStack.ObjectRA, iStack.FitsStack.ObjectDec);
             ap.AddCrossHair(target, 400, 5);
             //Create image
             Image baseImage = ap.ResizeImage(ImageBox.Size, true);

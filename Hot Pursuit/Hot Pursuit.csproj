@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.310801\build\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.props" Condition="Exists('..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.310801\build\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -30,7 +29,7 @@
     <ProductName>Hot Pursuit</ProductName>
     <PublisherName>TSXToolKit</PublisherName>
     <SuiteName>TSXToolKit</SuiteName>
-    <ApplicationRevision>74</ApplicationRevision>
+    <ApplicationRevision>75</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -65,7 +64,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AstroImage">
@@ -79,7 +78,7 @@
       <HintPath>..\..\AstroMath\AstroMath\bin\Release\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3-beta1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -123,7 +122,9 @@
     <Compile Include="Reduction.cs" />
     <Compile Include="SafetyCheck.cs" />
     <Compile Include="SatCat.cs" />
+    <Compile Include="SDBDesigner.cs" />
     <Compile Include="TLE.cs" />
+    <Compile Include="Utility.cs" />
     <Compile Include="Utils.cs" />
     <EmbeddedResource Include="FormHotPursuit.resx">
       <DependentUpon>FormHotPursuit.cs</DependentUpon>
@@ -206,16 +207,5 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Analyzer Include="..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.310801\analyzers\dotnet\cs\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.Common.dll" />
-    <Analyzer Include="..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.310801\analyzers\dotnet\cs\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.dll" />
-    <Analyzer Include="..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.310801\analyzers\dotnet\cs\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.CodeFixes.dll" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.310801\build\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.0.3.310801\build\Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers.props'))" />
-  </Target>
 </Project>
