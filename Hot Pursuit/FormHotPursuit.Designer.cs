@@ -29,6 +29,7 @@ namespace Hot_Pursuit
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormHotPursuit));
             this.CloseButton = new System.Windows.Forms.Button();
             this.RefreshIntervalBox = new System.Windows.Forms.NumericUpDown();
             this.TargetBox = new System.Windows.Forms.TextBox();
@@ -558,6 +559,7 @@ namespace Hot_Pursuit
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.PlotGroupBox);
             this.ForeColor = System.Drawing.Color.Teal;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "FormHotPursuit";
             this.Text = "  ";
