@@ -72,6 +72,9 @@ namespace Hot_Pursuit
             FullReductionCheckBox.Checked = Properties.Settings.Default.FullReduction;
             OnTopBox.Checked = Properties.Settings.Default.IsOnTop;
             CLSBox.Checked = Properties.Settings.Default.UseCLS;
+            ScoutRadioButton.Checked = Properties.Settings.Default.ScoutChecked;
+            HorizonsRadioButton.Checked = Properties.Settings.Default.HorizonsChecked;
+            MPCRadioButton.Checked = Properties.Settings.Default.MPCChecked;
             if (ScoutRadioButton.Checked) QuerySite = "Scout";
             if (HorizonsRadioButton.Checked) QuerySite = "Horizons";
             if (MPCRadioButton.Checked) QuerySite = "MPC";
@@ -744,20 +747,22 @@ namespace Hot_Pursuit
         private void ScoutRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "Scout";
-            //TargetBox.Text = "";
+            Properties.Settings.Default.ScoutChecked = ScoutRadioButton .Checked;
         }
 
         private void HorizonsRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "Horizons";
-            //TargetBox.Text = "";
+            Properties.Settings.Default.HorizonsChecked = HorizonsRadioButton.Checked;
         }
 
         private void MPCRadioButton_CheckedChanged(object sender, EventArgs e)
         {
             QuerySite = "MPC";
-            //TargetBox.Text = "";
+            Properties.Settings.Default.MPCChecked = MPCRadioButton.Checked;
         }
+
+
 
         //private void SatRadioButton_CheckedChanged(object sender, EventArgs e)
         //{
@@ -820,6 +825,7 @@ namespace Hot_Pursuit
 
 
         #endregion
+
 
     }
 }

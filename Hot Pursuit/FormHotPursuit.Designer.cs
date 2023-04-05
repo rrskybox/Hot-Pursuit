@@ -542,7 +542,7 @@ namespace Hot_Pursuit
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkCyan;
-            this.ClientSize = new System.Drawing.Size(765, 184);
+            this.ClientSize = new System.Drawing.Size(765, 191);
             this.Controls.Add(this.MPCRadioButton);
             this.Controls.Add(this.HorizonsRadioButton);
             this.Controls.Add(this.ScoutRadioButton);

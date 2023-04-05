@@ -94,5 +94,41 @@ namespace Hot_Pursuit.Properties {
                 this["TLECatalogPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ScoutChecked {
+            get {
+                return ((bool)(this["ScoutChecked"]));
+            }
+            set {
+                this["ScoutChecked"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool HorizonsChecked {
+            get {
+                return ((bool)(this["HorizonsChecked"]));
+            }
+            set {
+                this["HorizonsChecked"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MPCChecked {
+            get {
+                return ((bool)(this["MPCChecked"]));
+            }
+            set {
+                this["MPCChecked"] = value;
+            }
+        }
     }
 }
