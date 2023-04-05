@@ -876,7 +876,7 @@ namespace Hot_Pursuit
             queryString[hSiteCoordinate] = siteCoords;  //e-long(degrees),lat(degrees),elevation(km)
             queryString[hStartTime] = startTime; // "2021-01-12";
             queryString[hStopTime] = endTime; // "2021-01-13";
-            queryString[hStepSize] = (10).ToString("0")+"m";
+            queryString[hStepSize] = (10).ToString("0") + "m";
             queryString[hAngleFormat] = hAngleFormatDegrees;
             queryString[hTimeDigits] = "Seconds";
             queryString[hRangeUnits] = "AU";
@@ -1025,7 +1025,7 @@ namespace Hot_Pursuit
             WebClient client = new WebClient();
             try
             {
-                urlSearch = URL_MPES_Search + MakeMPESQuery();
+                urlSearch = URL_MPES_Search + MakeMPESQuery((int)(EphEnd - EphStart).TotalMinutes);
                 mpesResultText = client.DownloadString(urlSearch);
             }
             catch (Exception ex)
@@ -1127,10 +1127,9 @@ namespace Hot_Pursuit
 
         //Ephemeris Specific Parameters
 
-
         #endregion
 
-        public string MakeMPESQuery()
+        public string MakeMPESQuery(int rangeInMinutes)
         {
             //Returns a url string for querying the TNS website
 
@@ -1148,9 +1147,40 @@ namespace Hot_Pursuit
             queryString[mStartDate] = ""; // Current ephemeris
             //queryString[mUTOffset] = EphStart.Hour.ToString("0");  //puts us in the correct hour of the day
             queryString[mUTOffset] = "";  //No offset for current ephemeris
-            queryString[mNumberOfRecords] = "1440";  // one day's worth at 1 min
-            queryString[mInterval] = "1";
-            queryString[mIntervalUnits] = "m";
+
+            //Determine range of query
+            //  if greater than 1440 minutes, then convert to hours
+            //  if greater than 1440 hours then convert to days
+            int rangeInHours = rangeInMinutes / 60;
+            int rangeInDays = rangeInMinutes / 60 / 24;
+            if (rangeInMinutes < 1440)  //Range from 1 - 1440 minutes (1 day)
+            {
+                queryString[mInterval] = "1";
+                queryString[mIntervalUnits] = "m";
+                queryString[mNumberOfRecords] = "1440";  // just do 1440 minutes
+            }
+            else if (rangeInHours < 1440)  //Range from 1 - 59 days
+            {
+                int minuteInterval = rangeInMinutes / 1440;
+                queryString[mInterval] = minuteInterval.ToString(); ;
+                queryString[mIntervalUnits] = "m";
+                queryString[mNumberOfRecords] = "1440";
+            }
+            else if (rangeInDays < 1440)  //Range from 60 - 1440 days
+            {
+                int hourInterval = rangeInMinutes / 60 / 1440;
+                queryString[mInterval] = hourInterval.ToString(); ;
+                queryString[mIntervalUnits] = "h";
+                queryString[mNumberOfRecords] = "1440";
+            }
+            else //Range from 1440 days up
+            {
+                int dayInterval = rangeInMinutes / 60 / 24 / 1440;
+                queryString[mInterval] = dayInterval.ToString(); ;
+                queryString[mIntervalUnits] = "d";
+                queryString[mNumberOfRecords] = "1440";
+            }
+
             queryString[mObservatoryCode] = "";
             queryString[mSiteLongitude] = MPC_Observatory.BestObservatory.MySiteLong.ToString("0.000");
             queryString[mSiteLatitude] = MPC_Observatory.BestObservatory.MySiteLat.ToString("0.000");

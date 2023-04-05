@@ -272,7 +272,7 @@ namespace Hot_Pursuit
                     Utility.ButtonGreen(GenerateSDBButton);
                     return;
                 }
-                                int minutes = (int)PlotDaysBox.Value * 60 * 24;
+                int minutes = (int)PlotDaysBox.Value * 60 * 24;
                 if (ScoutRadioButton.Checked)
                     EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
                 if (HorizonsRadioButton.Checked)
@@ -820,7 +820,7 @@ namespace Hot_Pursuit
 
         #endregion
 
-     }
+    }
 }
 
 //    #region treeview

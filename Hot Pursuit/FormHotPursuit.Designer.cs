@@ -497,7 +497,7 @@ namespace Hot_Pursuit
             // 
             this.PlotDaysBox.Location = new System.Drawing.Point(49, 30);
             this.PlotDaysBox.Maximum = new decimal(new int[] {
-            6000,
+            9999,
             0,
             0,
             0});
@@ -507,7 +507,7 @@ namespace Hot_Pursuit
             0,
             0});
             this.PlotDaysBox.Name = "PlotDaysBox";
-            this.PlotDaysBox.Size = new System.Drawing.Size(41, 20);
+            this.PlotDaysBox.Size = new System.Drawing.Size(74, 20);
             this.PlotDaysBox.TabIndex = 37;
             this.PlotDaysBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.PlotDaysBox.Value = new decimal(new int[] {
