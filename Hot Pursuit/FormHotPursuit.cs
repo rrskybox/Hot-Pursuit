@@ -287,6 +287,7 @@ namespace Hot_Pursuit
                     Utils.FindAndCenterChart(tName);
                     sdb.SDBToClipboard(tdList);
                 }
+                MessageBox.Show("Use Edit->Paste Photo in TheSky to plot this track.");
                 Utility.ButtonGreen(GenerateSDBButton);
                 return;
             }
