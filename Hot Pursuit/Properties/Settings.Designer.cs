@@ -12,7 +12,7 @@ namespace Hot_Pursuit.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.10.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.14.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -97,37 +97,13 @@ namespace Hot_Pursuit.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool ScoutChecked {
+        [global::System.Configuration.DefaultSettingValueAttribute("MPC")]
+        public string EphSource {
             get {
-                return ((bool)(this["ScoutChecked"]));
+                return ((string)(this["EphSource"]));
             }
             set {
-                this["ScoutChecked"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool HorizonsChecked {
-            get {
-                return ((bool)(this["HorizonsChecked"]));
-            }
-            set {
-                this["HorizonsChecked"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool MPCChecked {
-            get {
-                return ((bool)(this["MPCChecked"]));
-            }
-            set {
-                this["MPCChecked"] = value;
+                this["EphSource"] = value;
             }
         }
     }

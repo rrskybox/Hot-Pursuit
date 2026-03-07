@@ -20,14 +20,8 @@
     <Setting Name="TLECatalogPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ScoutChecked" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="HorizonsChecked" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="MPCChecked" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+    <Setting Name="EphSource" Type="System.String" Scope="User">
+      <Value Profile="(Default)">MPC</Value>
     </Setting>
   </Settings>
 </SettingsFile>

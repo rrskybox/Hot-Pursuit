@@ -17,6 +17,7 @@ namespace Hot_Pursuit
             Scout,
             MPES,
             Horizons,
+            Raw,
             HorizonsSat,
             HorizonsTLE
         }
@@ -310,7 +311,8 @@ namespace Hot_Pursuit
             {
                 MessageBox.Show("Download Error: " + ex.Message + "\n Possibly the NEO target is not available on Scout for ephemeris.");
                 return false;
-            };
+            }
+            ;
             List<SpeedVector> BasicRateTable = new List<SpeedVector>();
             UpdateRateTable = new List<SpeedVector>();
             ScoutResultsX = JsonConvert.DeserializeXNode(neoResultText, "Root");
@@ -357,7 +359,8 @@ namespace Hot_Pursuit
             {
                 MessageBox.Show("Geocentric Ephemeris Download Error: " + ex.Message);
                 return false;
-            };
+            }
+            ;
             XDocument geoResultsX = JsonConvert.DeserializeXNode(scoutResultText, "Root");
             XElement sEphXGeo = geoResultsX.Element("Root").Element("eph");
             if (sEphXGeo == null)
@@ -384,7 +387,8 @@ namespace Hot_Pursuit
             {
                 MessageBox.Show("Topocentric Ephemeris Download Error: " + ex.Message);
                 return false;
-            };
+            }
+            ;
             XDocument mpcResultsX = JsonConvert.DeserializeXNode(scoutResultText, "Root");
             XElement mpcEphXTopo = mpcResultsX.Element("Root").Element("eph");
             IEnumerable<XElement> mPositionX = mpcEphXTopo.Element("data").Elements("data");
@@ -707,7 +711,8 @@ namespace Hot_Pursuit
             {
                 MessageBox.Show("Download Error: " + ex.Message);
                 return false;
-            };
+            }
+            ;
             //Check result
             if (!hzResultText.Contains("$$SOE"))
             {
@@ -734,7 +739,7 @@ namespace Hot_Pursuit
                 columns[7] = (Convert.ToDouble(columns[7].ToString()) / 60.0).ToString();
                 columns[8] = (Convert.ToDouble(columns[8].ToString()) / 60.0).ToString();
                 for (int r = 1; r < headers.Count(); r++)
-                    ephmRecord.Add(new XElement(horizonsHeaderNames[r], columns[r]));
+                    ephmRecord.Add(new XElement(horizonsHeaderNames[r - 1], columns[r - 1]));
                 ephmList.Add(ephmRecord);
             }
             //Convert raw XML list to common speed vector format and return
@@ -1032,7 +1037,8 @@ namespace Hot_Pursuit
             {
                 MessageBox.Show("Download Error: " + ex.Message);
                 return false;
-            };
+            }
+            ;
             //Check result
             if (!mpesResultText.Contains("Date"))
             {

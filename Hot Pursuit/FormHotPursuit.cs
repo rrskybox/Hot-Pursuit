@@ -1,5 +1,4 @@
-﻿
-using AstroImage;
+﻿using AstroImage;
 using AstroMath;
 using System;
 using System.Collections.Generic;
@@ -18,8 +17,6 @@ namespace Hot_Pursuit
 
         //64 Bit
         const string TLEPath = "\\Software Bisque\\TheSky Professional Edition 64\\Satellites\\~SatellitesFromWeb.txt";
-        // 32 Bit
-        // const string TLEPath = "Software Bisque\\TheSkyX Professional Edition\\Satellites\\~SatellitesFromWeb.txt";
 
         public enum ControlColor
         {
@@ -72,12 +69,8 @@ namespace Hot_Pursuit
             FullReductionCheckBox.Checked = Properties.Settings.Default.FullReduction;
             OnTopBox.Checked = Properties.Settings.Default.IsOnTop;
             CLSBox.Checked = Properties.Settings.Default.UseCLS;
-            ScoutRadioButton.Checked = Properties.Settings.Default.ScoutChecked;
-            HorizonsRadioButton.Checked = Properties.Settings.Default.HorizonsChecked;
-            MPCRadioButton.Checked = Properties.Settings.Default.MPCChecked;
-            if (ScoutRadioButton.Checked) QuerySite = "Scout";
-            if (HorizonsRadioButton.Checked) QuerySite = "Horizons";
-            if (MPCRadioButton.Checked) QuerySite = "MPC";
+            QuerySite = Properties.Settings.Default.EphSource;
+            SourceBox.Text = QuerySite;
 
             SetBackColor(StartStopButton, ControlColor.Green);
             SetBackColor(CloseButton, ControlColor.Green);
@@ -185,58 +178,48 @@ namespace Hot_Pursuit
 
                 ClearFields();
 
-                if (ScoutRadioButton.Checked)
+                switch (QuerySite)
                 {
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    while (WalkEphemerisTable(Ephemeris.EphemSource.Scout))
-                    {
-                        UpdateStatusLine("Acquiring new ephemeris table");
-                        EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    }
-                }
-                if (HorizonsRadioButton.Checked)
-                {
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    while (WalkEphemerisTable(Ephemeris.EphemSource.Horizons))
-                    {
-                        UpdateStatusLine("Acquiring new ephemeris table");
-                        EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    }
-                }
-                if (MPCRadioButton.Checked)
-                {
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    {
-                        UpdateStatusLine("Acquiring new ephemeris table");
-                        while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
+                    case "Scout":
+                        {
+                            EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                            while (WalkEphemerisTable(Ephemeris.EphemSource.Scout))
+                            {
+                                UpdateStatusLine("Acquiring new ephemeris table");
+                                EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                            }
+                            break;
+                        }
+                    case "Horizons":
+                        {
+                            EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                            while (WalkEphemerisTable(Ephemeris.EphemSource.Horizons))
+                            {
+                                UpdateStatusLine("Acquiring new ephemeris table");
+                                EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                            }
+                            break;
+                        }
+                    case "MPC":
+                        {
                             EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                    }
+                            {
+                                UpdateStatusLine("Acquiring new ephemeris table");
+                                while (WalkEphemerisTable(Ephemeris.EphemSource.MPES))
+                                    EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
+                            }
+                            break;
+                        }
+                    case "Raw":
+                        {
+                            break;
+                        }
+                    default:
+                        {
+                            UpdateStatusLine("Unknown query site selection");
+                            break;
+                        }
                 }
-                //if (SatRadioButton.Checked)
-                //{
-                //    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                //    while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsSat))
-                //    {
-                //        UpdateStatusLine("Acquiring new ephemeris table");
-                //        EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsSat, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                //    }
-                //}
-                //if (TLERadioButton.Checked)
-                //{
-                //    //Make sure target name has 6 digits digits
-                //    if (tName.Length < 6)
-                //    {
-                //        tName = tName.PadLeft(5, '0');
-                //        TargetBox.Text = tName;
-                //    }
-                //    EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                //    {
-                //        UpdateStatusLine("Acquiring new ephemeris table");
-                //        while (WalkEphemerisTable(Ephemeris.EphemSource.HorizonsTLE))
-                //            EphemTable = new Ephemeris(Ephemeris.EphemSource.HorizonsTLE, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value);
-                //    }
-                //}
-
             }
         }
 
@@ -267,7 +250,7 @@ namespace Hot_Pursuit
                 }
                 UpdateStatusLine("Querying " + QuerySite + " catalog for " + tName);
                 if (QuerySite == "Scout")
-                    UpdateStatusLine("Scout takes time; Be patient...");
+                    UpdateStatusLine("Scout is very, very slow. Be very, very patient...");
                 Show();
                 System.Windows.Forms.Application.DoEvents();
                 if (tName == "")
@@ -276,12 +259,26 @@ namespace Hot_Pursuit
                     return;
                 }
                 int minutes = (int)PlotDaysBox.Value * 60 * 24;
-                if (ScoutRadioButton.Checked)
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
-                if (HorizonsRadioButton.Checked)
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
-                if (MPCRadioButton.Checked)
-                    EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
+                switch (QuerySite)
+                {
+                    case "Scout":
+                        {
+                            EphemTable = new Ephemeris(Ephemeris.EphemSource.Scout, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
+                            break;
+                        }
+                    case "Horizons":
+                        {
+                            EphemTable = new Ephemeris(Ephemeris.EphemSource.Horizons, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
+                            break;
+                        }
+                    case "MPC":
+                        {
+                            EphemTable = new Ephemeris(Ephemeris.EphemSource.MPES, tName, MinutesButton.Checked, (int)RefreshIntervalBox.Value, minutes);
+                            break;
+                        }
+                    case "Raw":
+                        { break; }
+                }
                 //Transform Ephemeris Table to Target Data
                 if (EphemTable.HasData)
                 {
@@ -699,6 +696,11 @@ namespace Hot_Pursuit
             return;
         }
 
+        private void TargetBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
         private void UpdateStatusLine(string status)
         {
             //print out status if not null
@@ -741,27 +743,20 @@ namespace Hot_Pursuit
         private void LogEntry(string entryStuff)
         {
             string logtime = DateTime.Now.ToString("HH:mm:ss");
-            File.AppendAllText(HPLogFilePath, (logtime + ": " + entryStuff + "\r\n"));
+            object lockObj = new object();
+            lock (lockObj)
+            {
+                try { File.AppendAllText(HPLogFilePath, (logtime + ": " + entryStuff + "\r\n")); }
+                catch (Exception ex)
+                { MessageBox.Show("Failed to log " + logtime + ": " + entryStuff + "\r\n" + ex.Message); }
+            }
         }
 
-        private void ScoutRadioButton_CheckedChanged(object sender, EventArgs e)
+        private void SourceBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            QuerySite = "Scout";
-            Properties.Settings.Default.ScoutChecked = ScoutRadioButton .Checked;
+            QuerySite = SourceBox.Text;
+            Properties.Settings.Default.EphSource = QuerySite;
         }
-
-        private void HorizonsRadioButton_CheckedChanged(object sender, EventArgs e)
-        {
-            QuerySite = "Horizons";
-            Properties.Settings.Default.HorizonsChecked = HorizonsRadioButton.Checked;
-        }
-
-        private void MPCRadioButton_CheckedChanged(object sender, EventArgs e)
-        {
-            QuerySite = "MPC";
-            Properties.Settings.Default.MPCChecked = MPCRadioButton.Checked;
-        }
-
 
 
         //private void SatRadioButton_CheckedChanged(object sender, EventArgs e)
@@ -825,7 +820,6 @@ namespace Hot_Pursuit
 
 
         #endregion
-
 
     }
 }

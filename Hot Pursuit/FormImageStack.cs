@@ -14,7 +14,13 @@ namespace Hot_Pursuit
         {
             InitializeComponent();
             Stack iStack = new Stack(fitsNames.ToArray());
-            ap = new AstroPic(iStack.FitsStack);
+
+            // Use a local variable so we can pass it with 'ref'
+            FitsFile fitsRef = iStack.FitsStack;
+            ap = new AstroPic(ref fitsRef);
+            // If AstroPic modified the FitsFile, write it back to the stack
+            iStack.FitsStack = fitsRef;
+
             ap.LinearStretch();
             //Add target cross
             //target cross hairs
