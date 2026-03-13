@@ -49,7 +49,6 @@ namespace Hot_Pursuit
             this.label5 = new System.Windows.Forms.Label();
             this.ExposureBox = new System.Windows.Forms.NumericUpDown();
             this.ImageButton = new System.Windows.Forms.Button();
-            this.HPStatusBox = new System.Windows.Forms.TextBox();
             this.DecRateBox = new System.Windows.Forms.TextBox();
             this.RARateBox = new System.Windows.Forms.TextBox();
             this.RangeBox = new System.Windows.Forms.TextBox();
@@ -66,6 +65,7 @@ namespace Hot_Pursuit
             this.GenerateSDBButton = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.SourceBox = new System.Windows.Forms.ComboBox();
+            this.HPStatusBox = new System.Windows.Forms.RichTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.RefreshIntervalBox)).BeginInit();
             this.SequencerGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.RepsBox)).BeginInit();
@@ -191,7 +191,7 @@ namespace Hot_Pursuit
             this.SequencerGroupBox.Size = new System.Drawing.Size(182, 119);
             this.SequencerGroupBox.TabIndex = 17;
             this.SequencerGroupBox.TabStop = false;
-            this.SequencerGroupBox.Text = "QAD Imaging";
+            this.SequencerGroupBox.Text = "Image Target";
             // 
             // RecenterBox
             // 
@@ -322,16 +322,6 @@ namespace Hot_Pursuit
             this.ImageButton.UseVisualStyleBackColor = true;
             this.ImageButton.Click += new System.EventHandler(this.ImageButton_Click);
             // 
-            // HPStatusBox
-            // 
-            this.HPStatusBox.AllowDrop = true;
-            this.HPStatusBox.Location = new System.Drawing.Point(5, 132);
-            this.HPStatusBox.Multiline = true;
-            this.HPStatusBox.Name = "HPStatusBox";
-            this.HPStatusBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.HPStatusBox.Size = new System.Drawing.Size(747, 46);
-            this.HPStatusBox.TabIndex = 18;
-            // 
             // DecRateBox
             // 
             this.DecRateBox.Location = new System.Drawing.Point(285, 56);
@@ -406,7 +396,7 @@ namespace Hot_Pursuit
             this.groupBox1.Size = new System.Drawing.Size(359, 119);
             this.groupBox1.TabIndex = 33;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Track";
+            this.groupBox1.Text = "Track Target";
             // 
             // TrailButton
             // 
@@ -506,7 +496,7 @@ namespace Hot_Pursuit
             this.GenerateSDBButton.Name = "GenerateSDBButton";
             this.GenerateSDBButton.Size = new System.Drawing.Size(94, 23);
             this.GenerateSDBButton.TabIndex = 36;
-            this.GenerateSDBButton.Text = "Generate SDB";
+            this.GenerateSDBButton.Text = "Ephemeris";
             this.GenerateSDBButton.UseVisualStyleBackColor = true;
             this.GenerateSDBButton.Click += new System.EventHandler(this.GenerateSDBButton_Click);
             // 
@@ -529,7 +519,7 @@ namespace Hot_Pursuit
             "MPC",
             "Raw"});
             this.SourceBox.Location = new System.Drawing.Point(58, 38);
-            this.SourceBox.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.SourceBox.Margin = new System.Windows.Forms.Padding(2);
             this.SourceBox.MaxDropDownItems = 4;
             this.SourceBox.Name = "SourceBox";
             this.SourceBox.Size = new System.Drawing.Size(141, 21);
@@ -537,15 +527,23 @@ namespace Hot_Pursuit
             this.SourceBox.Text = "Source Name";
             this.SourceBox.SelectedIndexChanged += new System.EventHandler(this.SourceBox_SelectedIndexChanged);
             // 
+            // HPStatusBox
+            // 
+            this.HPStatusBox.Location = new System.Drawing.Point(5, 130);
+            this.HPStatusBox.Name = "HPStatusBox";
+            this.HPStatusBox.Size = new System.Drawing.Size(747, 49);
+            this.HPStatusBox.TabIndex = 40;
+            this.HPStatusBox.Text = "";
+            // 
             // FormHotPursuit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(759, 184);
+            this.Controls.Add(this.HPStatusBox);
             this.Controls.Add(this.SourceBox);
             this.Controls.Add(this.label7);
-            this.Controls.Add(this.HPStatusBox);
             this.Controls.Add(this.SequencerGroupBox);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.TargetBox);
@@ -588,7 +586,6 @@ namespace Hot_Pursuit
         private System.Windows.Forms.Button ImageButton;
         private System.Windows.Forms.CheckBox FullReductionCheckBox;
         private System.Windows.Forms.ComboBox FiltersListBox;
-        private System.Windows.Forms.TextBox HPStatusBox;
         private System.Windows.Forms.TextBox DecRateBox;
         private System.Windows.Forms.TextBox RARateBox;
         private System.Windows.Forms.TextBox RangeBox;
@@ -609,6 +606,7 @@ namespace Hot_Pursuit
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ComboBox SourceBox;
+        private System.Windows.Forms.RichTextBox HPStatusBox;
     }
 }
 

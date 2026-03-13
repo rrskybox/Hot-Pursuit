@@ -54,15 +54,18 @@ namespace Hot_Pursuit
             Properties.Settings.Default.TLECatalogPath = TLEPath;
             Properties.Settings.Default.Save();
 
-            string version;
+            string driverversion;
             try
-            { version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(); }
+            {
+                Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                driverversion = $"{version.Major}.{version.Minor}.{version.Revision}.{version.Build}";
+            }
             catch
             {
                 //probably in debug mode
-                version = "  **in Debug**";
+                driverversion = "  **in Debug**";
             }
-            this.Text = "Hot Pursuit V" + version;
+            this.Text = "Hot Pursuit V" + driverversion;
             //Configure app to ignore SSL problems -- optional if servers are not working
             //System.Net.ServicePointManager.ServerCertificateValidationCallback = (senderX, certificate, chain, sslPolicyErrors) => { return true; };
 
@@ -237,27 +240,31 @@ namespace Hot_Pursuit
             {
                 //Retrieve current target name from TSX and set in ss
                 string tName;
-                if (TargetBox.Text == "")
-                    tName = Utils.GetTargetName();
-                else
-                    tName = TargetBox.Text;
-                TargetBox.Text = tName;
+                Utility.ButtonRed(GenerateSDBButton);
                 if (TargetBox.Text == "")
                 {
-                    UpdateStatusLine("No target found");
-                    Utility.ButtonGreen(GenerateSDBButton);
-                    return;
+                    UpdateStatusLine($"Querying for target selection in TheSky");
+                    tName = Utils.GetTargetName();
+                    if (tName == "" || tName.Contains("Mouse"))
+                    {
+                        UpdateStatusLine("No named target has been selected in TheSky", true);
+                        Utility.ButtonGreen(GenerateSDBButton);
+                        return;
+                    }
                 }
-                UpdateStatusLine("Querying " + QuerySite + " catalog for " + tName);
+                else
+                {
+                    tName = TargetBox.Text;
+                    TargetBox.Text = tName;
+                }
+
+                UpdateStatusLine(String.Format("Querying {0} catalog for target: {1}", QuerySite, tName));
                 if (QuerySite == "Scout")
                     UpdateStatusLine("Scout is very, very slow. Be very, very patient...");
-                Show();
+                this.UseWaitCursor = true;
+                this.Show();
                 System.Windows.Forms.Application.DoEvents();
-                if (tName == "")
-                {
-                    Utility.ButtonGreen(GenerateSDBButton);
-                    return;
-                }
+
                 int minutes = (int)PlotDaysBox.Value * 60 * 24;
                 switch (QuerySite)
                 {
@@ -279,15 +286,23 @@ namespace Hot_Pursuit
                     case "Raw":
                         { break; }
                 }
+                this.UseWaitCursor = false;
+
                 //Transform Ephemeris Table to Target Data
                 if (EphemTable.HasData)
                 {
+                    UpdateStatusLine(String.Format("An ephemeris table has been generated from {0} for tracking {1}", QuerySite, tName));
                     List<SDBDesigner.TargetData> tdList = EphemTable.SpeedVectorToTargetData();
                     SDBDesigner sdb = new SDBDesigner();
                     Utils.FindAndCenterChart(tName);
-                    sdb.SDBToClipboard(tdList);
+                    sdb.SDBToClipboard(tName, tdList);
+                    UpdateStatusLine(String.Format("Use Edit->Paste Photo in TheSky to plot this track, if desired."));
                 }
-                MessageBox.Show("Use Edit->Paste Photo in TheSky to plot this track.");
+                else
+                {
+                    UpdateStatusLine(String.Format("The target {0} was not found in the selected database {1}", tName, QuerySite), true);
+                }
+
                 Utility.ButtonGreen(GenerateSDBButton);
                 return;
             }
@@ -701,12 +716,19 @@ namespace Hot_Pursuit
 
         }
 
-        private void UpdateStatusLine(string status)
+        private void UpdateStatusLine(string status, bool red = false)
         {
             //print out status if not null
             if (status != null)
             {
+                Color c = HPStatusBox.ForeColor;
+                if (red)
+                    HPStatusBox.SelectionColor = Color.Red;
                 HPStatusBox.AppendText(status + "\r\n");
+                HPStatusBox.SelectionColor = c;
+                HPStatusBox.ScrollToCaret();
+                Show();
+                System.Windows.Forms.Application.DoEvents();
                 LogEntry(status);
             }
             return;

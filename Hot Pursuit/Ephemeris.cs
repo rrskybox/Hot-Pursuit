@@ -178,6 +178,10 @@ namespace Hot_Pursuit
                 double sdRAdt = sdRACosDecdt / Math.Cos(AstroMath.Transform.DegreesToRadians(sDec_D));
                 double sPA_D = Math.Atan2(sdDecdt, sdRACosDecdt);
                 double sRange = Convert.ToDouble(ephX.Element(xRng).Value);
+                double sMag = 0;
+                if (ephX.Elements(xV).Any())
+                    sMag = Convert.ToDouble(ephX.Element(xV).Value);
+                else sMag = 0;
 
                 BasicRateTable.Add(new SpeedVector
                 {
@@ -189,7 +193,8 @@ namespace Hot_Pursuit
                     Rate_RA_ArcsecPerMinute = sdRAdt,
                     PA_Degrees = sPA_D,
                     Range_AU = sRange,  //AU
-                    Elevation_KM = sElevation_KM
+                    Elevation_KM = sElevation_KM,
+                    Mag_V = sMag
                 });
             }
             if (isMinutes)
@@ -226,7 +231,7 @@ namespace Hot_Pursuit
                     TargetName = sv.Time_UTC.ToString(),
                     TargetRA = Utility.DegreesToHours(sv.RA_Degrees),
                     TargetDec = sv.Dec_Degrees,
-                    TargetMag = 0
+                    TargetMag = sv.Mag_V
                 });
             return tdList;
         }
@@ -309,7 +314,7 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Download Error: " + ex.Message + "\n Possibly the NEO target is not available on Scout for ephemeris.");
+                MessageBox.Show("Scout Download Error: " + ex.Message + "\n Possibly the NEO target is not available on Scout for ephemeris.");
                 return false;
             }
             ;
@@ -357,7 +362,7 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Geocentric Ephemeris Download Error: " + ex.Message);
+                MessageBox.Show("Scout Geocentric Ephemeris Download Error: " + ex.Message);
                 return false;
             }
             ;
@@ -385,7 +390,7 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Topocentric Ephemeris Download Error: " + ex.Message);
+                MessageBox.Show("Scout Topocentric Ephemeris Download Error: " + ex.Message);
                 return false;
             }
             ;
@@ -709,14 +714,14 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Download Error: " + ex.Message);
+                MessageBox.Show("Horizon Download Error: " + ex.Message);
                 return false;
             }
             ;
             //Check result
             if (!hzResultText.Contains("$$SOE"))
             {
-                MessageBox.Show("Target not found");
+                MessageBox.Show("Target not found on Horizon");
                 return false;
             }
             //Convert Text to raw XML list
@@ -1035,14 +1040,14 @@ namespace Hot_Pursuit
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Download Error: " + ex.Message);
+                MessageBox.Show("MPC Download Error: " + ex.Message);
                 return false;
             }
             ;
             //Check result
             if (!mpesResultText.Contains("Date"))
             {
-                MessageBox.Show("Target not found");
+                MessageBox.Show("Target not found on MPC");
                 return false;
             }
             //Convert Text to XML  -- JSON format is rudimentary and no better than text
@@ -1229,7 +1234,8 @@ namespace Hot_Pursuit
         public double Rate_RA_ArcsecPerMinute { get; set; }  //Tracking image rate
         public double Rate_Dec_ArcsecPerMinute { get; set; }
         public double Elevation_KM { get; set; }  //Meters?
-        public double Range_AU { get; set; }  //AU 
+        public double Range_AU { get; set; }  //AU
+        public double Mag_V { get; set; }  //Magnitude in V band
 
         public SpeedVector() { }
 

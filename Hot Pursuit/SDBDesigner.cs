@@ -118,13 +118,14 @@ namespace Hot_Pursuit
 
         public List<DataColumn> HeaderMap = new List<DataColumn>();
 
-        public List<ControlDesc> ControlFields = new List<ControlDesc>()
+        public List<ControlDesc> ControlFieldsEphemeris = new List<ControlDesc>()
         {
             //List of values for generating TSX SDB fields
             //  that are used for general conversion to and display of the
             //  display in the "Find" function
             //
-            new ControlDesc {ControlName = IdentifierX, ControlValue= "Large Asteroid"},
+            //new ControlDesc {ControlName = IdentifierX, ControlValue= "Large Asteroid"},
+            new ControlDesc {ControlName = IdentifierX, ControlValue= "Ephemeris"},
             new ControlDesc {ControlName = SDBDescriptionX, ControlValue  = ""},
             new ControlDesc {ControlName = SearchPrefixX, ControlValue = "" },
             new ControlDesc {ControlName = SpecialSDBX, ControlValue = "0" },
@@ -139,10 +140,12 @@ namespace Hot_Pursuit
             new ControlDesc {ControlName = DefaultMaxFOVX, ControlValue = "360.0000" },
             new ControlDesc {ControlName = RAMultiplierX , ControlValue = "1.0" }
         };
-        public string SearchPrefix
+
+        public string SearchPrefixEphemeris
         {
-            set { ControlFields.Single(c => c.ControlName == SearchPrefixX).ControlValue = value; }
+            set { ControlFieldsEphemeris.Single(c => c.ControlName == SearchPrefixX).ControlValue = value; }
         }
+
 
         public void MakeHeaderMap(List<TargetData> tgData)
         {
@@ -265,14 +268,14 @@ namespace Hot_Pursuit
             return dataFields;
         }
 
-        public void SDBToClipboard(List<TargetData> tgtDataList)
+        public void SDBToClipboard(string tgtName, List<TargetData> tgtDataList)
         {
             //Add the header
             //Build and add text lines according to the header
             //Write the XDocument to the text file
             MakeHeaderMap(tgtDataList);
             List<DataColumn> dataFields = ResultstoSDBHeader();
-            string sdbSection = SDBHeaderGenerator(dataFields).ToString();
+            string sdbSection = SDBHeaderGenerator(tgtName, dataFields).ToString();
             //Write the sdb text according to the column map
             foreach (TargetData tgtData in tgtDataList)
                 sdbSection += "\n" + SDBtoTextLine(tgtData, dataFields);
@@ -280,13 +283,13 @@ namespace Hot_Pursuit
             return;
         }
 
-        public void SDBToCSVFile(List<TargetData> tgtDataList, string fileName, bool IsIAU)
+        public void SDBToCSVFile(string tgtName, List<TargetData> tgtDataList, string fileName, bool IsIAU)
         {
             //Do all the same things as clipboard, but write it to a file *sdb.csv
 
             MakeHeaderMap(tgtDataList);
             List<DataColumn> dataFields = ResultstoSDBHeader();
-            string sdbSection = SDBHeaderGenerator(dataFields).ToString();
+            string sdbSection = SDBHeaderGenerator(tgtName, dataFields).ToString();
             //Write the sdb text according to the column map
             foreach (TargetData tgtData in tgtDataList)
                 sdbSection += "\n" + SDBtoTextLine(tgtData, dataFields);
@@ -307,12 +310,17 @@ namespace Hot_Pursuit
                   tgtData.TargetMag.ToString().PadRight(dataFields[3].ColumnWidth);
         }
 
-        private XDocument SDBHeaderGenerator(List<DataColumn> dataFields)
+        private XDocument SDBHeaderGenerator(string tName, List<DataColumn> dataFields)
         {
             //Catalog Fields
             XElement xHeader = new XElement(SDBHeaderX, new XAttribute("version", "1.00"));
-            foreach (ControlDesc cf in ControlFields)
-            { xHeader.Add(new XElement(cf.ControlName, cf.ControlValue)); }
+            foreach (ControlDesc cf in ControlFieldsEphemeris)
+            {
+                //modify identifier field to append target name from the data
+                if (cf.ControlName == IdentifierX)
+                    cf.ControlValue += " " + tName;
+                xHeader.Add(new XElement(cf.ControlName, cf.ControlValue));
+            }
             //Default Object type -- may fix this up later
             XElement dotx = new XElement(DefaultObjectTypeX,
                     new XAttribute(IndexX, DefaultObjectIndex),
