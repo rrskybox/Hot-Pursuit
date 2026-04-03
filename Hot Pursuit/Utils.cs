@@ -37,6 +37,8 @@ namespace Hot_Pursuit
             sky6ObjectInformation tsxoi = new sky6ObjectInformation();
             tsxoi.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_NAME1);
             string tgtName = tsxoi.ObjInfoPropOut;
+            //Clear any parentheses and their contents from the target name, as TSX sometimes adds them for comets and asteroids
+            tgtName = System.Text.RegularExpressions.Regex.Replace(tgtName, @"\s*\(.*?\)\s*", "");
             return tgtName;
         }
 
@@ -259,15 +261,14 @@ namespace Hot_Pursuit
             return;
         }
 
-        public static void FindAndCenterChart(string targetName)
+        public static bool FindAndCenterChart(string targetName)
         {
             sky6StarChart tsxc = new sky6StarChart();
             sky6ObjectInformation tsxo = new sky6ObjectInformation();
             try { tsxc.Find(targetName); }
             catch
             {
-                MessageBox.Show("TSX does not catalog the target");
-                return;
+                return (false);
             };
             tsxo.Property(Sk6ObjectInformationProperty.sk6ObjInfoProp_RA_2000);
             double ra = tsxo.ObjInfoPropOut;
@@ -277,7 +278,7 @@ namespace Hot_Pursuit
             tsxc.Declination = dec;
             //Set star chart field of view to 5 minutes
             tsxc.FieldOfView = 5;
-            return;
+            return (true);
         }
 
     }

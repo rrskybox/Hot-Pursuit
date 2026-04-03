@@ -168,13 +168,13 @@ namespace Hot_Pursuit
                     UpdateStatusLine("No target found");
                     return;
                 }
-                UpdateStatusLine("Querying " + QuerySite + " catalog for " + tName);
+
+                UpdateStatusLine(String.Format("Querying {0} catalog for target: {1}", QuerySite, tName));
                 if (QuerySite == "Scout")
-                    UpdateStatusLine("Scout takes time; Be patient...");
-                Show();
-                System.Windows.Forms.Application.DoEvents();
-                if (tName == "")
-                    return;
+                    UpdateStatusLine("Scout is very, very slow. Be very, very patient...");
+                this.UseWaitCursor = true;
+                this.Show();
+                Thread.Sleep(100);
 
                 InPursuit = true;
                 StartStopButton.Text = "Stop";
@@ -240,22 +240,15 @@ namespace Hot_Pursuit
             {
                 //Retrieve current target name from TSX and set in ss
                 string tName;
-                Utility.ButtonRed(GenerateSDBButton);
+                if (TargetBox.Text == "")
+                    tName = Utils.GetTargetName();
+                else
+                    tName = TargetBox.Text;
+                TargetBox.Text = tName;
                 if (TargetBox.Text == "")
                 {
-                    UpdateStatusLine($"Querying for target selection in TheSky");
-                    tName = Utils.GetTargetName();
-                    if (tName == "" || tName.Contains("Mouse"))
-                    {
-                        UpdateStatusLine("No named target has been selected in TheSky", true);
-                        Utility.ButtonGreen(GenerateSDBButton);
-                        return;
-                    }
-                }
-                else
-                {
-                    tName = TargetBox.Text;
-                    TargetBox.Text = tName;
+                    UpdateStatusLine("No target found");
+                    return;
                 }
 
                 UpdateStatusLine(String.Format("Querying {0} catalog for target: {1}", QuerySite, tName));
@@ -263,7 +256,7 @@ namespace Hot_Pursuit
                     UpdateStatusLine("Scout is very, very slow. Be very, very patient...");
                 this.UseWaitCursor = true;
                 this.Show();
-                System.Windows.Forms.Application.DoEvents();
+                Thread.Sleep(100);
 
                 int minutes = (int)PlotDaysBox.Value * 60 * 24;
                 switch (QuerySite)
@@ -294,7 +287,8 @@ namespace Hot_Pursuit
                     UpdateStatusLine(String.Format("An ephemeris table has been generated from {0} for tracking {1}", QuerySite, tName));
                     List<SDBDesigner.TargetData> tdList = EphemTable.SpeedVectorToTargetData();
                     SDBDesigner sdb = new SDBDesigner();
-                    Utils.FindAndCenterChart(tName);
+                    if (!Utils.FindAndCenterChart(tName))
+                        UpdateStatusLine(String.Format("Warning: TSX has not registered this object in its catalogs."));
                     sdb.SDBToClipboard(tName, tdList);
                     UpdateStatusLine(String.Format("Use Edit->Paste Photo in TheSky to plot this track, if desired."));
                 }

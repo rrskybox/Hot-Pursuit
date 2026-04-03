@@ -3,13 +3,13 @@
 ; Non-commercial use only
 
 #define MyAppName "Hot Pursuit"
-#define MyAppVersion "1.1.83"
+#define MyAppVersion "1.1.85"
 #define MyAppPublisher "TSXToolKit"
 #define MyAppExeName "Hot Pursuit.exe"
 #define MyAppAssocName MyAppName + " File"
 #define MyAppAssocExt ".myp"
 #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
-#define MySourceDirectory = "C:\Users\rick-\OneDrive\CS Projects\Hot Pursuit\Hot Pursuit\bin\Release"
+#define MySourceDirectory = "C:\Users\rick-\OneDrive\CSMajors\rrskybox\Hot Pursuit\Hot Pursuit\bin\Release"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -33,7 +33,7 @@ ChangesAssociations=yes
 DisableProgramGroupPage=yes
 ; Uncomment the following line to run in non administrative install mode (install for current user only).
 ;PrivilegesRequired=lowest
-OutputBaseFilename=HotPursuit
+OutputBaseFilename=HotPursuitSetUp
 SolidCompression=yes
 WizardStyle=modern dynamic
 

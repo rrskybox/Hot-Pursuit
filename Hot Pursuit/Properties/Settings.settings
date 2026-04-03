@@ -21,7 +21,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="EphSource" Type="System.String" Scope="User">
-      <Value Profile="(Default)">MPC</Value>
+      <Value Profile="(Default)">Horizons</Value>
     </Setting>
   </Settings>
 </SettingsFile>

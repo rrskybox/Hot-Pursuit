@@ -721,7 +721,7 @@ namespace Hot_Pursuit
             //Check result
             if (!hzResultText.Contains("$$SOE"))
             {
-                MessageBox.Show("Target not found on Horizon");
+                MessageBox.Show("Target query error on Horizon: \r\n" + hzResultText);
                 return false;
             }
             //Convert Text to raw XML list
@@ -759,7 +759,7 @@ namespace Hot_Pursuit
             //Comets will start with P/ or C/.  Horizons cant search that so it must be scrubbed.
             //  Anything trailing (e.g. (PANSTARRS) must be removed as well.
             //if (longName.StartsWith("P/") || longName.StartsWith("C/"))
-            string scrub;
+            string scrub = null;
             if (longName.Contains("/"))
             {
                 //We got a comet, probably from TSX SDB
@@ -778,6 +778,7 @@ namespace Hot_Pursuit
                 //this could be in the format of a single name (e.g. JWST),
                 //  a comet designation (e.g. 2021 A7),
                 //  or a asteroid designation (e.g. 7 Isis)
+                //  or a satellite designation (e.g. Artemis II)
                 //So, if it is a single name, we pass it through with no small body search designator (";")
                 string[] splits = longName.Split(' ');
                 if (splits.Count() < 2)
@@ -785,10 +786,12 @@ namespace Hot_Pursuit
                 else if (splits[1].All(Char.IsLetter)) //Comet -- 2021 A7 or Asteroid 7 Isis
                     if (splits[0].Length == 4) //Comet 2021 xx
                         scrub = splits[0] + " " + splits[1] + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
-                    else
+                    else if (splits[0].All(Char.IsDigit)) //Asteroid 7 Isis
                         scrub = splits[1] + ";"; //Asteroid format ( e.g. 7 Isis) so return just the name and small body search designator (";")
-                else
-                    scrub = splits[0] + " " + splits[1] + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
+                else if (splits[0].All(Char.IsLetter)) //Satellite Artemis II
+                        scrub = longName + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
+                    else
+                        scrub = splits[0] + " " + splits[1] + ";";  //Comet format (e.g. 2021 A7) so return the first two fields and small body search designator (";")
             }
             return scrub;
         }
@@ -877,7 +880,8 @@ namespace Hot_Pursuit
             string siteName = MPC_Observatory.BestObservatory.MPC_Code;
             NameValueCollection queryString = System.Web.HttpUtility.ParseQueryString(string.Empty);
             queryString[hFormat] = hFormatTypeText;
-            queryString[hCommand] = "\'NAME=" + scrubbedTargetName + "\'"; // ";" means that it is a small body search for name
+            //queryString[hCommand] = "\'NAME=" + scrubbedTargetName + "\'"; // ";" means that it is a small body search for name
+            queryString[hCommand] = "\'" + scrubbedTargetName + "\'"; // ";" means that it is a small body search for name
             queryString[hMakeEphemeris] = hYes;
             queryString[hEphemerisType] = "OBSERVER";
             queryString[hCenter] = "coord@399";  //if using site coordinates
