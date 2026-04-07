@@ -1,9 +1,10 @@
 # Hot-Pursuit
-Hot Pursuit is a Windows 10 desktop application whose purpose is to automate the tracking of a NEO object with TheSkyX.
+Hot Pursuit is a Windows 11 desktop application whose purpose is to automate the tracking of a NEO object with TheSky64.
 
-Targets are input to TheSkyX using the TSXToolKit Transient Search (see rrskybox/Transient Search) application via the NEO Scout search.  The user selects one then launches Hot Pursuit.
-Hot Pursuit fetches the name of the current TSX target, queries the CNEOS Scout internet site for its current ephemeral data, slews the mount to the coordinates and changes the tracking to match the target’s pace.  Hot Pursuit recaptures the ephemeral data and resets tracking speeds every few minutes as set by the user.
+Targets are input to TheSkyX using the TSXToolKit Transient Search (see rrskybox/Transient Search) application via the NEO Scout search, or can be uncataloged on TSX.
+
+Hot Pursuit fetches the name of the target, queries the NASA Scout, Horizons or MPC websites for its current ephemeral data, slews the mount to the coordinates and changes the tracking to match the target’s pace.  Hot Pursuit recaptures the ephemeral data and resets tracking speeds every few minutes as set by the user.  A bare-bones image sequencer is supported.
 
 A detailed description can be found in the "Hot Pursuit Description.docx" within the "Hot Pursuit" folder.
 
-A One-Click installation of the app is in "Hot Pursuit/publish/Hot Pursuit64.zip".  Download, extract and run setup.exe.  See the detailed description for more information.
+To install, download "PursuitBuildXX.zip" from the Output folder, extract and run.  See the detailed description for more information.
